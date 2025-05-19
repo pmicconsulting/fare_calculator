@@ -17,7 +17,7 @@
     "incremental": true,
 
     // ここだけを追加
-    "types": ["googlemaps"]
+    "types": ["google.maps"]
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
   "exclude": ["node_modules"]
