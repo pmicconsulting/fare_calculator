@@ -7,13 +7,16 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "check": "npm run lint && npm run type-check",
+    "all": "npm install && npm run check && next build && npm run dev",
+    "deploy": "git add . && git commit -m \"chore: deploy to Vercel\" && git push origin main && vercel --prod"
   },
   "dependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "@supabase/supabase-js": "^2.49.4",
     "next": "15.3.2",
-    "@supabase/supabase-js": "^2.49.4"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "typescript": "^5",

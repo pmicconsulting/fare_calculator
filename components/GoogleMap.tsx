@@ -18,6 +18,7 @@ const regionMap: Record<string, number> = {
   北海道: 1, 東北: 2, 関東: 3, 北陸信越: 4, 中部: 5,
   近畿: 6, 中国: 7, 四国: 8, 九州: 9, 沖縄: 10,
 };
+
 // 車種キー→vehicle_code マッピング
 const vehicleMap: Record<"small" | "medium" | "large" | "trailer", number> = {
   small: 1, medium: 2, large: 3, trailer: 4,
@@ -39,23 +40,20 @@ export default function GoogleMap() {
   const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
 
-  // 地図初期化（日本全域を表示）
+  // 地図初期化（本州を中心に適度に拡大）
   useEffect(() => {
     window.initMap = () => {
       if (!mapRef.current || !window.google) return;
-      const map = new window.google.maps.Map(mapRef.current, {
+
+      // 本州を中心に、適度に拡大した状態で地図を初期化
+      const map = new window.google.maps.Map(mapRef.current!, {
+        center: { lat: 37, lng: 138.0 },     // 本州の中央あたり
+        zoom: 6,                             // ズームレベルはお好みで調整（5～6 前後が目安）
         mapTypeId: "roadmap",
         zoomControl: true,
         streetViewControl: false,
         fullscreenControl: false,
       });
-      // 日本全域が見えるようにフィット
-      const bounds = new window.google.maps.LatLngBounds(
-        { lat: 20.0, lng: 122.0 },
-        { lat: 45.5, lng: 154.0 }
-      );
-      map.fitBounds(bounds);
-
       const renderer = new window.google.maps.DirectionsRenderer({
         map,
         suppressMarkers: true,
@@ -63,6 +61,7 @@ export default function GoogleMap() {
       });
       directionsRendererRef.current = renderer;
 
+      // クリックリスナーは唯一の map インスタンスに登録
       map.addListener("click", (e: google.maps.MapMouseEvent) => {
         if (!e.latLng) return;
         const pos = { lat: e.latLng.lat(), lng: e.latLng.lng() };
@@ -74,20 +73,19 @@ export default function GoogleMap() {
           destinationRef.current = pos;
           addMarker(pos, "green-dot");
         } else {
+          // 3回目以降はリセット
           originRef.current = pos;
           destinationRef.current = null;
           setRawKm(null);
           setRoundedKm(null);
           setFare(null);
-          // 空ルートでリセット
-          directionsRendererRef.current!.setDirections(
-            { routes: [] } as unknown as google.maps.DirectionsResult
-          );
+          directionsRendererRef.current!.setDirections({ routes: [] } as unknown as google.maps.DirectionsResult);
           clearMarkers();
           addMarker(pos, "blue-dot");
         }
       });
     };
+
     if (window.google && typeof window.initMap === "function") {
       window.initMap();
     }
@@ -129,7 +127,6 @@ export default function GoogleMap() {
         travelMode: window.google.maps.TravelMode.DRIVING,
         avoidHighways: !useHighway,
         avoidFerries: true,
-        provideRouteAlternatives: true,
       },
       async (result, status) => {
         if (status !== "OK" || !result) {
@@ -137,66 +134,59 @@ export default function GoogleMap() {
           return;
         }
 
-        // 取得した最初のルートの leg を使って住所を取り出し
         const firstLeg = result.routes[0].legs[0];
         const startRaw = firstLeg.start_address;
-        const endRaw   = firstLeg.end_address;
+        const endRaw = firstLeg.end_address;
 
-        // 「北海道⇔それ以外」の組み合わせなら計算不可
         const isStartHokkaido = startRaw.includes("北海道");
-        const isEndHokkaido   = endRaw.includes("北海道");
+        const isEndHokkaido = endRaw.includes("北海道");
         if (isStartHokkaido !== isEndHokkaido) {
-          alert("フェリー利用区間は計算できません");
+          alert("北海道と本州を指定すると、フェリー利用となるため、計算できません");
           return;
         }
 
-        // 複数ルートからフェリー区間を含まないものを選択
-const landOnly = result.routes.find(route =>
-  !route.legs.some(leg =>
-    leg.steps.some(step =>
-      (step.instructions || '').includes('フェリー')
-    )
-  )
-);
-
+        const landOnly = result.routes.find(route =>
+          !route.legs.some(leg =>
+            leg.steps.some(step =>
+              (step.instructions || "").includes("フェリー")
+            )
+          )
+        );
         if (!landOnly) {
-          alert("フェリー利用区間は計算できません");
+          alert("「高速道路を利用する」にチェックして再度計算してください！");
           return;
         }
 
-        // 陸路のみのルートを描画
         directionsRendererRef.current!.setDirections({
           ...result,
-          routes: [landOnly]
+          routes: [landOnly],
         });
-       const leg = landOnly.legs[0];
-       // distance プロパティが undefined の可能性を排除
-       if (!leg.distance) {
-       alert('距離情報が取得できませんでした');
-       return;
-       }
-        // ガード通過後に一度だけ距離を算出
+
+        const leg = landOnly.legs[0];
+        if (!leg.distance) {
+          alert("距離情報が取得できませんでした");
+          return;
+        }
         const km = leg.distance.value / 1000;
         setRawKm(km);
         setOriginAddr(leg.start_address.replace(/^日本、,?\s*/, ""));
         setDestinationAddr(leg.end_address.replace(/^日本、,?\s*/, ""));
 
-        // 距離丸め、運賃照会
         const rkm = roundDistance(km, region);
         setRoundedKm(rkm);
 
-        const regionCode  = regionMap[region];
+        const regionCode = regionMap[region];
         const vehicleCode = vehicleMap[vehicle];
         const { data, error } = await supabase
           .from("fare_rates")
           .select("fare_yen")
-          .eq("region_code",  regionCode)
+          .eq("region_code", regionCode)
           .eq("vehicle_code", vehicleCode)
-          .eq("upto_km",      rkm)
+          .eq("upto_km", rkm)
           .maybeSingle();
 
         if (error || !data) {
-          alert("運賃データが見つかりません");
+          alert("運賃計算できません");
           return;
         }
         setFare(data.fare_yen);
@@ -206,7 +196,7 @@ const landOnly = result.routes.find(route =>
 
   return (
     <div>
-      {/* 車種・地域・高速道路利用 */}
+      {/* 操作パネル */}
       <div style={{ marginBottom: 12 }}>
         <fieldset>
           <legend>車種</legend>
@@ -216,31 +206,23 @@ const landOnly = result.routes.find(route =>
                 type="radio"
                 name="vehicle"
                 value={v}
-                checked={vehicle === v}
-                onChange={() => setVehicle(v)}
+                checked={vehicle===v}
+                onChange={()=>setVehicle(v)}
               />
-              {{
-                small:   "小型車(2t)",
-                medium:  "中型車(4t)",
-                large:   "大型車(10t)",
-                trailer: "トレーラ(20t)"
-              }[v]}
+              {{ small:"小型車(2t)", medium:"中型車(4t)", large:"大型車(10t)", trailer:"トレーラ(20t)" }[v]}
             </label>
           ))}
         </fieldset>
         <fieldset style={{ marginTop: 8 }}>
-          <legend>利用運輸局</legend>
-          {([
-            "北海道","東北","関東","北陸信越",
-            "中部","近畿","中国","四国","九州","沖縄"
-          ] as string[]).map(r => (
+          <legend>届出の利用運輸局</legend>
+          {(["北海道","東北","関東","北陸信越","中部","近畿","中国","四国","九州","沖縄"] as string[]).map(r => (
             <label key={r} style={{ marginRight: 8 }}>
               <input
                 type="radio"
                 name="region"
                 value={r}
-                checked={region === r}
-                onChange={() => setRegion(r)}
+                checked={region===r}
+                onChange={()=>setRegion(r)}
               />
               {r}
             </label>
@@ -251,9 +233,8 @@ const landOnly = result.routes.find(route =>
             <input
               type="checkbox"
               checked={useHighway}
-              onChange={e => setUseHighway(e.target.checked)}
-            />
-            高速道路を利用する
+              onChange={e=>setUseHighway(e.target.checked)}
+            /> 高速道路を利用する
           </label>
         </div>
       </div>
@@ -300,14 +281,9 @@ const landOnly = result.routes.find(route =>
             <dd style={{ marginLeft: 120 }}>{useHighway ? "利用する" : "利用しない"}</dd>
             <dt style={{ float: "left", clear: "left", width: 120 }}>車種</dt>
             <dd style={{ marginLeft: 120 }}>
-              {{
-                small:   "小型車(2t)",
-                medium:  "中型車(4t)",
-                large:   "大型車(10t)",
-                trailer: "トレーラ(20t)"
-              }[vehicle]}
+              {{ small:"小型車(2t)", medium:"中型車(4t)", large:"大型車(10t)", trailer:"トレーラ(20t)" }[vehicle]}
             </dd>
-            <dt style={{ float: "left", clear: "left", width: 120 }}>管轄運輸局</dt>
+            <dt style={{ float: "left", clear: "left", width: 120 }}>届出の運輸局</dt>
             <dd style={{ marginLeft: 120 }}>{region}運輸局</dd>
           </dl>
         </div>
@@ -315,15 +291,10 @@ const landOnly = result.routes.find(route =>
 
       {/* 注意書き */}
       <div style={{
-        marginTop: 24,
-        padding: "0 16px",
-        fontSize: 12,
-        lineHeight: 1.6,
-        color: "#555",
-        maxWidth: 600
+        marginTop: 24, padding: "0 16px", fontSize: 12, lineHeight: 1.6, color: "#555", maxWidth: 600
       }}>
         <p>●標準的運賃は、令和６年国土交通省告示第209号（2024/03/22）を踏まえ算出されます。</p>
-        <p>●四国－九州ルートの一部では、フェリーによる海上距離を含めて算出される場合がありますので、高速道路を利用するにチェックを入れてください。</p>
+        <p>●距離の算出にはGoogle Maps APIを利用しています。</p>
         <p>●算出される距離と実際の走行距離に誤差が発生する場合があります。</p>
         <p>●地図データの状況により出発地の住所が取得できない場合は、近隣エリアを起点、終点として算出します。</p>
         <p>●割増、割引、燃料サーチャージ、高速道路利用料金などの詳細計算につきましては、７～８月頃の公開を予定しています。</p>
