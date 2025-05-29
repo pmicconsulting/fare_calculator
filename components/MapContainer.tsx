@@ -7,20 +7,28 @@ export interface MapContainerProps {
 
 export const MapContainer: React.FC<MapContainerProps> = ({ onClick }) => {
   const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstance = useRef<google.maps.Map | null>(null);
+  const renderer = useRef<google.maps.DirectionsRenderer | null>(null);
 
   useEffect(() => {
-    if (!mapRef.current) return;
-
+    if (!mapRef.current || !window.google || mapInstance.current) return;
     const map = new window.google.maps.Map(mapRef.current, {
-      center: { lat: 35.68, lng: 139.76 },
+      center: { lat: 37, lng: 138 },
       zoom: 6,
+      mapTypeId: "roadmap",
+      zoomControl: true,
+      streetViewControl: false,
+      fullscreenControl: false,
     });
-
-    // ←ここ重要！親から渡された onClick を使う
-    map.addListener("click", (e: google.maps.MapMouseEvent) => onClick(e));
-    window.map = map;
-    window.renderer = new window.google.maps.DirectionsRenderer({ map });
+    mapInstance.current = map;
+    renderer.current = new window.google.maps.DirectionsRenderer({
+      map,
+      suppressMarkers: true,
+      polylineOptions: { strokeColor: "#0000FF" },
+      preserveViewport: true,
+    });
+    map.addListener("click", onClick);
   }, [onClick]);
 
-  return <div ref={mapRef} style={{ width: "100%", height: 400 }} />;
+  return <div ref={mapRef} style={{ width: "100%", height: 400, position: "relative" }} />;
 };
