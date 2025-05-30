@@ -1,57 +1,54 @@
-// components/DetailedSettings.tsx
 import React from "react";
-
-export interface DetailedSettingsProps {
-  // 親コンポーネントへ渡すコールバック
-  onChange: (settings: DetailedSettingsState) => void;
-}
 
 export type DetailedSettingsState = {
   waitingTimeMin: number;
   fuelSurcharge: number;
   workCharge: boolean;
-  // …必要に応じて他の設定項目を追加
 };
 
-export const DetailedSettings: React.FC<DetailedSettingsProps> = ({ onChange }) => {
-  const [waitingTimeMin, setWaitingTimeMin] = React.useState(0);
-  const [fuelSurcharge, setFuelSurcharge] = React.useState(0);
-  const [workCharge, setWorkCharge] = React.useState(false);
+type Props = {
+  value: DetailedSettingsState;
+  onChange: (v: DetailedSettingsState) => void;
+};
 
-  React.useEffect(() => {
-    onChange({ waitingTimeMin, fuelSurcharge, workCharge });
-  }, [waitingTimeMin, fuelSurcharge, workCharge, onChange]);
-
+export function DetailedSettings({ value, onChange }: Props) {
   return (
-    <div style={{ border: "1px solid #ccc", padding: 12, marginTop:24 }}>
-      <h3>詳細な条件設定</h3>
-      <label>
-        待機時間（分）：
-        <input
-          type="number"
-          value={waitingTimeMin}
-          onChange={e => setWaitingTimeMin(+e.target.value)}
-        />
-      </label>
-      <br/>
-      <label>
-        燃料サーチャージ（円）：
-        <input
-          type="number"
-          value={fuelSurcharge}
-          onChange={e => setFuelSurcharge(+e.target.value)}
-        />
-      </label>
-      <br/>
-      <label>
-        作業料金を含む
-        <input
-          type="checkbox"
-          checked={workCharge}
-          onChange={e => setWorkCharge(e.target.checked)}
-        />
-      </label>
-      {/* 他の項目も同様に追加 */}
-    </div>
+    <fieldset style={{ marginTop: 16, border: "1px solid #aaa", borderRadius: 6, padding: 12 }}>
+      <legend>追加料金設定</legend>
+      <div style={{ marginBottom: 8 }}>
+        <label>
+          待機時間（分）:{" "}
+          <input
+            type="number"
+            min={0}
+            value={value.waitingTimeMin}
+            onChange={e => onChange({ ...value, waitingTimeMin: Number(e.target.value) })}
+            style={{ width: 60 }}
+          />
+        </label>
+      </div>
+      <div style={{ marginBottom: 8 }}>
+        <label>
+          燃料サーチャージ（円）:{" "}
+          <input
+            type="number"
+            min={0}
+            value={value.fuelSurcharge}
+            onChange={e => onChange({ ...value, fuelSurcharge: Number(e.target.value) })}
+            style={{ width: 80 }}
+          />
+        </label>
+      </div>
+      <div>
+        <label>
+          <input
+            type="checkbox"
+            checked={value.workCharge}
+            onChange={e => onChange({ ...value, workCharge: e.target.checked })}
+          />
+          作業料金（2,000円）を加算する
+        </label>
+      </div>
+    </fieldset>
   );
-};
+}

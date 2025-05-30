@@ -1,10 +1,7 @@
-// pages/_app.tsx
+import "../styles/global.css";
 
-// 相対パスで globals.css を読み込む
-import "../styles/globals.css";
+import type { AppProps } from 'next/app';
 
-import type { AppProps } from "next/app";
-
-export default function App({ Component, pageProps }: AppProps) {
+export default function MyApp({ Component, pageProps }: AppProps) {
   return <Component {...pageProps} />;
 }

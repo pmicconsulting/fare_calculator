@@ -5,14 +5,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { roundDistance } from "../lib/fareUtils";
-import { DetailedSettings, DetailedSettingsState } from "../components/DetailedSettings";
-
-declare global {
-  interface Window {
-    initMap: () => void;
-    google: typeof google;
-  }
-}
+import { DetailedSettings, DetailedSettingsState } from "./DetailedSettings";
 
 // 地域名→region_code マッピング
 const regionMap: Record<string, number> = {
@@ -101,7 +94,8 @@ export default function GoogleMap() {
     map.addListener("click", (e: google.maps.MapMouseEvent) => {
       if (!e.latLng) return;
       const ev = e.domEvent as MouseEvent;
-      setMenuPos({ x: ev.clientX, y: ev.clientY });
+      // クリック位置の右上近くにサブメニューを表示
+      setMenuPos({ x: ev.clientX + 10, y: ev.clientY - 10 });
       setClickedLatLng({ lat: e.latLng.lat(), lng: e.latLng.lng() });
       setMenuOpen(true);
     });
@@ -151,6 +145,7 @@ export default function GoogleMap() {
       return;
     }
 
+    // 道路経路を取得し描画＆距離取得（フェリー利用不可・高速道路条件反映）
     new window.google.maps.DirectionsService().route({
       origin,
       destination: dest,
@@ -162,13 +157,7 @@ export default function GoogleMap() {
         alert("ルート取得エラー：" + status);
         return;
       }
-      const leg = result.routes[0].legs[0];
-      const sh = leg.start_address.includes("北海道");
-      const eh = leg.end_address.includes("北海道");
-      if (sh !== eh) {
-        alert("北海道⇔本州フェリー区間は計算できません");
-        return;
-      }
+      // フェリー区間を含むルートは除外
       const landOnly = result.routes.find(r =>
         !r.legs.some(l =>
           l.steps.some(s => (s.instructions||"").includes("フェリー"))
@@ -184,18 +173,31 @@ export default function GoogleMap() {
         routes: [landOnly],
       });
 
-      const km = landOnly.legs[0].distance!.value / 1000;
+      const leg = landOnly.legs[0];
+      const sh = leg.start_address.includes("北海道");
+      const eh = leg.end_address.includes("北海道");
+      if (sh !== eh) {
+        alert("北海道⇔本州フェリー区間は計算できません");
+        return;
+      }
+
+      const km = leg.distance!.value / 1000;
       setRawKm(km);
       setOriginAddr(leg.start_address.replace(/^日本、,?\s*/,""));
       setDestinationAddr(leg.end_address.replace(/^日本、,?\s*/,""));
-      setRoundedKm(roundDistance(km, region));
+      const rounded = roundDistance(km, region);
+      setRoundedKm(rounded);
+
+      // Supabaseから運賃取得
+      const regionCode  = regionMap[region];
+      const vehicleCode = vehicleMap[vehicle];
 
       const { data, error } = await supabase
         .from("fare_rates")
         .select("fare_yen")
-        .eq("region_code", regionMap[region])
-        .eq("vehicle_code", vehicleMap[vehicle])
-        .eq("upto_km", Math.round(roundDistance(km, region)))
+        .eq("region_code", regionCode)
+        .eq("vehicle_code", vehicleCode)
+        .eq("upto_km", rounded)
         .maybeSingle();
 
       if (error || !data) {
@@ -336,7 +338,7 @@ export default function GoogleMap() {
             <dt style={{ float:"left", clear:"left", width:120 }}>到着地：住所</dt>
             <dd style={{ marginLeft:120 }}>{destinationAddr}</dd>
             <dt style={{ float:"left", clear:"left", width:120 }}>経路上の距離</dt>
-            <dd style={{ marginLeft:120 }}>{rawKm!.toFixed(1)}km</dd>
+            <dd style={{ marginLeft:120 }}>{rawKm!=null ? rawKm.toFixed(1) : ""}km</dd>
             <dt style={{ float:"left", clear:"left", width:120 }}>運賃計算距離</dt>
             <dd style={{ marginLeft:120 }}>{roundedKm}km</dd>
             <dt style={{ float:"left", clear:"left", width:120 }}>高速道路利用</dt>

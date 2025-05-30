@@ -1,9 +1,28 @@
-// src/utils/constants.ts
-export const regionMap: Record<string, number> = {
-  北海道: 1, 東北: 2, 関東: 3, 北陸信越: 4,
-  中部: 5, 近畿: 6, 中国: 7, 四国: 8, 九州: 9, 沖縄: 10,
+// 地域と車種のマッピング（DBと一致させること！）
+export const regionMap: Record<string, string> = {
+  "北海道": "HOKKAIDO",
+  "東北": "TOHOKU",
+  "関東": "KANTO",
+  "北陸信越": "HOKURIKU_SHINETSU",
+  "中部": "CHUBU",
+  "近畿": "KINKI",
+  "中国": "CHUGOKU",
+  "四国": "SHIKOKU",
+  "九州": "KYUSHU",
+  "沖縄": "OKINAWA"
 };
 
-export const vehicleMap: Record<"small"|"medium"|"large"|"trailer", number> = {
-  small: 1, medium: 2, large: 3, trailer: 4,
+export const vehicleMap: Record<string, string> = {
+  small: "SMALL",
+  medium: "MEDIUM",
+  large: "LARGE",
+  trailer: "TRAILER"
+};
+
+// 日本語ラベル
+export const vehicleLabel: Record<string, string> = {
+  small: "小型車(2t)",
+  medium: "中型車(4t)",
+  large: "大型車(10t)",
+  trailer: "トレーラ(20t)"
 };
