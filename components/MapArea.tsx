@@ -1,104 +1,159 @@
-import React, { useRef, useEffect, useState } from "react";
-import MapContainer from "./MapContainer";
+import React, {
+  useRef,
+  useEffect,
+  useState,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
 
-// ピン色定義
-const PIN_ICONS = {
-  origin: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
-  destination: "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
-  waypoint: [
-    "http://maps.google.com/mapfiles/ms/icons/green-dot.png", // 経由地1
-    "http://maps.google.com/mapfiles/ms/icons/ltblue-dot.png", // 経由地2
-    "http://maps.google.com/mapfiles/ms/icons/yellow-dot.png", // 経由地3
-    "http://maps.google.com/mapfiles/ms/icons/purple-dot.png", // 経由地4
-    "http://maps.google.com/mapfiles/ms/icons/orange-dot.png", // 経由地5
-  ]
-};
-
-type PinType = "origin" | "destination" | { type: "waypoint", index: number };
+type PinType = "origin" | "destination";
 type PinInfo = {
   type: PinType;
   marker: google.maps.Marker;
   position: google.maps.LatLngLiteral;
 };
 
-interface Props {
-  onPinsChange?: (pins: PinInfo[]) => void;
-}
+type Props = {
+  useHighway: boolean;
+  onRouteDraw: (
+    pins: PinInfo[],
+    km: number,
+    route: google.maps.DirectionsRoute | null
+  ) => void;
+};
 
-const MapArea: React.FC<Props> = ({ onPinsChange }) => {
+const MapArea = forwardRef(function MapArea(props: Props, ref) {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapIns = useRef<google.maps.Map | null>(null);
+
   const [pins, setPins] = useState<PinInfo[]>([]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
   const [clickedLatLng, setClickedLatLng] = useState<google.maps.LatLngLiteral | null>(null);
-  const [showWaypointMenu, setShowWaypointMenu] = useState(false);
 
-  const mapIns = useRef<google.maps.Map | null>(null);
+  const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
 
   useEffect(() => {
-    if (!window.google || !(window as any).map) return;
-    mapIns.current = (window as any).map as google.maps.Map;
+    if (!window.google || !mapRef.current || mapIns.current) return;
+    const map = new window.google.maps.Map(mapRef.current, {
+      center: { lat: 37, lng: 138 },
+      zoom: 6,
+      mapTypeId: "roadmap",
+    });
+    mapIns.current = map;
+
+    const renderer = new window.google.maps.DirectionsRenderer({
+      map: map,
+      suppressMarkers: true,
+      polylineOptions: { strokeColor: "#0000FF" },
+      preserveViewport: true,
+    });
+    directionsRendererRef.current = renderer;
+
+    map.addListener("click", (e: google.maps.MapMouseEvent) => {
+      if (!e.latLng) return;
+      const ev = e.domEvent as MouseEvent;
+      setMenuPos({ x: ev.clientX, y: ev.clientY });
+      setClickedLatLng({ lat: e.latLng.lat(), lng: e.latLng.lng() });
+      setMenuOpen(true);
+    });
   }, []);
 
-  // 地図クリック時の処理
-  const handleMapClick = (e: google.maps.MapMouseEvent, relative: { x: number; y: number }) => {
-    if (!e.latLng) return;
-    setMenuPos({ x: relative.x + 10, y: relative.y + 10 });
-    setClickedLatLng({ lat: e.latLng.lat(), lng: e.latLng.lng() });
-    setMenuOpen(true);
-    setShowWaypointMenu(false);
-  };
-
-  // ピン追加・置換
   const addOrReplacePin = (type: PinType, pos: google.maps.LatLngLiteral) => {
-    if (!mapIns.current || !pos) return; // マップが取得できない場合は何もしない
-
-    setPins((prev) => {
-      let newPins = prev;
-      // origin/destinationは1個まで、waypointはindex毎に1個まで
-      if (type === "origin" || type === "destination") {
-        newPins = prev.filter((p) => p.type !== type);
-      } else if (typeof type === "object" && type.type === "waypoint") {
-        newPins = prev.filter(
-          (p) =>
-            !(typeof p.type === "object" && p.type.type === "waypoint" && p.type.index === type.index)
-        );
-      }
-      prev.forEach((p) => {
-        if (
-          (type === "origin" && p.type === "origin") ||
-          (type === "destination" && p.type === "destination") ||
-          (typeof type === "object" && type.type === "waypoint" &&
-            typeof p.type === "object" && p.type.type === "waypoint" && p.type.index === type.index)
-        ) {
-          p.marker.setMap(null);
-        }
-      });
-
-      let iconUrl = "";
-      if (type === "origin") iconUrl = PIN_ICONS.origin;
-      else if (type === "destination") iconUrl = PIN_ICONS.destination;
-      else if (typeof type === "object" && type.type === "waypoint") iconUrl = PIN_ICONS.waypoint[type.index];
-
-      const marker = new window.google.maps.Marker({
-        position: pos,
-        map: mapIns.current!,
-        icon: {
-          url: iconUrl,
-          scaledSize: new window.google.maps.Size(32, 32),
-          anchor: new window.google.maps.Point(16, 32),
-        }
-      });
-
-      return [...newPins, { type, marker, position: pos }];
+    // 既存ピンを地図から削除
+    const oldPin = pins.find((p) => p.type === type);
+    if (oldPin) {
+      oldPin.marker.setMap(null);
+    }
+    // 新しいピンを作成
+    const iconUrl =
+      type === "origin"
+        ? "http://maps.google.com/mapfiles/ms/icons/blue-dot.png"
+        : "http://maps.google.com/mapfiles/ms/icons/red-dot.png";
+    const marker = new window.google.maps.Marker({
+      position: pos,
+      map: mapIns.current!,
+      icon: {
+        url: iconUrl,
+        scaledSize: new window.google.maps.Size(32, 32),
+        anchor: new window.google.maps.Point(16, 32),
+      },
     });
+    // pins状態を更新（同じtypeのピンは除外して新しいピンを追加）
+    setPins((prev) => [
+      ...prev.filter((p) => p.type !== type),
+      { type, marker, position: pos },
+    ]);
     setMenuOpen(false);
-    setShowWaypointMenu(false);
-    if (onPinsChange) setTimeout(() => onPinsChange(pins), 0);
   };
 
-  // サブメニュー
-  const renderMenu = () =>
-    menuOpen && menuPos && clickedLatLng ? (
+  // 経路描画（親から呼び出し用）
+  const drawRoute = () => {
+    if (!directionsRendererRef.current) return;
+    const originPin = pins.find((p) => p.type === "origin");
+    const destPin = pins.find((p) => p.type === "destination");
+    if (!originPin || !destPin) {
+      directionsRendererRef.current.setDirections({ routes: [] });
+      props.onRouteDraw(pins, 0, null);
+      return;
+    }
+
+    new window.google.maps.DirectionsService().route(
+      {
+        origin: originPin.position,
+        destination: destPin.position,
+        travelMode: window.google.maps.TravelMode.DRIVING,
+        avoidHighways: !props.useHighway,
+        avoidFerries: true,
+      },
+      (result, status) => {
+        if (status !== "OK" || !result || !result.routes.length) {
+          directionsRendererRef.current!.setDirections({ routes: [] });
+          props.onRouteDraw(pins, 0, null);
+          return;
+        }
+        const landOnly = result.routes.find(
+          (r) =>
+            !r.legs.some((l) =>
+              l.steps.some((s) => (s.instructions || "").includes("フェリー"))
+            )
+        );
+        const route = landOnly || result.routes[0];
+        directionsRendererRef.current!.setDirections({
+          ...result,
+          routes: [route],
+        });
+        const totalMeters = route.legs.reduce(
+          (sum, leg) => sum + (leg.distance?.value || 0),
+          0
+        );
+        props.onRouteDraw(pins, totalMeters / 1000, route);
+      }
+    );
+  };
+
+  useImperativeHandle(ref, () => ({
+    drawRoute,
+  }));
+
+  const menuItems = [
+    {
+      label: (
+        <span style={{ color: "blue", fontWeight: "bold" }}>出発地に設定</span>
+      ),
+      onClick: () => addOrReplacePin("origin", clickedLatLng!),
+    },
+    {
+      label: (
+        <span style={{ color: "red", fontWeight: "bold" }}>目的地に設定</span>
+      ),
+      onClick: () => addOrReplacePin("destination", clickedLatLng!),
+    },
+  ];
+
+  const renderMenu = () => {
+    if (!menuOpen || !menuPos || !clickedLatLng) return null;
+    return (
       <div
         style={{
           position: "absolute",
@@ -110,70 +165,56 @@ const MapArea: React.FC<Props> = ({ onPinsChange }) => {
           zIndex: 1000,
           display: "flex",
           flexDirection: "column",
-          minWidth: 170,
+          minWidth: 160,
         }}
       >
-        <button
-          style={{ color: "blue", fontWeight: "bold", padding: 8, border: "none", background: "none", textAlign: "left", fontSize: 15, cursor: "pointer" }}
-          onClick={() => addOrReplacePin("origin", clickedLatLng!)}
-        >出発地に設定</button>
-        <button
-          style={{ color: "red", fontWeight: "bold", padding: 8, border: "none", background: "none", textAlign: "left", fontSize: 15, cursor: "pointer" }}
-          onClick={() => addOrReplacePin("destination", clickedLatLng!)}
-        >目的地に設定</button>
-        <button
-          style={{ color: "#ffaa00", fontWeight: "bold", padding: 8, border: "none", background: "none", textAlign: "left", fontSize: 15, cursor: "pointer" }}
-          onClick={() => setShowWaypointMenu(true)}
-        >経由地を設定</button>
-      </div>
-    ) : null;
-
-  // 経由地サブメニュー（完全に重ねて表示。overflowやz-index対策済み）
-  const renderWaypointMenu = () =>
-    showWaypointMenu && menuPos && clickedLatLng ? (
-      <div
-        style={{
-          position: "absolute",
-          left: menuPos.x + 10,
-          top: menuPos.y + 36,
-          background: "#fff",
-          boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
-          borderRadius: 4,
-          zIndex: 1100,
-          display: "flex",
-          flexDirection: "column",
-          minWidth: 170,
-        }}
-      >
-        {[0, 1, 2, 3, 4].map(i => (
+        {menuItems.map((item, idx) => (
           <button
-            key={i}
+            key={idx}
             style={{
-              color: "#ffaa00",
-              padding: "8px 10px",
+              padding: 8,
               border: "none",
               background: "none",
-              fontWeight: "bold",
               textAlign: "left",
+              cursor: "pointer",
               fontSize: 15,
-              cursor: "pointer"
             }}
-            onClick={() => addOrReplacePin({ type: "waypoint", index: i }, clickedLatLng)}
-          >経由地{i + 1}に設定</button>
+            onClick={item.onClick}
+          >
+            {item.label}
+          </button>
         ))}
       </div>
-    ) : null;
+    );
+  };
 
   return (
-    <div style={{ position: "relative", width: "100%", height: 420 }}>
-      <MapContainer onMapClick={handleMapClick} />
+    <div
+      className="map-area"
+      style={{ position: "relative", width: "100%", height: 420 }}
+    >
+      <div
+        ref={mapRef}
+        style={{
+          width: "100%",
+          height: "420px",
+          background: "#eee",
+          border: "1px solid #bbb",
+        }}
+      />
       {renderMenu()}
-      {renderWaypointMenu()}
-      <div style={{ marginTop: 8, fontSize: 12, textAlign: "right", color: "#888" }}>
-        地図上をクリックして出発地・目的地・経由地を設定してください
+      <div
+        style={{
+          marginTop: 8,
+          fontSize: 12,
+          textAlign: "right",
+          color: "#888",
+        }}
+      >
+        地図上をクリックして出発地・目的地を設定してください
       </div>
     </div>
   );
-};
+});
 
 export default MapArea;

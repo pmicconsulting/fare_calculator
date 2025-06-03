@@ -14,17 +14,17 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.4",
-    "next": "15.3.2",
+    "next": "^15.3.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "@types/google.maps": "^3.58.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.3.2",
-    "@types/google.maps": "^3.58.1"
+    "typescript": "^5"
   }
 }

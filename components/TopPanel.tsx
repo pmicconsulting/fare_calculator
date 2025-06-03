@@ -1,5 +1,7 @@
 import React from "react";
+import AddressForm from "./AddressForm";
 import { VehicleType, RegionType, DistanceType, TollType } from "../pages/index";
+import { DetailedSettings, DetailedSettingsState } from "./DetailedSettings"; // 追加
 
 type Props = {
   vehicle: VehicleType;
@@ -13,6 +15,16 @@ type Props = {
   toll: TollType;
   setToll: (t: TollType) => void;
   onCalcFare: () => void;
+  from: string;
+  setFrom: (v: string) => void;
+  tos: string[];
+  setTos: (v: string[]) => void;
+  to: string;
+  setTo: (v: string) => void;
+  detailedSettingsEnabled: boolean; // 追加
+  setDetailedSettingsEnabled: (enabled: boolean) => void; // 追加
+  detailedSettings: DetailedSettingsState; // 追加
+  setDetailedSettings: (v: DetailedSettingsState) => void; // 追加
 };
 
 const VEHICLE_LABELS: { value: VehicleType; label: string }[] = [
@@ -41,6 +53,8 @@ export default function TopPanel(props: Props) {
     useHighway, setUseHighway,
     toll, setToll,
     onCalcFare,
+    from, setFrom, tos, setTos, to, setTo,
+    detailedSettingsEnabled, setDetailedSettingsEnabled, detailedSettings, setDetailedSettings,
   } = props;
 
   return (
@@ -123,20 +137,27 @@ export default function TopPanel(props: Props) {
         <div className="toll-btns grid-2col">
           <button
             className={`panel-btn${toll === "apply" ? " selected" : ""}`}
-            onClick={() => setToll("apply")}
+            onClick={() => {
+              setToll("apply");
+              setDetailedSettingsEnabled(true); // 詳細設定画面を表示
+            }}
             type="button"
           >
             適用する
           </button>
           <button
             className={`panel-btn${toll === "not_apply" ? " selected" : ""}`}
-            onClick={() => setToll("not_apply")}
+            onClick={() => {
+              setToll("not_apply");
+              setDetailedSettingsEnabled(false); // 詳細設定画面を非表示
+            }}
             type="button"
           >
             適用しない
           </button>
         </div>
       </div>
+      {/* 住所で距離フォーム */}
     </div>
   );
 }
