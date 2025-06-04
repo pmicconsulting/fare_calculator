@@ -65,7 +65,7 @@ const DetailedSettings: React.FC<Props> = ({ value, onChange }) => {
                 onChange={e => onChange({ ...value, fuelSurchargeValue: e.target.value })}
                 style={{ width: "80px", textAlign: "right", marginRight: 4 }}
               />
-              <span>円</span>
+              <span>円（計算時点の燃料単価）</span>
             </div>
           )}
         </div>
@@ -113,7 +113,7 @@ const DetailedSettings: React.FC<Props> = ({ value, onChange }) => {
                 onChange={e => onChange({ ...value, forwardingFeeValue: e.target.value })}
                 style={{ width: "80px", textAlign: "right", marginRight: 4 }}
               />
-              <span>円</span>
+              <span>％</span>
             </div>
           )}
         </div>
@@ -277,7 +277,7 @@ const DetailedSettings: React.FC<Props> = ({ value, onChange }) => {
           fontWeight: "bold",
           marginBottom: 8
         }}>
-          遅速割（納期前倒し）
+          速達割増（納期前倒し）
         </div>
         <div style={{ 
           display: "flex", 

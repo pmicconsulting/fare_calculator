@@ -5,6 +5,7 @@ import React, {
   forwardRef,
   useImperativeHandle,
 } from "react";
+import { RegionType } from "../lib/codeMaps";
 
 type PinType = "origin" | "destination";
 type PinInfo = {
@@ -15,6 +16,7 @@ type PinInfo = {
 
 type Props = {
   useHighway: boolean;
+  region?: RegionType; // 追加
   onRouteDraw: (
     pins: PinInfo[],
     km: number,
@@ -22,7 +24,21 @@ type Props = {
   ) => void;
 };
 
+const REGION_COORDINATES: Record<RegionType, { lat: number; lng: number; zoom: number }> = {
+  北海道: { lat: 43.064615, lng: 141.346807, zoom: 7 },
+  東北: { lat: 38.260, lng: 140.880, zoom: 7 },
+  関東: { lat: 35.689, lng: 139.692, zoom: 8 },
+  北陸信越: { lat: 36.565, lng: 137.658, zoom: 7 },
+  中部: { lat: 35.180, lng: 136.906, zoom: 8 },
+  近畿: { lat: 34.686, lng: 135.520, zoom: 8 },
+  中国: { lat: 34.667, lng: 133.935, zoom: 7 },
+  四国: { lat: 33.842, lng: 133.565, zoom: 8 },
+  九州: { lat: 32.790, lng: 130.742, zoom: 7 },
+  沖縄: { lat: 26.212, lng: 127.681, zoom: 8 },
+};
+
 const MapArea = forwardRef(function MapArea(props: Props, ref) {
+  const { useHighway, region = "関東", onRouteDraw } = props; // regionを追加、デフォルトは関東
   const mapRef = useRef<HTMLDivElement>(null);
   const mapIns = useRef<google.maps.Map | null>(null);
 
@@ -35,9 +51,13 @@ const MapArea = forwardRef(function MapArea(props: Props, ref) {
 
   useEffect(() => {
     if (!window.google || !mapRef.current || mapIns.current) return;
+    
+    // 初期表示の地域座標を取得
+    const initialRegion = REGION_COORDINATES[region];
+    
     const map = new window.google.maps.Map(mapRef.current, {
-      center: { lat: 37, lng: 138 },
-      zoom: 6,
+      center: { lat: initialRegion.lat, lng: initialRegion.lng }, // 変更
+      zoom: initialRegion.zoom, // 変更
       mapTypeId: "roadmap",
     });
     mapIns.current = map;
@@ -53,11 +73,40 @@ const MapArea = forwardRef(function MapArea(props: Props, ref) {
     map.addListener("click", (e: google.maps.MapMouseEvent) => {
       if (!e.latLng) return;
       const ev = e.domEvent as MouseEvent;
-      setMenuPos({ x: ev.clientX, y: ev.clientY });
+      
+      // 地図コンテナの位置を取得
+      const mapContainer = mapRef.current;
+      if (!mapContainer) return;
+      
+      const rect = mapContainer.getBoundingClientRect();
+      
+      // ビューポート座標から地図コンテナに対する相対座標を計算
+      const relativeX = ev.clientX - rect.left;
+      const relativeY = ev.clientY - rect.top;
+      
+      // メニューをカーソルの右上に表示（少しずらす）
+      setMenuPos({ 
+        x: relativeX + 10,  // 右に10pxずらす
+        y: relativeY - 30   // 上に30pxずらす（メニューの高さを考慮）
+      });
       setClickedLatLng({ lat: e.latLng.lat(), lng: e.latLng.lng() });
       setMenuOpen(true);
     });
   }, []);
+
+  // 地域変更時のズーム処理を追加（新規useEffect）
+  useEffect(() => {
+    if (!mapIns.current || !region) return;
+
+    const regionConfig = REGION_COORDINATES[region];
+    if (regionConfig) {
+      // スムーズに移動
+      mapIns.current.panTo({ lat: regionConfig.lat, lng: regionConfig.lng });
+      setTimeout(() => {
+        mapIns.current?.setZoom(regionConfig.zoom);
+      }, 300);
+    }
+  }, [region]);
 
   const addOrReplacePin = (type: PinType, pos: google.maps.LatLngLiteral) => {
     // 既存ピンを地図から削除
@@ -94,7 +143,7 @@ const MapArea = forwardRef(function MapArea(props: Props, ref) {
     const destPin = pins.find((p) => p.type === "destination");
     if (!originPin || !destPin) {
       directionsRendererRef.current.setDirections({ routes: [] });
-      props.onRouteDraw(pins, 0, null);
+      onRouteDraw(pins, 0, null);
       return;
     }
 
@@ -103,13 +152,13 @@ const MapArea = forwardRef(function MapArea(props: Props, ref) {
         origin: originPin.position,
         destination: destPin.position,
         travelMode: window.google.maps.TravelMode.DRIVING,
-        avoidHighways: !props.useHighway,
+        avoidHighways: !useHighway,
         avoidFerries: true,
       },
       (result, status) => {
         if (status !== "OK" || !result || !result.routes.length) {
           directionsRendererRef.current!.setDirections({ routes: [] });
-          props.onRouteDraw(pins, 0, null);
+          onRouteDraw(pins, 0, null);
           return;
         }
         const landOnly = result.routes.find(
@@ -127,7 +176,7 @@ const MapArea = forwardRef(function MapArea(props: Props, ref) {
           (sum, leg) => sum + (leg.distance?.value || 0),
           0
         );
-        props.onRouteDraw(pins, totalMeters / 1000, route);
+        onRouteDraw(pins, totalMeters / 1000, route);
       }
     );
   };

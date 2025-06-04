@@ -122,38 +122,134 @@ const AddressForm = forwardRef((props: Props, ref) => {
   return (
     <div className="address-form">
       <div className="address-row">
-        <span className="address-label">出発地</span>
+        <span
+          className="address-label"
+          style={{
+            minWidth: 140,
+            background: "#28a745",
+            color: "#fff",
+            borderRadius: 6,
+            textAlign: "center",
+            padding: "10px 0",
+            fontWeight: "bold",
+            fontSize: 15,
+          }}
+        >
+          出発地
+        </span>
         <input
           value={from}
-          onChange={e => setFrom(e.target.value)}
-          placeholder='「住所」又は「市町村＋事業所名」を入力'
-          style={{ width: "400px" }}
+          onChange={(e) => setFrom(e.target.value)}
+          placeholder="「住所」又は「市町村＋事業所名」を入力"
+          style={{
+            marginLeft: 20,
+            width: 480, // FerryFormと同じ幅
+            height: 56, // FerryFormと同じ高さ
+            fontSize: 15,
+            borderRadius: 6,
+            border: "2px solid #bbb",
+            padding: "0 12px",
+          }}
           disabled={loading}
         />
       </div>
       {tos.map((v, i) => (
         <div className="address-row" key={i}>
-          <span className="address-label">経由地</span>
+          <span
+            className="address-label"
+            style={{
+              minWidth: 140,
+              background: "#28a745",
+              color: "#fff",
+              borderRadius: 6,
+              textAlign: "center",
+              padding: "10px 0",
+              fontWeight: "bold",
+              fontSize: 15,
+            }}
+          >
+            経由地
+          </span>
           <input
             value={v}
-            onChange={e => updateVia(i, e.target.value)}
-            placeholder='「住所」又は「市町村＋事業所名」を入力'
-            style={{ width: "400px" }}
+            onChange={(e) => updateVia(i, e.target.value)}
+            placeholder="「住所」又は「市町村＋事業所名」を入力"
+            style={{
+              marginLeft: 20,
+              width: 480, // FerryFormと同じ幅
+              height: 56, // FerryFormと同じ高さ
+              fontSize: 15,
+              borderRadius: 6,
+              border: "2px solid #bbb",
+              padding: "0 12px",
+            }}
             disabled={loading}
           />
-          <button type="button" onClick={() => removeVia(i)} disabled={tos.length === 1 || loading}>－</button>
+          <button
+            type="button"
+            onClick={() => removeVia(i)}
+            disabled={tos.length === 1 || loading}
+            style={{
+              marginLeft: 10,
+              padding: "8px 12px",
+              fontSize: 15,
+              borderRadius: 6,
+              border: "2px solid #bbb",
+              background: "#fff",
+              cursor: "pointer",
+            }}
+          >
+            －
+          </button>
           {i === tos.length - 1 && tos.length < 5 && (
-            <button type="button" onClick={addVia} disabled={loading}>＋</button>
+            <button
+              type="button"
+              onClick={addVia}
+              disabled={loading}
+              style={{
+                marginLeft: 10,
+                padding: "8px 12px",
+                fontSize: 15,
+                borderRadius: 6,
+                border: "2px solid #bbb",
+                background: "#fff",
+                cursor: "pointer",
+              }}
+            >
+              ＋
+            </button>
           )}
         </div>
       ))}
       <div className="address-row">
-        <span className="address-label">到着地</span>
+        <span
+          className="address-label"
+          style={{
+            minWidth: 140,
+            background: "#28a745",
+            color: "#fff",
+            borderRadius: 6,
+            textAlign: "center",
+            padding: "10px 0",
+            fontWeight: "bold",
+            fontSize: 15,
+          }}
+        >
+          到着地
+        </span>
         <input
           value={to}
-          onChange={e => setTo(e.target.value)}
-          placeholder='「住所」又は「市町村＋事業所名」を入力'
-          style={{ width: "400px" }}
+          onChange={(e) => setTo(e.target.value)}
+          placeholder="「住所」又は「市町村＋事業所名」を入力"
+          style={{
+            marginLeft: 20,
+            width: 480, // FerryFormと同じ幅
+            height: 56, // FerryFormと同じ高さ
+            fontSize: 15,
+            borderRadius: 6,
+            border: "2px solid #bbb",
+            padding: "0 12px",
+          }}
           disabled={loading}
         />
       </div>

@@ -383,6 +383,7 @@ export default function Home() {
             <MapArea
               ref={mapRef}
               useHighway={useHighway}
+              region={region} // この行を追加
               onRouteDraw={handleRouteDraw}
             />
             {(fare !== null || error !== null) && (

@@ -34,10 +34,10 @@ export default function FerryForm({
 
   return (
     <div>
-      <InputRow label="出発地" placeholder="住所を入力" value={origin} onChange={setOrigin} />
+      <InputRow label="出発地" placeholder="住所または市町村+事業所名を入力" value={origin} onChange={setOrigin} />
       <InputRow label="乗船する港名" placeholder="港名を入力" value={embarkPort} onChange={setEmbarkPort} />
       <InputRow label="下船する港名" placeholder="港名を入力" value={disembarkPort} onChange={setDisembarkPort} />
-      <InputRow label="到着地" placeholder="住所を入力" value={destination} onChange={setDestination} />
+      <InputRow label="到着地" placeholder="住所または市町村+事業所名を入力" value={destination} onChange={setDestination} />
     </div>
   );
 }
@@ -56,13 +56,13 @@ function InputRow({ label, placeholder, value, onChange }: RowProps) {
       <span
         style={{
           minWidth: 140,
-          background: "#1a78f7",
+          background: "#28a745",
           color: "#fff",
           borderRadius: 6,
           textAlign: "center",
           padding: "10px 0",
           fontWeight: "bold",
-          fontSize: 20,
+          fontSize: 15,
         }}
       >
         {label}
@@ -75,7 +75,7 @@ function InputRow({ label, placeholder, value, onChange }: RowProps) {
           marginLeft: 20,
           width: 480,
           height: 56,
-          fontSize: 20,
+          fontSize: 15,
           borderRadius: 6,
           border: "2px solid #bbb",
           padding: "0 12px",
