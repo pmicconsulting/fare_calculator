@@ -1,238 +1,356 @@
 import React, { useState } from "react";
 
-// DepartureSettingsProps → ArrivalSettingsPropsに変更
+// 荷役タイプのデータ定義
+type LoadingWorkData = {
+  id: string;
+  name: string;
+};
+
+const loadingWorkTypes: LoadingWorkData[] = [
+  { id: "machine", name: "機械荷役" },
+  { id: "manual", name: "手荷役" }
+];
+
 type ArrivalSettingsProps = {
   waitingTimeEnabled: boolean;
   waitingTimeValue: string;
-  // loadingWork → unloadingWorkに変更
-  unloadingWorkEnabled: boolean;
-  unloadingWorkValue: string;
-  unloadingWorkType?: "machine" | "manual";
+  loadingWorkEnabled: boolean;
+  loadingWorkValue: string;
   onWaitingTimeChange: (enabled: boolean, value: string) => void;
-  // onLoadingWorkChange → onUnloadingWorkChangeに変更
-  onUnloadingWorkChange: (enabled: boolean, value: string) => void;
+  onLoadingWorkChange: (enabled: boolean, value: string) => void;
+  loadingWorkType?: "machine" | "manual";
 };
 
-// DepartureSettings → ArrivalSettingsに変更
+// スタイルの修正
+const containerStyle: React.CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: 12,
+  fontFamily: "sans-serif",
+  padding: "12px 0",
+};
+
+const rowStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  marginBottom: 4,
+};
+
+const itemLabelStyle: React.CSSProperties = {
+  background: "#f8d7da",
+  color: "#b94a48",
+  border: "1.5px solid #b94a48",
+  borderRadius: 4,
+  fontWeight: "bold",
+  fontSize: 18,
+  minWidth: 140,
+  textAlign: "left",
+  padding: "8px 16px",
+  marginRight: 24,
+  height: "80px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "flex-start"
+};
+
+const radioGroupStyle: React.CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "flex-start",
+  justifyContent: "center",
+  gap: 8,
+  height: "100%",
+  padding: "8px 16px",
+};
+
+const radioContainerStyle: React.CSSProperties = {
+  border: "1.5px solid #b94a48",
+  borderRadius: 4,
+  background: "#fff",
+  width: 200,
+  height: 80,
+  padding: "0 8px",
+  marginRight: 16,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "flex-start",
+};
+
+const radioLabelStyle = (isSelected: boolean): React.CSSProperties => ({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "flex-start",
+  color: isSelected ? "#b94a48" : "#666",
+  fontWeight: isSelected ? "bold" : "normal",
+  cursor: "pointer",
+  transition: "all 0.2s",
+  fontSize: 14,
+  whiteSpace: "nowrap",
+  width: "100%",
+});
+
+const radioInputStyle: React.CSSProperties = {
+  marginRight: 8,
+  cursor: "pointer",
+  accentColor: "#b94a48",
+};
+
+const inputBoxStyle: React.CSSProperties = {
+  border: "1.5px solid #b94a48",
+  borderRadius: 4,
+  background: "#fff",
+  minWidth: 120,
+  minHeight: 38,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  fontSize: 16,
+  padding: "0 8px",
+  height: "80px",  // 入力ボックスの高さも合わせて調整
+};
+
+const buttonStyle: React.CSSProperties = {
+  border: "none",
+  background: "#b94a48",
+  color: "#fff",
+  padding: "4px 12px",
+  borderRadius: 4,
+  cursor: "pointer",
+  fontSize: 14,
+};
+
+const inputContainerStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+};
+
 const ArrivalSettings: React.FC<ArrivalSettingsProps> = ({
   waitingTimeEnabled,
   waitingTimeValue,
-  // loadingWork → unloadingWorkに変更
-  unloadingWorkEnabled,
-  unloadingWorkValue,
-  unloadingWorkType = "machine",
+  loadingWorkEnabled,
+  loadingWorkValue,
   onWaitingTimeChange,
-  // onLoadingWorkChange → onUnloadingWorkChangeに変更
-  onUnloadingWorkChange,
+  onLoadingWorkChange,
+  loadingWorkType: initialLoadingWorkType,
 }) => {
-  const [tempWaitingValue, setTempWaitingValue] = useState(waitingTimeValue);
-  // tempLoadingValue → tempUnloadingValueに変更
-  const [tempUnloadingValue, setTempUnloadingValue] = useState(unloadingWorkValue);
+  // 待機時間料の状態
   const [showWaitingTime, setShowWaitingTime] = useState(waitingTimeEnabled);
-  // showLoadingWork → showUnloadingWorkに変更
-  const [showUnloadingWork, setShowUnloadingWork] = useState(unloadingWorkEnabled);
-  // loadingWorkType → unloadingWorkTypeに変更
-  const [selectedUnloadingType, setSelectedUnloadingType] = useState(unloadingWorkType);
+  const [tempWaitingTime, setTempWaitingTime] = useState("");
+  const [isWaitingTimeConfirmed, setIsWaitingTimeConfirmed] = useState(false);
 
-  const handleWaitingTimeRadio = (enabled: boolean) => {
-    setShowWaitingTime(enabled);
-    if (!enabled) {
-      setTempWaitingValue("");
+  // 取卸料の状態
+  const [showLoadingWork, setShowLoadingWork] = useState(loadingWorkEnabled);
+  const [selectedLoadingType, setSelectedLoadingType] = useState<string | null>(null);
+  const [isLoadingListExpanded, setIsLoadingListExpanded] = useState(false);
+  const [tempLoadingTime, setTempLoadingTime] = useState("");
+  const [isLoadingTimeConfirmed, setIsLoadingTimeConfirmed] = useState(false);
+
+  // 全角→半角変換関数
+  const toHalfWidth = (str: string): string => {
+    return str.replace(/[０-９．]/g, (s) => {
+      return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
+    });
+  };
+
+  // 入力値の検証関数（1〜600の整数）
+  const isValidTime = (value: string): boolean => {
+    if (!value) return false;
+    const num = parseInt(value, 10);
+    return !isNaN(num) && num >= 1 && num <= 600 && value === num.toString();
+  };
+
+  // ボタンのテキストを決定する関数
+  const getButtonText = (isConfirmed: boolean, isDisabled: boolean): string => {
+    if (isDisabled) return '無効';
+    if (isConfirmed) return '確定済';
+    return '確定';
+  };
+
+  // 待機時間料のハンドラー
+  const handleWaitingTimeToggle = () => {
+    const newValue = !showWaitingTime;
+    setShowWaitingTime(newValue);
+    if (!newValue) {
+      setTempWaitingTime("");
+      setIsWaitingTimeConfirmed(false);
       onWaitingTimeChange(false, "");
+    } else {
+      onWaitingTimeChange(true, tempWaitingTime);
+    }
+  };
+
+  const handleWaitingTimeInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value;
+    const halfWidthValue = toHalfWidth(rawValue);
+    // 数字以外を除去（小数点も除去）
+    const numericValue = halfWidthValue.replace(/[^0-9]/g, '');
+    
+    // 600を超える場合は入力を制限
+    if (numericValue && parseInt(numericValue, 10) > 600) {
+      setTempWaitingTime('600');
+    } else {
+      setTempWaitingTime(numericValue);
     }
   };
 
   const handleWaitingTimeConfirm = () => {
-    onWaitingTimeChange(true, tempWaitingValue);
-  };
-
-  // handleLoadingWorkRadio → handleUnloadingWorkRadioに変更
-  const handleUnloadingWorkRadio = (type: "none" | "machine" | "manual") => {
-    if (type === "none") {
-      // setShowLoadingWork → setShowUnloadingWorkに変更
-      setShowUnloadingWork(false);
-      // setTempLoadingValue → setTempUnloadingValueに変更
-      setTempUnloadingValue("");
-      // onLoadingWorkChange → onUnloadingWorkChangeに変更
-      onUnloadingWorkChange(false, "");
+    if (isWaitingTimeConfirmed) {
+      setIsWaitingTimeConfirmed(false);
     } else {
-      // setShowLoadingWork → setShowUnloadingWorkに変更
-      setShowUnloadingWork(true);
-      // setSelectedLoadingType → setSelectedUnloadingTypeに変更
-      setSelectedUnloadingType(type);
+      if (isValidTime(tempWaitingTime)) {
+        setIsWaitingTimeConfirmed(true);
+        onWaitingTimeChange(true, tempWaitingTime);
+        console.log("待機時間料確定:", tempWaitingTime + "分");
+      }
     }
   };
 
-  // handleLoadingWorkConfirm → handleUnloadingWorkConfirmに変更
-  const handleUnloadingWorkConfirm = () => {
-    // onLoadingWorkChange → onUnloadingWorkChangeに変更
-    onUnloadingWorkChange(true, tempUnloadingValue);
+  // 取卸料のハンドラー
+  const handleLoadingWorkToggle = () => {
+    const newValue = !showLoadingWork;
+    setShowLoadingWork(newValue);
+    if (!newValue) {
+      setSelectedLoadingType(null);
+      setIsLoadingListExpanded(false);
+      setTempLoadingTime("");
+      setIsLoadingTimeConfirmed(false);
+      if (onLoadingWorkChange) { // ← 追加: 存在チェック
+        onLoadingWorkChange(false, "");
+      }
+    } else {
+      setIsLoadingListExpanded(true); // 「適用する」で自動展開
+      if (onLoadingWorkChange) { // ← 追加: 存在チェック
+        onLoadingWorkChange(true, tempLoadingTime);
+      }
+    }
   };
 
-  // スタイルの修正
-  const containerStyle: React.CSSProperties = {
-    display: "flex",
-    flexDirection: "column",
-    gap: 12,
-    fontFamily: "sans-serif",
-    padding: "12px 0",
+  const handleLoadingTypeSelect = (loadingId: string) => {
+    if (selectedLoadingType === loadingId) {
+      // 選択済みをクリックしたら展開
+      setIsLoadingListExpanded(true);
+    } else {
+      // 新規選択
+      setSelectedLoadingType(loadingId);
+      console.log("取卸料タイプ選択:", loadingId);
+      setIsLoadingListExpanded(false);
+    }
   };
 
-  const labelColStyle: React.CSSProperties = {
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "stretch",
+  const handleLoadingTimeInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value;
+    const halfWidthValue = toHalfWidth(rawValue);
+    // 数字以外を除去（小数点も除去）
+    const numericValue = halfWidthValue.replace(/[^0-9]/g, '');
+    
+    // 600を超える場合は入力を制限
+    if (numericValue && parseInt(numericValue, 10) > 600) {
+      setTempLoadingTime('600');
+    } else {
+      setTempLoadingTime(numericValue);
+    }
+  };
+
+  const handleLoadingTimeConfirm = () => {
+    if (isLoadingTimeConfirmed) {
+      setIsLoadingTimeConfirmed(false);
+    } else {
+      if (isValidTime(tempLoadingTime) && selectedLoadingType) {
+        setIsLoadingTimeConfirmed(true);
+        if (onLoadingWorkChange) {
+          onLoadingWorkChange(true, tempLoadingTime);
+        }
+        console.log("取卸料確定:", selectedLoadingType, tempLoadingTime + "分");
+      }
+    }
+  };
+
+  // 追加のスタイル定義
+  const timeLabelStyle: React.CSSProperties = {
+    fontSize: 14,
+    color: '#333',
     marginRight: 8,
+    fontWeight: 'normal',
   };
 
-  const mainLabelStyle: React.CSSProperties = {
-    writingMode: "vertical-rl",
-    background: "#b94a48",
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 20,
+  const timeInputBoxStyle = (isConfirmed: boolean): React.CSSProperties => ({
+    width: 80,
+    height: 36,
+    padding: '0 8px',
+    border: '1.5px solid #b94a48',
     borderRadius: 4,
-    boxShadow: "2px 2px 6px #ccc",
-    padding: "12px 4px",
-    textAlign: "center",
-    minWidth: 36,
-    marginBottom: 0,
-  };
-
-  const itemColStyle: React.CSSProperties = {
-    display: "flex",
-    flexDirection: "column",
-    gap: 12,
-  };
-
-  const rowStyle: React.CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    marginBottom: 4,
-  };
-
-  const itemLabelStyle: React.CSSProperties = {
-    background: "#f8d7da",
-    color: "#b94a48",
-    border: "1.5px solid #b94a48",
-    borderRadius: 4,
-    fontWeight: "bold",
-    fontSize: 18,
-    minWidth: 140,
-    textAlign: "left",         // centerから左寄せに変更
-    padding: "8px 16px",       // パディングを調整
-    marginRight: 24,
-    height: "80px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "flex-start"  // centerからflex-startに変更
-  };
-
-  const optionBoxStyle: React.CSSProperties = {
-    border: "1.5px solid #b94a48",
-    borderRadius: 4,
-    background: "#fff",
-    minWidth: 220,
-    minHeight: 38,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: 16,
-    marginRight: 24,
-    padding: "0 8px",
-  };
-
-  const inputBoxStyle: React.CSSProperties = {
-    border: "1.5px solid #b94a48",
-    borderRadius: 4,
-    background: "#fff",
-    minWidth: 120,
-    minHeight: 38,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: 16,
-    padding: "0 8px",
-    height: "80px",  // 入力ボックスの高さも合わせて調整
-  };
-
-  const buttonStyle: React.CSSProperties = {
-    border: "none",
-    background: "#b94a48",
-    color: "#fff",
-    padding: "4px 12px",
-    borderRadius: 4,
-    cursor: "pointer",
     fontSize: 14,
-  };
-
-  const radioGroupStyle: React.CSSProperties = {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "flex-start",  // 中央揃えから左寄せに変更
-    justifyContent: "center",
-    gap: 8, // ラジオボタン間の間隔を少し広げる
-    height: "100%", // 親要素の高さいっぱいに
-    padding: "8px 16px",  // 左右のパディングを追加
-  };
-
-  const radioContainerStyle: React.CSSProperties = {
-    border: "1.5px solid #b94a48",
-    borderRadius: 4,
-    background: "#fff",
-    width: 200,
-    height: 80, // minHeightからheightに変更
-    padding: "0 8px", // 左右のパディングのみ設定
-    marginRight: 16,
-    display: "flex",
-    alignItems: "center", // 中央寄せに変更
-    justifyContent: "flex-start",  // 中央揃えから左寄せに変更
-  };
-
-  const inputGroupStyle: React.CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    marginLeft: 16,
-  };
-
-  const radioLabelStyle = (isSelected: boolean): React.CSSProperties => ({
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "flex-start",  // 中央揃えから左寄せに変更
-    color: isSelected ? "#b94a48" : "#666",
-    fontWeight: isSelected ? "bold" : "normal",
-    cursor: "pointer",
-    transition: "all 0.2s",
-    fontSize: 14,
-    whiteSpace: "nowrap",
-    width: "100%",  // 幅を100%に設定
+    textAlign: 'center',
+    backgroundColor: isConfirmed ? '#f8f9fa' : '#fff',
+    color: isConfirmed ? '#6c757d' : '#000',
   });
 
-  const radioInputStyle: React.CSSProperties = {
+  const confirmButtonStyle = (isConfirmed: boolean, isDisabled: boolean): React.CSSProperties => ({
+    height: 36,
+    padding: '0 16px',
+    backgroundColor: isDisabled ? '#ccc' : (isConfirmed ? '#28a745' : '#b94a48'),
+    color: isDisabled ? '#666' : '#fff',
+    border: 'none',
+    borderRadius: 4,
+    fontSize: 14,
+    fontWeight: 'bold',
+    cursor: isDisabled ? 'not-allowed' : 'pointer',
+    transition: 'all 0.3s ease',
+    minWidth: 80,
+    opacity: isDisabled ? 0.6 : 1,
+    pointerEvents: isDisabled ? 'none' : 'auto',
+  });
+
+  const unitStyle: React.CSSProperties = {
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 4,
     marginRight: 8,
-    cursor: "pointer",
-    accentColor: "#b94a48",
   };
 
-  const inputContainerStyle: React.CSSProperties = {
-    display: "flex",
-    alignItems: "center",
+  const accordionContainerStyle: React.CSSProperties = {
+    maxHeight: isLoadingListExpanded ? '50px' : selectedLoadingType ? '50px' : '0',
+    overflow: 'hidden',
+    transition: 'max-height 0.3s ease-in-out',
+    marginBottom: 12,
+    display: 'flex',
+    flexDirection: 'row',
+    gap: 8,
+  };
+
+  const loadingItemStyle = (isSelected: boolean): React.CSSProperties => ({
+    padding: '12px 16px',
+    backgroundColor: isSelected ? '#b94a48' : '#fff',
+    color: isSelected ? '#fff' : '#333',
+    border: '1px solid #b94a48',
+    borderRadius: 4,
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    fontSize: 14,
+    display: isSelected || isLoadingListExpanded ? 'block' : 'none',
+    whiteSpace: 'nowrap',
+  });
+
+  const timeInputContainerStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
     gap: 8,
   };
 
   return (
     <div style={containerStyle}>
-      {/* 待機時間料 - 変更なし */}
-      <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
+      {/* 待機時間料 */}
+      <div style={rowStyle}>
         <div style={itemLabelStyle}>待機時間料</div>
         <div style={radioContainerStyle}>
           <div style={radioGroupStyle}>
             <label style={radioLabelStyle(!showWaitingTime)}>
               <input
                 type="radio"
-                name="waitingTime"
+                name="wait"
                 checked={!showWaitingTime}
-                onChange={() => handleWaitingTimeRadio(false)}
+                onChange={handleWaitingTimeToggle}
                 style={radioInputStyle}
               />
               適用しない
@@ -240,9 +358,9 @@ const ArrivalSettings: React.FC<ArrivalSettingsProps> = ({
             <label style={radioLabelStyle(showWaitingTime)}>
               <input
                 type="radio"
-                name="waitingTime"
+                name="wait"
                 checked={showWaitingTime}
-                onChange={() => handleWaitingTimeRadio(true)}
+                onChange={handleWaitingTimeToggle}
                 style={radioInputStyle}
               />
               適用する
@@ -250,91 +368,107 @@ const ArrivalSettings: React.FC<ArrivalSettingsProps> = ({
           </div>
         </div>
         {showWaitingTime && (
-          <div style={inputContainerStyle}>
+          <div style={timeInputContainerStyle}>
+            <span style={timeLabelStyle}>所要時間</span>
             <input
-              type="number"
-              value={tempWaitingValue}
-              onChange={(e) => setTempWaitingValue(e.target.value)}
-              style={inputBoxStyle}
-              placeholder="分"
+              type="text"
+              value={tempWaitingTime}
+              onChange={handleWaitingTimeInputChange}
+              style={timeInputBoxStyle(isWaitingTimeConfirmed)}
+              disabled={isWaitingTimeConfirmed}
+              maxLength={3}
             />
-            <button onClick={handleWaitingTimeConfirm} style={buttonStyle}>
-              確定
+            <span style={unitStyle}>分</span>
+            <button 
+              onClick={handleWaitingTimeConfirm} 
+              style={confirmButtonStyle(isWaitingTimeConfirmed, !isValidTime(tempWaitingTime))}
+              disabled={!isValidTime(tempWaitingTime) && !isWaitingTimeConfirmed}
+              onMouseEnter={(e) => {
+                if (!(!isValidTime(tempWaitingTime) && !isWaitingTimeConfirmed)) {
+                  e.currentTarget.style.backgroundColor = isWaitingTimeConfirmed ? '#218838' : '#a03937';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!(!isValidTime(tempWaitingTime) && !isWaitingTimeConfirmed)) {
+                  e.currentTarget.style.backgroundColor = isWaitingTimeConfirmed ? '#28a745' : '#b94a48';
+                }
+              }}
+            >
+              {getButtonText(isWaitingTimeConfirmed, !isValidTime(tempWaitingTime) && !isWaitingTimeConfirmed)}
             </button>
           </div>
         )}
       </div>
 
-      {/* 積込料 → 取卸料に変更 */}
-      <div style={{ display: "flex", alignItems: "flex-start" }}>
-        {/* "積込料" → "取卸料"に変更 */}
+      {/* 取卸料 */}
+      <div style={rowStyle}>
         <div style={itemLabelStyle}>取卸料</div>
-        <div
-          style={{
-            ...radioContainerStyle,
-            height: 120,
-            flexDirection: "column",
-            justifyContent: "center",
-          }}
-        >
-          <div style={{ ...radioGroupStyle, flexDirection: "column", gap: 8 }}>
-            {/* showLoadingWork → showUnloadingWorkに変更 */}
-            <label style={radioLabelStyle(!showUnloadingWork)}>
+        <div style={radioContainerStyle}>
+          <div style={radioGroupStyle}>
+            <label style={radioLabelStyle(!showLoadingWork)}>
               <input
                 type="radio"
-                // name="load" → name="unload"に変更
-                name="unload"
-                // showLoadingWork → showUnloadingWorkに変更
-                checked={!showUnloadingWork}
-                // handleLoadingWorkRadio → handleUnloadingWorkRadioに変更
-                onChange={() => handleUnloadingWorkRadio("none")}
+                name="load"
+                checked={!showLoadingWork}
+                onChange={handleLoadingWorkToggle}
                 style={radioInputStyle}
               />
               適用しない
             </label>
-            {/* showLoadingWork → showUnloadingWork、selectedLoadingType → selectedUnloadingTypeに変更 */}
-            <label style={radioLabelStyle(showUnloadingWork && selectedUnloadingType === "machine")}>
+            <label style={radioLabelStyle(showLoadingWork)}>
               <input
                 type="radio"
-                // name="load" → name="unload"に変更
-                name="unload"
-                checked={showUnloadingWork && selectedUnloadingType === "machine"}
-                // handleLoadingWorkRadio → handleUnloadingWorkRadioに変更
-                onChange={() => handleUnloadingWorkRadio("machine")}
+                name="load"
+                checked={showLoadingWork}
+                onChange={handleLoadingWorkToggle}
                 style={radioInputStyle}
               />
-              適用する → 機械荷役
-            </label>
-            <label style={radioLabelStyle(showUnloadingWork && selectedUnloadingType === "manual")}>
-              <input
-                type="radio"
-                // name="load" → name="unload"に変更
-                name="unload"
-                checked={showUnloadingWork && selectedUnloadingType === "manual"}
-                // handleLoadingWorkRadio → handleUnloadingWorkRadioに変更
-                onChange={() => handleUnloadingWorkRadio("manual")}
-                style={radioInputStyle}
-              />
-              適用する → 手荷役
+              適用する
             </label>
           </div>
         </div>
-        {/* showLoadingWork → showUnloadingWorkに変更 */}
-        {showUnloadingWork && (
-          <div style={inputContainerStyle}>
-            <input
-              type="number"
-              // tempLoadingValue → tempUnloadingValueに変更
-              value={tempUnloadingValue}
-              // setTempLoadingValue → setTempUnloadingValueに変更
-              onChange={(e) => setTempUnloadingValue(e.target.value)}
-              style={inputBoxStyle}
-              placeholder="分"
-            />
-            {/* handleLoadingWorkConfirm → handleUnloadingWorkConfirmに変更 */}
-            <button onClick={handleUnloadingWorkConfirm} style={buttonStyle}>
-              確定
-            </button>
+        {showLoadingWork && (
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <div style={accordionContainerStyle}>
+              {loadingWorkTypes.map((loading) => (
+                <div
+                  key={loading.id}
+                  style={loadingItemStyle(selectedLoadingType === loading.id)}
+                  onClick={() => handleLoadingTypeSelect(loading.id)}
+                >
+                  {loading.name}
+                </div>
+              ))}
+            </div>
+            <div style={timeInputContainerStyle}>
+              <span style={timeLabelStyle}>所要時間</span>
+              <input
+                type="text"
+                value={tempLoadingTime}
+                onChange={handleLoadingTimeInputChange}
+                style={timeInputBoxStyle(isLoadingTimeConfirmed)}
+                disabled={isLoadingTimeConfirmed}
+                maxLength={3}
+              />
+              <span style={unitStyle}>分</span>
+              <button 
+                onClick={handleLoadingTimeConfirm} 
+                style={confirmButtonStyle(isLoadingTimeConfirmed, !isValidTime(tempLoadingTime) || !selectedLoadingType)}
+                disabled={(!isValidTime(tempLoadingTime) || !selectedLoadingType) && !isLoadingTimeConfirmed}
+                onMouseEnter={(e) => {
+                  if (!((!isValidTime(tempLoadingTime) || !selectedLoadingType) && !isLoadingTimeConfirmed)) {
+                    e.currentTarget.style.backgroundColor = isLoadingTimeConfirmed ? '#218838' : '#a03937';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!((!isValidTime(tempLoadingTime) || !selectedLoadingType) && !isLoadingTimeConfirmed)) {
+                    e.currentTarget.style.backgroundColor = isLoadingTimeConfirmed ? '#28a745' : '#b94a48';
+                  }
+                }}
+              >
+                {getButtonText(isLoadingTimeConfirmed, (!isValidTime(tempLoadingTime) || !selectedLoadingType) && !isLoadingTimeConfirmed)}
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -342,5 +476,4 @@ const ArrivalSettings: React.FC<ArrivalSettingsProps> = ({
   );
 };
 
-// DepartureSettings → ArrivalSettingsに変更
 export { ArrivalSettings };

@@ -5,53 +5,138 @@ type FuelSurchargeSettingsProps = {
   // Props名を燃料サーチャージ用に変更
   fuelEnabled: boolean;
   fuelPrice: string;
-  forwardingEnabled: boolean;
-  forwardingRate: string;
   onFuelChange: (enabled: boolean, price: string) => void;
-  onForwardingChange: (enabled: boolean, rate: string) => void;
 };
 
 // DepartureSettings → FuelSurchargeSettingsに変更
 const FuelSurchargeSettings: React.FC<FuelSurchargeSettingsProps> = ({
   fuelEnabled,
   fuelPrice,
-  forwardingEnabled,
-  forwardingRate,
   onFuelChange,
-  onForwardingChange,
 }) => {
   // 状態変数名を燃料サーチャージ用に変更
   const [tempFuelPrice, setTempFuelPrice] = useState(fuelPrice);
-  const [tempForwardingRate, setTempForwardingRate] = useState(forwardingRate);
+  const [tempFuelConsumption, setTempFuelConsumption] = useState("");
   const [showFuel, setShowFuel] = useState(fuelEnabled);
-  const [showForwarding, setShowForwarding] = useState(forwardingEnabled);
-  const [selectedForwardingType, setSelectedForwardingType] = useState<"percentage" | "fixed">("percentage");
+  const [isFuelPriceConfirmed, setIsFuelPriceConfirmed] = useState(false);
+  const [isFuelConsumptionConfirmed, setIsFuelConsumptionConfirmed] = useState(false);
+
+  // 全角→半角変換関数
+  const toHalfWidth = (str: string): string => {
+    return str.replace(/[０-９．]/g, (s) => {
+      return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
+    });
+  };
+
+  // 燃料調達価格の検証（50〜200、小数点第1位）
+  const isValidFuelPrice = (value: string): boolean => {
+    if (!value) return false;
+    const num = parseFloat(value);
+    if (isNaN(num)) return false;
+    
+    // 範囲チェック
+    if (num < 50 || num > 200) return false;
+    
+    // 小数点チェック（第1位まで）
+    const parts = value.split('.');
+    if (parts.length > 1 && parts[1].length > 1) return false;
+    
+    return true;
+  };
+
+  // 燃費の検証（1〜20、小数点第2位）
+  const isValidFuelConsumption = (value: string): boolean => {
+    if (!value) return false;
+    const num = parseFloat(value);
+    if (isNaN(num)) return false;
+    
+    // 範囲チェック
+    if (num < 1 || num > 20) return false;
+    
+    // 小数点チェック（第2位まで）
+    const parts = value.split('.');
+    if (parts.length > 1 && parts[1].length > 2) return false;
+    
+    return true;
+  };
+
+  // ボタンのテキストを決定する関数
+  const getButtonText = (isConfirmed: boolean, isDisabled: boolean): string => {
+    if (isDisabled) return '無効';
+    if (isConfirmed) return '確定済';
+    return '確定';
+  };
 
   const handleFuelRadio = (enabled: boolean) => {
     setShowFuel(enabled);
     if (!enabled) {
       setTempFuelPrice("");
+      setTempFuelConsumption("");
+      setIsFuelPriceConfirmed(false);
+      setIsFuelConsumptionConfirmed(false);
       onFuelChange(false, "");
     }
   };
 
-  const handleFuelConfirm = () => {
-    onFuelChange(true, tempFuelPrice);
+  const handleFuelPriceInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value;
+    const halfWidthValue = toHalfWidth(rawValue);
+    
+    // 数字と小数点以外を除去
+    const cleaned = halfWidthValue.replace(/[^0-9.]/g, '');
+    
+    // 複数の小数点を防ぐ
+    const parts = cleaned.split('.');
+    if (parts.length > 2) return;
+    
+    // 小数点以下の桁数制限（第1位まで）
+    if (parts.length === 2 && parts[1].length > 1) {
+      return;
+    }
+    
+    setTempFuelPrice(cleaned);
   };
 
-  const handleForwardingRadio = (type: "none" | "percentage" | "fixed") => {
-    if (type === "none") {
-      setShowForwarding(false);
-      setTempForwardingRate("");
-      onForwardingChange(false, "");
+  const handleFuelConsumptionInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value;
+    const halfWidthValue = toHalfWidth(rawValue);
+    
+    // 数字と小数点以外を除去
+    const cleaned = halfWidthValue.replace(/[^0-9.]/g, '');
+    
+    // 複数の小数点を防ぐ
+    const parts = cleaned.split('.');
+    if (parts.length > 2) return;
+    
+    // 小数点以下の桁数制限（第2位まで）
+    if (parts.length === 2 && parts[1].length > 2) {
+      return;
+    }
+    
+    setTempFuelConsumption(cleaned);
+  };
+
+  const handleFuelPriceConfirm = () => {
+    if (isFuelPriceConfirmed) {
+      setIsFuelPriceConfirmed(false);
     } else {
-      setShowForwarding(true);
-      setSelectedForwardingType(type);
+      if (isValidFuelPrice(tempFuelPrice)) {
+        setIsFuelPriceConfirmed(true);
+        onFuelChange(true, tempFuelPrice);
+        console.log("燃料調達価格確定:", tempFuelPrice + "円/ℓ");
+      }
     }
   };
 
-  const handleForwardingConfirm = () => {
-    onForwardingChange(true, tempForwardingRate);
+  const handleFuelConsumptionConfirm = () => {
+    if (isFuelConsumptionConfirmed) {
+      setIsFuelConsumptionConfirmed(false);
+    } else {
+      if (isValidFuelConsumption(tempFuelConsumption)) {
+        setIsFuelConsumptionConfirmed(true);
+        console.log("燃費確定:", tempFuelConsumption + "km/ℓ");
+      }
+    }
   };
 
   // スタイル定義はそのまま維持
@@ -121,7 +206,7 @@ const FuelSurchargeSettings: React.FC<FuelSurchargeSettingsProps> = ({
     gap: 8,
   };
 
-  const inputBoxStyle: React.CSSProperties = {
+  const inputBoxStyle = (isConfirmed: boolean): React.CSSProperties => ({
     width: 80,
     height: 36,
     padding: '0 8px',
@@ -129,24 +214,51 @@ const FuelSurchargeSettings: React.FC<FuelSurchargeSettingsProps> = ({
     borderRadius: 4,
     fontSize: 14,
     textAlign: 'center',
-  };
+    backgroundColor: isConfirmed ? '#f8f9fa' : '#fff',
+    color: isConfirmed ? '#6c757d' : '#000',
+  });
 
-  const buttonStyle: React.CSSProperties = {
+  const confirmButtonStyle = (isConfirmed: boolean, isDisabled: boolean): React.CSSProperties => ({
     height: 36,
     padding: '0 16px',
-    backgroundColor: '#b94a48',
-    color: '#fff',
+    backgroundColor: isDisabled ? '#ccc' : (isConfirmed ? '#28a745' : '#b94a48'),
+    color: isDisabled ? '#666' : '#fff',
     border: 'none',
     borderRadius: 4,
     fontSize: 14,
     fontWeight: 'bold',
-    cursor: 'pointer',
-    transition: 'background-color 0.2s',
+    cursor: isDisabled ? 'not-allowed' : 'pointer',
+    transition: 'all 0.3s ease',
+    minWidth: 80,
+    opacity: isDisabled ? 0.6 : 1,
+    pointerEvents: isDisabled ? 'none' : 'auto',
+  });
+
+  const labelStyle: React.CSSProperties = {
+    fontSize: 14,
+    color: '#333',
+    marginRight: 8,
+    fontWeight: 'normal',
+    whiteSpace: 'nowrap',
+    minWidth: 100,
+  };
+
+  const unitStyle: React.CSSProperties = {
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 4,
+    marginRight: 8,
+  };
+
+  const inputGroupStyle: React.CSSProperties = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 12,
   };
 
   return (
     <div style={containerStyle}>
-      {/* 対策3: 待機時間料 → 燃料サーチャージに変更 */}
+      {/* 燃料サーチャージ */}
       <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
         <div style={itemLabelStyle}>燃料サーチャージ</div>
         <div style={radioContainerStyle}>
@@ -174,77 +286,65 @@ const FuelSurchargeSettings: React.FC<FuelSurchargeSettingsProps> = ({
           </div>
         </div>
         {showFuel && (
-          <div style={inputContainerStyle}>
-            <input
-              type="number"
-              value={tempFuelPrice}
-              onChange={(e) => setTempFuelPrice(e.target.value)}
-              style={inputBoxStyle}
-              placeholder="円/L"
-            />
-            <button onClick={handleFuelConfirm} style={buttonStyle}>
-              確定
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* 対策3: 積込料 → 利用運送手数料に変更 */}
-      <div style={{ display: "flex", alignItems: "flex-start" }}>
-        <div style={itemLabelStyle}>利用運送手数料</div>
-        <div
-          style={{
-            ...radioContainerStyle,
-            height: 120,
-            flexDirection: "column",
-            justifyContent: "center",
-          }}
-        >
-          <div style={{ ...radioGroupStyle, flexDirection: "column", gap: 8 }}>
-            <label style={radioLabelStyle(!showForwarding)}>
+          <div style={inputGroupStyle}>
+            <div style={inputContainerStyle}>
+              <span style={labelStyle}>燃料調達価格</span>
               <input
-                type="radio"
-                name="forwarding"
-                checked={!showForwarding}
-                onChange={() => handleForwardingRadio("none")}
-                style={radioInputStyle}
+                type="text"
+                value={tempFuelPrice}
+                onChange={handleFuelPriceInputChange}
+                style={inputBoxStyle(isFuelPriceConfirmed)}
+                disabled={isFuelPriceConfirmed}
+                maxLength={5}
               />
-              適用しない
-            </label>
-            <label style={radioLabelStyle(showForwarding && selectedForwardingType === "percentage")}>
+              <span style={unitStyle}>円/ℓ</span>
+              <button 
+                onClick={handleFuelPriceConfirm} 
+                style={confirmButtonStyle(isFuelPriceConfirmed, !isValidFuelPrice(tempFuelPrice))}
+                disabled={!isValidFuelPrice(tempFuelPrice) && !isFuelPriceConfirmed}
+                onMouseEnter={(e) => {
+                  if (!(!isValidFuelPrice(tempFuelPrice) && !isFuelPriceConfirmed)) {
+                    e.currentTarget.style.backgroundColor = isFuelPriceConfirmed ? '#218838' : '#a03937';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!(!isValidFuelPrice(tempFuelPrice) && !isFuelPriceConfirmed)) {
+                    e.currentTarget.style.backgroundColor = isFuelPriceConfirmed ? '#28a745' : '#b94a48';
+                  }
+                }}
+              >
+                {getButtonText(isFuelPriceConfirmed, !isValidFuelPrice(tempFuelPrice) && !isFuelPriceConfirmed)}
+              </button>
+            </div>
+            <div style={inputContainerStyle}>
+              <span style={labelStyle}>燃　　　費</span>
               <input
-                type="radio"
-                name="forwarding"
-                checked={showForwarding && selectedForwardingType === "percentage"}
-                onChange={() => handleForwardingRadio("percentage")}
-                style={radioInputStyle}
+                type="text"
+                value={tempFuelConsumption}
+                onChange={handleFuelConsumptionInputChange}
+                style={inputBoxStyle(isFuelConsumptionConfirmed)}
+                disabled={isFuelConsumptionConfirmed}
+                maxLength={5}
               />
-              適用する → 運賃の%
-            </label>
-            <label style={radioLabelStyle(showForwarding && selectedForwardingType === "fixed")}>
-              <input
-                type="radio"
-                name="forwarding"
-                checked={showForwarding && selectedForwardingType === "fixed"}
-                onChange={() => handleForwardingRadio("fixed")}
-                style={radioInputStyle}
-              />
-              適用する → 固定額
-            </label>
-          </div>
-        </div>
-        {showForwarding && (
-          <div style={inputContainerStyle}>
-            <input
-              type="number"
-              value={tempForwardingRate}
-              onChange={(e) => setTempForwardingRate(e.target.value)}
-              style={inputBoxStyle}
-              placeholder={selectedForwardingType === "percentage" ? "%" : "円"}
-            />
-            <button onClick={handleForwardingConfirm} style={buttonStyle}>
-              確定
-            </button>
+              <span style={unitStyle}>km/ℓ</span>
+              <button 
+                onClick={handleFuelConsumptionConfirm} 
+                style={confirmButtonStyle(isFuelConsumptionConfirmed, !isValidFuelConsumption(tempFuelConsumption))}
+                disabled={!isValidFuelConsumption(tempFuelConsumption) && !isFuelConsumptionConfirmed}
+                onMouseEnter={(e) => {
+                  if (!(!isValidFuelConsumption(tempFuelConsumption) && !isFuelConsumptionConfirmed)) {
+                    e.currentTarget.style.backgroundColor = isFuelConsumptionConfirmed ? '#218838' : '#a03937';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!(!isValidFuelConsumption(tempFuelConsumption) && !isFuelConsumptionConfirmed)) {
+                    e.currentTarget.style.backgroundColor = isFuelConsumptionConfirmed ? '#28a745' : '#b94a48';
+                  }
+                }}
+              >
+                {getButtonText(isFuelConsumptionConfirmed, !isValidFuelConsumption(tempFuelConsumption) && !isFuelConsumptionConfirmed)}
+              </button>
+            </div>
           </div>
         )}
       </div>

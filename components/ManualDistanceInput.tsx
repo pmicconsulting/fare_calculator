@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { supabase } from "../lib/supabaseClient";
-import { roundDistance } from "../utils/fareUtils"; // ← 丸め処理を統一
+import { roundDistance } from "../utils/fareUtils";
 import { regionMap, vehicleMap, RegionType, VehicleType } from "../lib/codeMaps";
 
 export default function ManualDistanceInput({
@@ -24,13 +24,27 @@ export default function ManualDistanceInput({
   const [value, setValue] = useState("");
   const [lastConfirmedValue, setLastConfirmedValue] = useState(""); // 確定された値
 
+  // 全角→半角変換関数
+  const toHalfWidth = (str: string): string => {
+    return str.replace(/[０-９]/g, (s) => {
+      return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
+    });
+  };
+
+  // 入力値の検証関数（1〜2000の整数）
+  const isValidDistance = (value: string): boolean => {
+    if (!value) return false;
+    const num = parseInt(value, 10);
+    return !isNaN(num) && num >= 1 && num <= 2000 && value === num.toString();
+  };
+
   const handleClick = async () => {
-    if (!value || isNaN(Number(value)) || Number(value) <= 0) {
-      onFareResult(null, "数値を正しく入力してください");
+    if (!isValidDistance(value)) {
+      onFareResult(null, "1〜2000の整数を入力してください");
       return;
     }
     const num = Number(value);
-    const rounded = roundDistance(num, region); // ← 地域別で端数処理
+    const rounded = roundDistance(num, region);
 
     // コード化
     const regionCode = regionMap[region];
@@ -62,25 +76,42 @@ export default function ManualDistanceInput({
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value.replace(/[^0-9.]/g, ""); // 数字以外を除去
-    setValue(newValue);
+    const rawValue = e.target.value;
+    // 全角→半角変換
+    const halfWidthValue = toHalfWidth(rawValue);
+    // 小数点を含む場合は整数部分のみ取得、数字以外を除去
+    const numericValue = halfWidthValue.split('.')[0].replace(/[^0-9]/g, '');
+    setValue(numericValue);
   };
 
   const getButtonColor = () => {
     if (value.trim() === "") {
-      return "#28a745"; // 緑色（入力が空の場合）
+      return "#ccc"; // グレー（入力が空の場合）
     }
     if (value === lastConfirmedValue) {
       return "#28a745"; // 緑色（確定された値と一致する場合）
     }
-    return "#ff0000"; // 赤色（異なる値が入力された場合）
+    if (isValidDistance(value)) {
+      return "#ff0000"; // 赤色（有効な値が入力された場合）
+    }
+    return "#ccc"; // グレー（無効な値の場合）
   };
 
   const getButtonText = () => {
-    if (value.trim() === "" || value === lastConfirmedValue) {
+    if (value.trim() === "") {
+      return "無効"; // 空欄時
+    }
+    if (!isValidDistance(value)) {
+      return "無効"; // 範囲外の値
+    }
+    if (value === lastConfirmedValue) {
       return "確定済"; // 緑色ボタンの文字
     }
     return "確定"; // 赤色ボタンの文字
+  };
+
+  const isButtonDisabled = () => {
+    return value.trim() === "" || !isValidDistance(value);
   };
 
   return (
@@ -108,6 +139,7 @@ export default function ManualDistanceInput({
         onChange={handleChange}
         placeholder="運行距離"
         type="text"
+        maxLength={4}
         style={{
           width: 200, // 入力枠の幅
           height: 56, // 入力枠の高さ
@@ -123,16 +155,19 @@ export default function ManualDistanceInput({
       <button
         className="manual-btn"
         onClick={handleClick}
+        disabled={isButtonDisabled()}
         style={{
           padding: "8px 16px", // ボタンの内側余白
           fontSize: 15,
           borderRadius: 8, // ボタンの角丸
           border: "2px solid #999", // ボタンの枠線
           background: getButtonColor(), // ボタンの色を動的に変更
-          color: "#fff", // ボタンの文字色
-          cursor: "pointer",
+          color: isButtonDisabled() ? "#666" : "#fff", // ボタンの文字色
+          cursor: isButtonDisabled() ? "not-allowed" : "pointer",
           height: 40, // ボタンの高さ
           minWidth: 80, // ボタンの最小幅
+          opacity: isButtonDisabled() ? 0.6 : 1,
+          transition: "all 0.3s ease",
         }}
       >
         {getButtonText()} {/* ボタンの文字を動的に変更 */}
