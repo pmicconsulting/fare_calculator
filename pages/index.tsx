@@ -17,7 +17,10 @@ import {
   regionMap,
   vehicleMap,
 } from "../lib/codeMaps";
+// DetailedSettingsのインポートを有効化
 import DetailedSettings from "../components/DetailedSettings";
+
+type SpecialVehicleType = "none" | "trailer" | "refrigerated" | "wing" | "powerGate";
 
 export type DistanceType = "map" | "address" | "manual" | "ferry";
 export type TollType = "apply" | "not_apply";
@@ -53,31 +56,39 @@ export default function Home() {
   const [to, setTo] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  // DetailedSettings表示フラグと、DetailedSettingsState型のステートを追加
-  const [detailedSettingsEnabled, setDetailedSettingsEnabled] = useState(false);
-  const [detailedSettings, setDetailedSettings] = useState<DetailedSettingsState>({
+  // 詳細設定の状態管理
+  const [detailedSettingsEnabled, setDetailedSettingsEnabled] = useState<boolean>(false);
+  const [detailedSettings, setDetailedSettings] = useState({
+    // 出発時の設定
     departureWaitingTimeEnabled: false,
     departureWaitingTimeValue: "",
     departureLoadingWorkEnabled: false,
     departureLoadingWorkValue: "",
+    departureLoadingWorkType: "machine",
+    
+    // 到着時の設定
     arrivalWaitingTimeEnabled: false,
     arrivalWaitingTimeValue: "",
     arrivalUnloadingWorkEnabled: false,
     arrivalUnloadingWorkValue: "",
+    arrivalUnloadingWorkType: "machine",
+    
+    // 料金の設定
     fuelSurchargeEnabled: false,
     fuelSurchargeValue: "",
     forwardingFeeEnabled: false,
     forwardingFeeValue: "",
-    specialVehicleEnabled: false,
-    specialVehicleValue: "",
-    holidaySurchargeEnabled: false,
-    holidaySurchargeValue: "",
-    lateNightEarlyMorningEnabled: false,
-    lateNightEarlyMorningValue: "",
-    expeditedDeliveryEnabled: false,
-    expeditedDeliveryValue: "",
-    generalRoadUseEnabled: false,
-    generalRoadUseValue: "",
+    
+    // 割増の設定
+    specialVehicleType: "none" as SpecialVehicleType, // 型を明示
+    holidayEnabled: false,
+    holidayRate: "20",
+    deepNightEnabled: false,  // deepNight に統一
+    deepNightRate: "30",
+    expressEnabled: false,
+    expressRate: "20",
+    generalRoadEnabled: false,
+    generalRoadRate: "20",
   });
 
   // distanceType切替時に結果stateをリセット
@@ -178,7 +189,59 @@ export default function Home() {
     setError(errorMsg || null);
   };
 
-  // 入力・計算結果の状態管理
+  // Ferry関連の状態管理
+  const [ferryAddresses, setFerryAddresses] = useState({
+    origin: "",
+    embarkPort: "",
+    disembarkPort: "",
+    destination: "",
+  });
+
+  const [ferryResult, setFerryResult] = useState<{
+    beforeFare: number;
+    afterFare: number;
+    beforeKm: number;
+    afterKm: number;
+    beforeRoundedKm: number;
+    afterRoundedKm: number;
+    beforeOriginAddr: string;
+    beforeDestAddr: string;
+    afterOriginAddr: string;
+    afterDestAddr: string;
+  } | null>(null);
+
+  const [ferryError, setFerryError] = useState<string | null>(null);
+
+  const handleFerryFareResult = (result: typeof ferryResult, err?: string) => {
+    if (err || !result) {
+      setFerryResult(null);
+      setFerryError(err || "運賃計算に失敗しました。再度入力を確認してください。");
+      return;
+    }
+    setFerryResult(result);
+    setFerryError(null);
+  };
+
+  // Manual入力の状態管理
+  const [manualFareResult, setManualFareResult] = useState<{
+    fare: number;
+    rawKm: number;
+    roundedKm: number;
+    originAddr: string;
+    destinationAddr: string;
+  } | null>(null);
+
+  const handleManualFareResult = (result: {
+    fare: number;
+    rawKm: number;
+    roundedKm: number;
+    originAddr: string;
+    destinationAddr: string;
+  } | null) => {
+    setManualFareResult(result);
+  };
+
+  // Address入力の状態管理
   const [result, setResult] = useState<{
     fare: number | null;
     originAddr: string;
@@ -191,14 +254,14 @@ export default function Home() {
   } | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | undefined>(undefined);
 
-  // onFareResultで計算結果を受け取る
-  const handleFareResult = async (res, err) => {
+  const handleFareResult = async (res: any, err: any) => {
     console.log("handleFareResult called", res, err);
     setErrorMsg(err);
     if (!res) {
       setResult(null);
       return;
     }
+
     // 住所→緯度経度変換
     const geocode = async (address: string) => {
       console.log("geocode called with address:", address);
@@ -225,6 +288,7 @@ export default function Home() {
         });
       });
     };
+
     const originLatLng = await geocode(res.originAddr);
     console.log("originLatLng:", originLatLng);
     const destinationLatLng = await geocode(res.destinationAddr);
@@ -233,7 +297,6 @@ export default function Home() {
       tos.filter(t => t.trim()).map(addr => geocode(addr))
     );
 
-    // ここでnullチェックとエラーハンドリング
     if (!originLatLng || !destinationLatLng) {
       setErrorMsg("出発地または到着地の住所から座標を取得できませんでした。住所を確認してください。");
       setResult(null);
@@ -248,7 +311,6 @@ export default function Home() {
     });
   };
 
-  // resultが更新されたタイミングで計算実行
   useEffect(() => {
     if (
       distanceType === "address" &&
@@ -259,71 +321,43 @@ export default function Home() {
     }
   }, [distanceType, result]);
 
-  // state 追加 --------------------------------------------------
-  // Ferry用の住所stateを初期化
-  const [ferryAddresses, setFerryAddresses] = useState({
-    origin: "",
-    embarkPort: "",
-    disembarkPort: "",
-    destination: "",
-  });
-
-  // Ferry運賃計算結果を管理するstateを明確に定義
-  const [ferryResult, setFerryResult] = useState<{
-    beforeFare: number;
-    afterFare: number;
-    beforeKm: number;
-    afterKm: number;
-    beforeRoundedKm: number;
-    afterRoundedKm: number;
-    beforeOriginAddr: string;
-    beforeDestAddr: string;
-    afterOriginAddr: string;
-    afterDestAddr: string;
-  } | null>(null);
-
-  // Ferry運賃計算エラー管理用のstate
-  const [ferryError, setFerryError] = useState<string | null>(null);
-
-  // ハンドラ追加 ------------------------------------------------
-  // FerryMapからの結果を受け取るハンドラを明確に定義
-  const handleFerryFareResult = (result: typeof ferryResult, err?: string) => {
-    if (err || !result) {
-      setFerryResult(null);
-      setFerryError(err || "運賃計算に失敗しました。再度入力を確認してください。");
-      return;
-    }
-    setFerryResult(result);
-    setFerryError(null);
+  // スタイル定義を追加
+  const containerStyle: React.CSSProperties = {
+    display: 'flex',
+    height: '100vh',
+    width: '100vw',
+    overflow: 'hidden',
+    position: 'fixed',
+    top: 0,
+    left: 0,
   };
 
-  // Ferryの運賃計算トリガーメソッド追加
-  const handleCalcFerryFare = () => {
-    ferryFormRef.current?.calc();
+  const leftPanelStyle: React.CSSProperties = {
+    width: '400px',
+    height: '100vh',
+    overflowY: 'auto',
+    overflowX: 'hidden',
+    borderRight: '2px solid #dee2e6',
+    backgroundColor: '#f8f9fa',
+    padding: '20px',
+    boxSizing: 'border-box',
+    position: 'relative',
   };
 
-  // ManualDistanceInput/ManualFareResultの状態管理が不足している場合、下記のstateとハンドラを追加してください
-  const [manualFareResult, setManualFareResult] = useState<{
-    fare: number;
-    rawKm: number;
-    roundedKm: number;
-    originAddr: string;
-    destinationAddr: string;
-  } | null>(null);
-
-  const handleManualFareResult = (result: {
-    fare: number;
-    rawKm: number;
-    roundedKm: number;
-    originAddr: string;
-    destinationAddr: string;
-  } | null) => {
-    setManualFareResult(result);
+  const rightPanelStyle: React.CSSProperties = {
+    flex: 1,
+    height: '100vh',
+    overflowY: 'auto',
+    overflowX: 'hidden',
+    padding: '20px',
+    boxSizing: 'border-box',
+    backgroundColor: '#ffffff',
+    position: 'relative',
   };
 
   return (
-    <div className="main-container">
-      <div className="left-panel">
+    <div style={containerStyle}>
+      <div style={leftPanelStyle}>
         <TopPanel
           vehicle={vehicle}
           setVehicle={setVehicle}
@@ -348,7 +382,9 @@ export default function Home() {
           setDetailedSettings={setDetailedSettings}
         />
       </div>
-      <div className="right-panel">
+      
+      <div style={rightPanelStyle}>
+        {/* 既存の右パネルの内容をそのまま */}
         {distanceType === "manual" && (
           <>
             <ManualDistanceInput
@@ -378,12 +414,13 @@ export default function Home() {
             )}
           </>
         )}
+        
         {distanceType === "map" && (
           <>
             <MapArea
               ref={mapRef}
               useHighway={useHighway}
-              region={region} // この行を追加
+              region={region}
               onRouteDraw={handleRouteDraw}
             />
             {(fare !== null || error !== null) && (
@@ -407,6 +444,7 @@ export default function Home() {
             )}
           </>
         )}
+        
         {distanceType === "address" && (
           <>
             <AddressForm
@@ -456,6 +494,7 @@ export default function Home() {
             )}
           </>
         )}
+        
         {distanceType === "ferry" && (
           <>
             <FerryForm
