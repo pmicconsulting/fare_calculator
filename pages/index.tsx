@@ -20,6 +20,9 @@ import {
 // DetailedSettingsのインポートを有効化
 import DetailedSettings from "../components/DetailedSettings";
 import DetailedFareResult from "../components/DetailedFareResult";
+import { calculateDetailedFare } from '../lib/calculateDetailedFare'; // 修正: パスを変更
+import { DetailedSettingsType } from '../types/DetailedSettingsType';
+import DetailedManualFareResult from "../components/DetailedManualFareResult"; // 追加
 
 type SpecialVehicleType = "none" | "trailer" | "refrigerated" | "wing" | "powerGate";
 
@@ -327,57 +330,6 @@ export default function Home() {
     );
   };
 
-  // 詳細設定に基づく割増・料金の計算処理を追加
-  const calculateDetailedFare = (baseFare: number, settings: any) => {
-    const charges: any = {};
-    const surcharges: any = {};
-    
-    // 利用運送手数料の計算（基準運賃額の10%）
-    if (settings.forwardingFee?.enabled) {
-      charges.forwardingFee = Math.round(baseFare * 0.1);
-    }
-    
-    // 特殊車両割増の計算
-    if (settings.specialVehicle?.enabled && settings.specialVehicle?.type) {
-      // 車両タイプから割増率を取得
-      const vehicle = specialVehicleTypes.find(v => v.id === settings.specialVehicle.type);
-      if (vehicle) {
-        surcharges.specialVehicle = {
-          type: vehicle.name,
-          rate: vehicle.rate
-        };
-      }
-    }
-    
-    // 休日割増の計算
-    if (settings.holiday?.enabled && settings.holiday?.distanceRatio > 0) {
-      // 休日割増 = 基本運賃 × (走行距離比率 ÷ 100) × 0.3
-      const ratio = settings.holiday.distanceRatio / 100;
-      surcharges.holiday = Math.round(baseFare * ratio * 0.3);
-    }
-    
-    // 深夜・早朝割増の計算
-    if (settings.deepNight?.enabled && settings.deepNight?.distanceRatio > 0) {
-      // 深夜割増 = 基本運賃 × (走行距離比率 ÷ 100) × 0.3
-      const ratio = settings.deepNight.distanceRatio / 100;
-      surcharges.deepNight = Math.round(baseFare * ratio * 0.3);
-    }
-    
-    // 速達割増の計算
-    if (settings.express?.enabled && settings.express?.surchargeRate > 0) {
-      // 速達割増 = 基本運賃 × 割増率 ÷ 100
-      surcharges.express = Math.round(baseFare * settings.express.surchargeRate / 100);
-    }
-    
-    // 一般道利用割増の計算
-    if (settings.generalRoad?.enabled && settings.generalRoad?.surchargeRate > 0) {
-      // 一般道割増 = 基本運賃 × 割増率 ÷ 100
-      surcharges.generalRoad = Math.round(baseFare * settings.generalRoad.surchargeRate / 100);
-    }
-    
-    return { charges, surcharges };
-  };
-
   // 結果表示の分岐処理
   const renderFareResult = () => {
     if (distanceType === "map" && (fare !== null || error !== null)) {
@@ -397,7 +349,6 @@ export default function Home() {
             region={region}
             charges={charges}
             surcharges={surcharges}
-            error={error}
           />
         );
       } else {
@@ -419,47 +370,75 @@ export default function Home() {
     }
     
     if (distanceType === "address" && result) {
-      const shouldShowDetailed = isDetailedSettingsActive();
+      const shouldShowDetailed = detailedSettingsEnabled && isDetailedSettingsActive();
       
-      return shouldShowDetailed ? (
-        <DetailedFareResult
-          fare={result.fare}
-          rawKm={result.rawKm}
-          roundedKm={result.roundedKm}
-          originAddr={result.originAddr}
-          destinationAddr={result.destinationAddr}
-          useHighway={useHighway}
-          vehicle={vehicle}
-          region={region}
-          detailedSettings={detailedSettings}
-        />
-      ) : (
-        <FareResult
-          fare={result.fare}
-          rawKm={result.rawKm}
-          roundedKm={result.roundedKm}
-          originAddr={result.originAddr}
-          destinationAddr={result.destinationAddr}
-          useHighway={useHighway}
-          vehicle={vehicle}
-          region={region}
-        />
-      );
+      if (shouldShowDetailed) {
+        const { charges, surcharges } = calculateDetailedFare(result.fare || 0, detailedSettings);
+        
+        return (
+          <DetailedFareResult
+            fare={result.fare}
+            rawKm={result.rawKm}
+            roundedKm={result.roundedKm}
+            originAddr={result.originAddr}
+            destinationAddr={result.destinationAddr}
+            useHighway={useHighway}
+            vehicle={vehicle}
+            region={region}
+            charges={charges}
+            surcharges={surcharges}
+          />
+        );
+      } else {
+        return (
+          <FareResult
+            fare={result.fare}
+            rawKm={result.rawKm}
+            roundedKm={result.roundedKm}
+            originAddr={result.originAddr}
+            destinationAddr={result.destinationAddr}
+            useHighway={useHighway}
+            vehicle={vehicle}
+            region={region}
+          />
+        );
+      }
     }
 
     if (distanceType === "manual" && manualFareResult) {
-      return (
-        <ManualFareResult
-          fare={manualFareResult.fare}
-          rawKm={manualFareResult.rawKm}
-          roundedKm={manualFareResult.roundedKm}
-          originAddr={manualFareResult.originAddr}
-          destinationAddr={manualFareResult.destinationAddr}
-          useHighway={useHighway}
-          vehicle={vehicle}
-          region={region}
-        />
-      );
+      const shouldShowDetailed = detailedSettingsEnabled && isDetailedSettingsActive();
+      
+      if (shouldShowDetailed) {
+        const { charges, surcharges } = calculateDetailedFare(manualFareResult.fare || 0, detailedSettings);
+        
+        return (
+          <DetailedManualFareResult
+            fare={manualFareResult.fare}
+            rawKm={manualFareResult.rawKm}
+            roundedKm={manualFareResult.roundedKm}
+            originAddr={manualFareResult.originAddr}
+            destinationAddr={manualFareResult.destinationAddr}
+            useHighway={useHighway}
+            vehicle={vehicle}
+            region={region}
+            charges={charges}
+            surcharges={surcharges}
+          />
+        );
+      } else {
+        return (
+          <ManualFareResult
+            fare={manualFareResult.fare}
+            rawKm={manualFareResult.rawKm}
+            roundedKm={manualFareResult.roundedKm}
+            originAddr={manualFareResult.originAddr}
+            destinationAddr={manualFareResult.destinationAddr}
+            useHighway={useHighway}
+            vehicle={vehicle}
+            region={region}
+          />
+        );
+      }
     }
 
     if (distanceType === "ferry" && ferryResult) {
@@ -563,18 +542,7 @@ export default function Home() {
               fareOption={toll}
               onFareResult={handleManualFareResult}
             />
-            {manualFareResult && (
-              <ManualFareResult
-                fare={manualFareResult.fare}
-                rawKm={manualFareResult.rawKm}
-                roundedKm={manualFareResult.roundedKm}
-                originAddr={manualFareResult.originAddr}
-                destinationAddr={manualFareResult.destinationAddr}
-                useHighway={useHighway}
-                vehicle={vehicle}
-                region={region}
-              />
-            )}
+            {renderFareResult()}
             {detailedSettingsEnabled && (
               <DetailedSettings
                 value={detailedSettings}
@@ -592,19 +560,7 @@ export default function Home() {
               region={region}
               onRouteDraw={handleRouteDraw}
             />
-            {(fare !== null || error !== null) && (
-              <FareResult
-                fare={fare}
-                originAddr={originAddr}
-                destinationAddr={destinationAddr}
-                rawKm={km}
-                roundedKm={roundedKm}
-                useHighway={useHighway}
-                vehicle={vehicle}
-                region={region}
-                error={error}
-              />
-            )}
+            {renderFareResult()}
             {detailedSettingsEnabled && (
               <DetailedSettings
                 value={detailedSettings}
@@ -642,19 +598,7 @@ export default function Home() {
                 console.log("AddressMap onRouteResult:", routeResult, routeError);
               }}
             />
-            {result && (
-              <FareResult
-                fare={result.fare}
-                originAddr={result.originAddr}
-                destinationAddr={result.destinationAddr}
-                rawKm={result.rawKm}
-                roundedKm={result.roundedKm}
-                useHighway={useHighway}
-                vehicle={vehicle}
-                region={region}
-                error={errorMsg}
-              />
-            )}
+            {renderFareResult()}
             {detailedSettingsEnabled && (
               <DetailedSettings
                 value={detailedSettings}

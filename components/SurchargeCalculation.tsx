@@ -1,35 +1,16 @@
+import { DetailedSettingsType, SpecialVehicleData, FareCalculationResult } from '../types/DetailedSettingsType';
+
 // 特殊車両の種類
-export type SpecialVehicleType = 
-  | 'none'                    // 適用しない
-  | 'refrigerated'            // 冷蔵車・冷凍車
-  | 'container'               // 海上コンテナ輸送車
-  | 'cement_bulk'             // セメントバルク車
-  | 'dump'                    // ダンプ車
-  | 'concrete_mixer'          // コンクリートミキサー車
-  | 'truck_crane'             // トラック搭載型クレーン車
-  | 'tank_petroleum'          // タンク車 石油製品輸送車
-  | 'tank_chemical'           // タンク車 化成品輸送車
-  | 'tank_high_pressure_gas'; // タンク輸送 高圧ガス輸送車
-
-// 特殊車両の設定
-export interface SpecialVehicleConfig {
-  type: SpecialVehicleType;
-  name: string;
-  rate: number; // 割増率（%）
-}
-
-// 特殊車両の定義
-export const SPECIAL_VEHICLE_OPTIONS: SpecialVehicleConfig[] = [
-  { type: 'none', name: '適用しない', rate: 0 },
-  { type: 'refrigerated', name: '冷蔵車・冷凍車', rate: 20 },
-  { type: 'container', name: '海上コンテナ輸送車', rate: 40 },
-  { type: 'cement_bulk', name: 'セメントバルク車', rate: 20 },
-  { type: 'dump', name: 'ダンプ車', rate: 20 },
-  { type: 'concrete_mixer', name: 'コンクリートミキサー車', rate: 20 },
-  { type: 'truck_crane', name: 'トラック搭載型クレーン車', rate: 30 },
-  { type: 'tank_petroleum', name: 'タンク車 石油製品輸送車', rate: 30 },
-  { type: 'tank_chemical', name: 'タンク車 化成品輸送車', rate: 40 },
-  { type: 'tank_high_pressure_gas', name: 'タンク輸送 高圧ガス輸送車', rate: 50 },
+export const specialVehicleTypes: SpecialVehicleData[] = [
+  { id: "refrigerated", name: "冷蔵車・冷凍車", rate: 20 },
+  { id: "container", name: "海上コンテナ輸送車", rate: 40 },
+  { id: "cement_bulk", name: "セメントバルク車", rate: 20 },
+  { id: "dump", name: "ダンプ車", rate: 20 },
+  { id: "concrete_mixer", name: "コンクリートミキサー車", rate: 20 },
+  { id: "truck_crane", name: "トラック搭載型クレーン車", rate: 30 },
+  { id: "tank_petroleum", name: "タンク車 石油製品輸送車", rate: 30 },
+  { id: "tank_chemical", name: "タンク車 化成品輸送車", rate: 40 },
+  { id: "tank_high_pressure_gas", name: "タンク輸送 高圧ガス輸送車", rate: 50 },
 ];
 
 // サーチャージ設定の型定義
@@ -102,138 +83,75 @@ export function getSpecialVehicleInfo(vehicleType: SpecialVehicleType): SpecialV
 }
 
 // サーチャージ計算メイン関数
-export function calculateSurcharge(
-  baseAmount: number,
-  settings: {
-    specialVehicle: { enabled: boolean; type: string };
-    holiday: { enabled: boolean; distanceRatio: number };
-    deepNight: { enabled: boolean; distanceRatio: number };
-    express: { enabled: boolean; surchargeRate: number };
-    generalRoad: { enabled: boolean; surchargeRate: number };
-    waitingTime: { departure: { enabled: boolean; time: number }; arrival: { enabled: boolean; time: number } };
-    loadingWork: { departure: { enabled: boolean; type: string; time: number }; arrival: { enabled: boolean; type: string; time: number } };
-    forwardingFee: { enabled: boolean };
-    fuelSurcharge: { enabled: boolean; rate: number };
-  }
-): SurchargeResult {
-  const surcharges: SurchargeResult['surcharges'] = {};
-  const charges: SurchargeResult['charges'] = {};
-  let totalSurcharge = 0;
-  let totalCharges = 0;
+export const calculateDetailedFare = (
+  baseFare: number, 
+  settings: DetailedSettingsType
+): FareCalculationResult => {
+  const charges: any = {};
+  const surcharges: any = {};
 
-  // 特殊車両割増
-  if (settings.specialVehicle.enabled) {
-    const vehicleInfo = getSpecialVehicleInfo(settings.specialVehicle.type);
-    if (vehicleInfo.rate > 0) {
-      const amount = Math.round(baseAmount * vehicleInfo.rate / 100);
+  // 利用運送手数料の計算（基準運賃額の10%）
+  if (settings.forwardingFee?.enabled) {
+    charges.forwardingFee = Math.round(baseFare * 0.1);
+  }
+
+  // 特殊車両割増の計算
+  if (settings.specialVehicle?.enabled && settings.specialVehicle?.type) {
+    const vehicle = specialVehicleTypes.find(v => v.id === settings.specialVehicle.type);
+    if (vehicle) {
       surcharges.specialVehicle = {
-        type: vehicleInfo.type,
-        name: vehicleInfo.name,
-        rate: vehicleInfo.rate,
-        amount,
+        type: vehicle.name,
+        rate: vehicle.rate,
+        amount: Math.round(baseFare * vehicle.rate / 100),
       };
-      totalSurcharge += amount;
     }
   }
 
-  // 休日割増
-  if (settings.holiday.enabled) {
-    const amount = Math.round(baseAmount * settings.holiday.distanceRatio);
-    surcharges.holiday = {
-      rate: settings.holiday.distanceRatio,
-      amount,
-    };
-    totalSurcharge += amount;
+  // 休日割増の計算（基準運賃 × 走行距離比率 × 0.3）
+  if (settings.holiday?.enabled && settings.holiday?.distanceRatio > 0) {
+    const ratio = settings.holiday.distanceRatio / 100;
+    surcharges.holiday = Math.round(baseFare * ratio * 0.3);
   }
 
-  // 深夜・早朝割増
-  if (settings.deepNight.enabled) {
-    const amount = Math.round(baseAmount * settings.deepNight.distanceRatio);
-    surcharges.deepNight = {
-      rate: settings.deepNight.distanceRatio,
-      amount,
-    };
-    totalSurcharge += amount;
+  // 深夜・早朝割増の計算（基準運賃 × 走行距離比率 × 0.3）
+  if (settings.deepNight?.enabled && settings.deepNight?.distanceRatio > 0) {
+    const ratio = settings.deepNight.distanceRatio / 100;
+    surcharges.deepNight = Math.round(baseFare * ratio * 0.3);
   }
 
-  // 速達割増
-  if (settings.express.enabled) {
-    const amount = Math.round(baseAmount * settings.express.surchargeRate);
-    surcharges.express = {
-      rate: settings.express.surchargeRate,
-      amount,
-    };
-    totalSurcharge += amount;
+  // 速達割増の計算
+  if (settings.express?.enabled && settings.express?.surchargeRate > 0) {
+    surcharges.express = Math.round(baseFare * settings.express.surchargeRate / 100);
   }
 
-  // 一般道利用割増
-  if (settings.generalRoad.enabled) {
-    const amount = Math.round(baseAmount * settings.generalRoad.surchargeRate);
-    surcharges.generalRoad = {
-      rate: settings.generalRoad.surchargeRate,
-      amount,
-    };
-    totalSurcharge += amount;
+  // 一般道利用割増の計算
+  if (settings.generalRoad?.enabled && settings.generalRoad?.surchargeRate > 0) {
+    surcharges.generalRoad = Math.round(baseFare * settings.generalRoad.surchargeRate / 100);
   }
 
-  // 待機時間割増
-  if (settings.waitingTime.departure.enabled) {
-    const amount = Math.round(settings.waitingTime.departure.time * 100);
-    surcharges.waitingTimeDeparture = {
-      time: settings.waitingTime.departure.time,
-      amount,
-    };
-    totalSurcharge += amount;
+  // 待機時間料金の計算
+  if (settings.waitingTime?.departure?.enabled && settings.waitingTime.departure.time > 0) {
+    charges.waitingTimeDeparture = Math.round(settings.waitingTime.departure.time * 500);
   }
-  if (settings.waitingTime.arrival.enabled) {
-    const amount = Math.round(settings.waitingTime.arrival.time * 100);
-    surcharges.waitingTimeArrival = {
-      time: settings.waitingTime.arrival.time,
-      amount,
-    };
-    totalSurcharge += amount;
+  if (settings.waitingTime?.arrival?.enabled && settings.waitingTime.arrival.time > 0) {
+    charges.waitingTimeArrival = Math.round(settings.waitingTime.arrival.time * 500);
   }
 
-  // 荷役作業割増
-  if (settings.loadingWork.departure.enabled) {
-    const amount = Math.round(settings.loadingWork.departure.time * 100);
-    surcharges.loadingWorkDeparture = {
-      type: settings.loadingWork.departure.type,
-      time: settings.loadingWork.departure.time,
-      amount,
-    };
-    totalSurcharge += amount;
+  // 荷役作業料金の計算
+  if (settings.loadingWork?.departure?.enabled && settings.loadingWork.departure.time > 0) {
+    charges.loadingWorkDeparture = Math.round(settings.loadingWork.departure.time * 500);
   }
-  if (settings.loadingWork.arrival.enabled) {
-    const amount = Math.round(settings.loadingWork.arrival.time * 100);
-    surcharges.loadingWorkArrival = {
-      type: settings.loadingWork.arrival.type,
-      time: settings.loadingWork.arrival.time,
-      amount,
-    };
-    totalSurcharge += amount;
+  if (settings.loadingWork?.arrival?.enabled && settings.loadingWork.arrival.time > 0) {
+    charges.loadingWorkArrival = Math.round(settings.loadingWork.arrival.time * 500);
   }
 
-  // 利用運送手数料（基準運賃額の10%に変更）
-  if (settings.forwardingFee.enabled) {
-    charges.forwardingFee = Math.round(baseAmount * 0.1);
-    totalCharges += charges.forwardingFee;
+  // 燃料割増の計算
+  if (settings.fuelSurcharge?.enabled && settings.fuelSurcharge?.rate > 0) {
+    charges.fuelSurcharge = Math.round(baseFare * settings.fuelSurcharge.rate / 100);
   }
 
-  // 燃料サーチャージ
-  if (settings.fuelSurcharge.enabled) {
-    charges.fuelSurcharge = Math.round(baseAmount * settings.fuelSurcharge.rate);
-    totalCharges += charges.fuelSurcharge;
-  }
-
-  return {
-    surcharges,
-    charges,
-    totalSurcharge,
-    totalCharges,
-    totalAmount: baseAmount + totalSurcharge + totalCharges,
-  };
-}
+  return { charges, surcharges };
+};
 
 // デフォルト設定を作成
 export function createDefaultSurchargeSettings(): SurchargeSettings {

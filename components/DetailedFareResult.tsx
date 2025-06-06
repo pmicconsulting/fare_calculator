@@ -1,5 +1,6 @@
 import React from "react";
 import { vehicleLabel } from "../utils/constants";
+import { FareCalculationResult } from '../types/DetailedSettingsType';
 
 type VehicleType = "small" | "medium" | "large" | "trailer";
 
@@ -144,7 +145,7 @@ export default function DetailedFareResult({
           <>
             <dt style={{ float: "left", clear: "left", width: 120 }}>特殊車両割増</dt>
             <dd style={{ marginLeft: 120 }}>
-              ¥{(fare * surcharges.specialVehicle.rate / 100).toLocaleString()} ({surcharges.specialVehicle.rate}%)
+              ¥{surcharges.specialVehicle.amount.toLocaleString()} ({surcharges.specialVehicle.rate}%)
             </dd>
           </>
         )}

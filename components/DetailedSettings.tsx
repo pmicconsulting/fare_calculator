@@ -3,6 +3,7 @@ import FuelSurchargeSettings from './SurchargeSubMenu/FuelSurchargeSettings';
 import { SurchargeSettings } from './SurchargeSubMenu/SurchargeSettings';
 import { DepartureSettings } from './SurchargeSubMenu/DepartureSettings';
 import { ArrivalSettings } from './SurchargeSubMenu/ArrivalSettings';
+import { DetailedSettingsType } from '../types/DetailedSettingsType';
 
 type Props = {
   value: any;
@@ -64,7 +65,7 @@ const DetailedSettings: React.FC<Props> = ({ value, onChange }) => {
 
   // 割増の設定をレンダリング
   const renderSurcharge = () => (
-    <SurchargeSettings value={safeValue} onChange={onChange} />
+    <SurchargeSettings value={value} onChange={onChange} />
   );
 
   // デフォルト値を確実に設定

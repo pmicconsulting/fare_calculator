@@ -1,23 +1,6 @@
 import React, { useState } from "react";
-
-// 特殊車両タイプの定義
-type SpecialVehicleData = {
-  id: string;
-  name: string;
-  rate: number;
-};
-
-const specialVehicleTypes: SpecialVehicleData[] = [
-  { id: "refrigerated", name: "冷蔵車・冷凍車", rate: 20 },
-  { id: "container", name: "海上コンテナ輸送車", rate: 40 },
-  { id: "cement", name: "セメントバルク車", rate: 20 },
-  { id: "dump", name: "ダンプ車", rate: 20 },
-  { id: "mixer", name: "コンクリートミキサー車", rate: 20 },
-  { id: "crane", name: "トラック搭載型クレーン車", rate: 30 },
-  { id: "tankOil", name: "タンク車 石油製品輸送車", rate: 30 },
-  { id: "tankChemical", name: "タンク車 化成品輸送車", rate: 40 },
-  { id: "tankGas", name: "タンク輸送 高圧ガス輸送車", rate: 50 },
-];
+import { specialVehicleTypes } from '../SurchargeCalculation';
+import { DetailedSettingsType, SpecialVehicleData } from '../../types/DetailedSettingsType';
 
 // SurchargeSettingsProps の定義（valueとonChangeを追加）
 type SurchargeSettingsProps = {
@@ -26,34 +9,58 @@ type SurchargeSettingsProps = {
 };
 
 const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }) => {
-  // 特殊車両割増用の状態
-  const [showSpecialVehicle, setShowSpecialVehicle] = useState(false);
-  const [selectedVehicleType, setSelectedVehicleType] = useState<string | null>(null);
+  // valueから初期値を取得するように修正
+  const initialValue = value || {
+    specialVehicle: { enabled: false, type: "" },
+    holiday: { enabled: false, distanceRatio: 0 },
+    deepNight: { enabled: false, distanceRatio: 0 },
+    express: { enabled: false, surchargeRate: 0 },
+    generalRoad: { enabled: false, surchargeRate: 0 },
+    forwardingFee: { enabled: false }
+  };
+
+  // 特殊車両割増用の状態（初期値をvalueから取得）
+  const [showSpecialVehicle, setShowSpecialVehicle] = useState(initialValue.specialVehicle?.enabled || false);
+  const [selectedVehicleType, setSelectedVehicleType] = useState<string | null>(initialValue.specialVehicle?.type || null);
   const [selectedVehicleRate, setSelectedVehicleRate] = useState<number>(0);
   const [isVehicleListExpanded, setIsVehicleListExpanded] = useState(false);
 
-  // 休日割増用の状態
-  const [showHoliday, setShowHoliday] = useState(false);
-  const [tempHolidayDistanceRatio, setTempHolidayDistanceRatio] = useState("");
-  const [isHolidayConfirmed, setIsHolidayConfirmed] = useState(false);
+  // 休日割増用の状態（初期値をvalueから取得）
+  const [showHoliday, setShowHoliday] = useState(initialValue.holiday?.enabled || false);
+  const [tempHolidayDistanceRatio, setTempHolidayDistanceRatio] = useState(
+    initialValue.holiday?.distanceRatio?.toString() || ""
+  );
+  const [isHolidayConfirmed, setIsHolidayConfirmed] = useState(
+    initialValue.holiday?.distanceRatio > 0
+  );
   
-  // 深夜割増用の状態
-  const [showDeepNight, setShowDeepNight] = useState(false);
-  const [tempDeepNightDistanceRatio, setTempDeepNightDistanceRatio] = useState("");
-  const [isDeepNightConfirmed, setIsDeepNightConfirmed] = useState(false);
+  // 深夜割増用の状態（初期値をvalueから取得）
+  const [showDeepNight, setShowDeepNight] = useState(initialValue.deepNight?.enabled || false);
+  const [tempDeepNightDistanceRatio, setTempDeepNightDistanceRatio] = useState(
+    initialValue.deepNight?.distanceRatio?.toString() || ""
+  );
+  const [isDeepNightConfirmed, setIsDeepNightConfirmed] = useState(
+    initialValue.deepNight?.distanceRatio > 0
+  );
   
-  // 他の割増用の状態
-  const [showExpress, setShowExpress] = useState(false);
-  const [tempExpressRate, setTempExpressRate] = useState("20");
-  const [isExpressConfirmed, setIsExpressConfirmed] = useState(false);
+  // 他の割増用の状態（初期値をvalueから取得）
+  const [showExpress, setShowExpress] = useState(initialValue.express?.enabled || false);
+  const [tempExpressRate, setTempExpressRate] = useState(
+    initialValue.express?.surchargeRate?.toString() || "20"
+  );
+  const [isExpressConfirmed, setIsExpressConfirmed] = useState(
+    initialValue.express?.surchargeRate > 0
+  );
   
-  const [showGeneralRoad, setShowGeneralRoad] = useState(false);
-  const [tempGeneralRoadRate, setTempGeneralRoadRate] = useState("20");
-  const [isGeneralRoadConfirmed, setIsGeneralRoadConfirmed] = useState(false);
+  const [showGeneralRoad, setShowGeneralRoad] = useState(initialValue.generalRoad?.enabled || false);
+  const [tempGeneralRoadRate, setTempGeneralRoadRate] = useState(
+    initialValue.generalRoad?.surchargeRate?.toString() || "20"
+  );
+  const [isGeneralRoadConfirmed, setIsGeneralRoadConfirmed] = useState(
+    initialValue.generalRoad?.surchargeRate > 0
+  );
   
-  const [showForwardingFee, setShowForwardingFee] = useState(false);
-  const [tempForwardingFee, setTempForwardingFee] = useState("");
-  const [isForwardingFeeConfirmed, setIsForwardingFeeConfirmed] = useState(false);
+  const [showForwardingFee, setShowForwardingFee] = useState(initialValue.forwardingFee?.enabled || false);
 
   // ユーティリティ関数
   // 全角→半角変換関数
