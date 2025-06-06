@@ -19,12 +19,13 @@ const specialVehicleTypes: SpecialVehicleData[] = [
   { id: "tankGas", name: "タンク輸送 高圧ガス輸送車", rate: 50 },
 ];
 
-// SurchargeSettingsProps の定義
+// SurchargeSettingsProps の定義（valueとonChangeを追加）
 type SurchargeSettingsProps = {
-  // 空のProps定義（将来の拡張用）
+  value: any;
+  onChange: (value: any) => void;
 };
 
-const SurchargeSettings: React.FC<SurchargeSettingsProps> = () => {
+const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }) => {
   // 特殊車両割増用の状態
   const [showSpecialVehicle, setShowSpecialVehicle] = useState(false);
   const [selectedVehicleType, setSelectedVehicleType] = useState<string | null>(null);
@@ -43,14 +44,16 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = () => {
   
   // 他の割増用の状態
   const [showExpress, setShowExpress] = useState(false);
-  const [tempExpressRate, setTempExpressRate] = useState("20"); // "" → "20" に変更
+  const [tempExpressRate, setTempExpressRate] = useState("20");
   const [isExpressConfirmed, setIsExpressConfirmed] = useState(false);
   
   const [showGeneralRoad, setShowGeneralRoad] = useState(false);
-  const [tempGeneralRoadRate, setTempGeneralRoadRate] = useState("20"); // "" → "20" に変更
+  const [tempGeneralRoadRate, setTempGeneralRoadRate] = useState("20");
   const [isGeneralRoadConfirmed, setIsGeneralRoadConfirmed] = useState(false);
   
   const [showForwardingFee, setShowForwardingFee] = useState(false);
+  const [tempForwardingFee, setTempForwardingFee] = useState("");
+  const [isForwardingFeeConfirmed, setIsForwardingFeeConfirmed] = useState(false);
 
   // ユーティリティ関数
   // 全角→半角変換関数
@@ -82,8 +85,16 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = () => {
       setSelectedVehicleType(null);
       setSelectedVehicleRate(0);
       setIsVehicleListExpanded(false);
+      onChange({
+        ...value,
+        specialVehicle: { enabled: false, type: "" },
+      });
     } else {
       setIsVehicleListExpanded(true);
+      onChange({
+        ...value,
+        specialVehicle: { enabled: true, type: selectedVehicleType || "" },
+      });
     }
   };
 
@@ -98,6 +109,10 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = () => {
       if (vehicle) {
         setSelectedVehicleRate(vehicle.rate);
         console.log("特殊車両選択:", vehicleId, vehicle.rate);
+        onChange({
+          ...value,
+          specialVehicle: { enabled: true, type: vehicleId },
+        });
       }
       setIsVehicleListExpanded(false);
     }
@@ -110,6 +125,15 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = () => {
     if (!newValue) {
       setTempHolidayDistanceRatio("");
       setIsHolidayConfirmed(false);
+      onChange({
+        ...value,
+        holiday: { enabled: false, distanceRatio: 0 },
+      });
+    } else {
+      onChange({
+        ...value,
+        holiday: { enabled: true, distanceRatio: 0 },
+      });
     }
   };
 
@@ -131,6 +155,10 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = () => {
       if (isValidDistanceRatio(tempHolidayDistanceRatio)) {
         setIsHolidayConfirmed(true);
         console.log("休日割増確定 - 走行距離比率:", tempHolidayDistanceRatio + "%");
+        onChange({
+          ...value,
+          holiday: { enabled: true, distanceRatio: parseInt(tempHolidayDistanceRatio, 10) },
+        });
       }
     }
   };
@@ -142,6 +170,15 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = () => {
     if (!newValue) {
       setTempDeepNightDistanceRatio("");
       setIsDeepNightConfirmed(false);
+      onChange({
+        ...value,
+        deepNight: { enabled: false, distanceRatio: 0 },
+      });
+    } else {
+      onChange({
+        ...value,
+        deepNight: { enabled: true, distanceRatio: 0 },
+      });
     }
   };
 
@@ -163,6 +200,10 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = () => {
       if (isValidDistanceRatio(tempDeepNightDistanceRatio)) {
         setIsDeepNightConfirmed(true);
         console.log("深夜割増確定 - 走行距離比率:", tempDeepNightDistanceRatio + "%");
+        onChange({
+          ...value,
+          deepNight: { enabled: true, distanceRatio: parseInt(tempDeepNightDistanceRatio, 10) },
+        });
       }
     }
   };
@@ -172,8 +213,17 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = () => {
     const newValue = !showExpress;
     setShowExpress(newValue);
     if (!newValue) {
-      setTempExpressRate("20"); // "" → "20" に変更
+      setTempExpressRate("20");
       setIsExpressConfirmed(false);
+      onChange({
+        ...value,
+        express: { enabled: false, surchargeRate: 0 },
+      });
+    } else {
+      onChange({
+        ...value,
+        express: { enabled: true, surchargeRate: 20 },
+      });
     }
   };
 
@@ -191,6 +241,10 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = () => {
       if (isValidDistanceRatio(tempExpressRate)) {
         setIsExpressConfirmed(true);
         console.log("速達割増確定 - 割増率:", tempExpressRate + "%");
+        onChange({
+          ...value,
+          express: { enabled: true, surchargeRate: parseInt(tempExpressRate, 10) },
+        });
       }
     }
   };
@@ -199,8 +253,17 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = () => {
     const newValue = !showGeneralRoad;
     setShowGeneralRoad(newValue);
     if (!newValue) {
-      setTempGeneralRoadRate("20"); // "" → "20" に変更
+      setTempGeneralRoadRate("20");
       setIsGeneralRoadConfirmed(false);
+      onChange({
+        ...value,
+        generalRoad: { enabled: false, surchargeRate: 0 },
+      });
+    } else {
+      onChange({
+        ...value,
+        generalRoad: { enabled: true, surchargeRate: 20 },
+      });
     }
   };
 
@@ -218,6 +281,10 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = () => {
       if (isValidDistanceRatio(tempGeneralRoadRate)) {
         setIsGeneralRoadConfirmed(true);
         console.log("一般道利用割増確定 - 割増率:", tempGeneralRoadRate + "%");
+        onChange({
+          ...value,
+          generalRoad: { enabled: true, surchargeRate: parseInt(tempGeneralRoadRate, 10) },
+        });
       }
     }
   };
@@ -225,9 +292,44 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = () => {
   const handleForwardingFeeToggle = () => {
     const newValue = !showForwardingFee;
     setShowForwardingFee(newValue);
+    if (!newValue) {
+      setTempForwardingFee("");
+      setIsForwardingFeeConfirmed(false);
+      onChange({
+        ...value,
+        forwardingFee: { enabled: false },
+      });
+    } else {
+      onChange({
+        ...value,
+        forwardingFee: { enabled: true },
+      });
+    }
   };
 
-  // スタイル定義
+  const handleForwardingFeeInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value;
+    const halfWidthValue = toHalfWidth(rawValue);
+    const numericValue = halfWidthValue.replace(/[^0-9]/g, '');
+    setTempForwardingFee(numericValue);
+  };
+
+  const handleForwardingFeeConfirm = () => {
+    if (isForwardingFeeConfirmed) {
+      setIsForwardingFeeConfirmed(false);
+    } else {
+      if (tempForwardingFee && parseInt(tempForwardingFee) > 0) {
+        setIsForwardingFeeConfirmed(true);
+        console.log("利用運送手数料確定:", tempForwardingFee + "円");
+        onChange({
+          ...value,
+          forwardingFee: { enabled: true },
+        });
+      }
+    }
+  };
+
+  // スタイル定義（以前のファイルと完全に同じ）
   const containerStyle: React.CSSProperties = {
     display: "flex",
     flexDirection: "column",
@@ -675,7 +777,7 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = () => {
         )}
       </div>
 
-      {/* 利用運送手数料 - 修正版 */}
+      {/* 利用運送手数料 - 入力枠を削除 */}
       <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
         <div style={itemLabelStyle}>利用運送手数料</div>
         <div style={radioContainerStyle}>
@@ -703,9 +805,7 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = () => {
           </div>
         </div>
         {showForwardingFee && (
-          <div style={fixedRateDisplayStyle}>
-            割  増  率  10％
-          </div>
+          <span style={fixedRateDisplayStyle}>基準運賃額の10%</span>
         )}
       </div>
     </div>

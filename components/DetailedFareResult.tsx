@@ -80,46 +80,62 @@ export default function DetailedFareResult({
         <dd style={{ marginLeft: 120 }}>{region}運輸局</dd>
       </dl>
 
-      {/* 料金詳細 */}
-      <h3 style={{ margin: "16px 0", fontSize: 20 }}>料金</h3>
-      <dl style={{ margin: "12px 0", lineHeight: 1.5, overflow: "hidden" }}>
-        {charges.loadingFee && (
-          <>
-            <dt style={{ float: "left", clear: "left", width: 120 }}>積込料</dt>
-            <dd style={{ marginLeft: 120 }}>¥{charges.loadingFee.toLocaleString()}</dd>
-          </>
-        )}
-        {charges.departureWaitingFee && (
-          <>
-            <dt style={{ float: "left", clear: "left", width: 120 }}>出発時待機時間料</dt>
-            <dd style={{ marginLeft: 120 }}>¥{charges.departureWaitingFee.toLocaleString()}</dd>
-          </>
-        )}
-        {charges.arrivalWaitingFee && (
-          <>
-            <dt style={{ float: "left", clear: "left", width: 120 }}>到着時待機時間料</dt>
-            <dd style={{ marginLeft: 120 }}>¥{charges.arrivalWaitingFee.toLocaleString()}</dd>
-          </>
-        )}
-        {charges.unloadingFee && (
-          <>
-            <dt style={{ float: "left", clear: "left", width: 120 }}>取卸料</dt>
-            <dd style={{ marginLeft: 120 }}>¥{charges.unloadingFee.toLocaleString()}</dd>
-          </>
-        )}
-        {charges.forwardingFee && (
-          <>
-            <dt style={{ float: "left", clear: "left", width: 120 }}>利用運送手数料</dt>
-            <dd style={{ marginLeft: 120 }}>¥{charges.forwardingFee.toLocaleString()}</dd>
-          </>
-        )}
-        {charges.fuelSurcharge && (
-          <>
-            <dt style={{ float: "left", clear: "left", width: 120 }}>燃料サーチャージ</dt>
-            <dd style={{ marginLeft: 120 }}>¥{charges.fuelSurcharge.toLocaleString()}</dd>
-          </>
-        )}
-      </dl>
+      {/* 料金・実費の部（0円の項目は非表示） */}
+      <div style={{ margin: "16px 0", lineHeight: 1.5, overflow: "hidden" }}>
+        <h3 style={{ margin: 0, fontSize: 20 }}>料金・実費</h3>
+        <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 8 }}>
+          <tbody>
+            {charges.loadingFee && (
+              <tr>
+                <td style={{ border: "1px solid #ddd", padding: 8, width: "50%" }}>積込料</td>
+                <td style={{ border: "1px solid #ddd", padding: 8 }}>
+                  ¥{charges.loadingFee.toLocaleString()}
+                </td>
+              </tr>
+            )}
+            {charges.departureWaitingFee && (
+              <tr>
+                <td style={{ border: "1px solid #ddd", padding: 8, width: "50%" }}>出発時待機時間料</td>
+                <td style={{ border: "1px solid #ddd", padding: 8 }}>
+                  ¥{charges.departureWaitingFee.toLocaleString()}
+                </td>
+              </tr>
+            )}
+            {charges.arrivalWaitingFee && (
+              <tr>
+                <td style={{ border: "1px solid #ddd", padding: 8, width: "50%" }}>到着時待機時間料</td>
+                <td style={{ border: "1px solid #ddd", padding: 8 }}>
+                  ¥{charges.arrivalWaitingFee.toLocaleString()}
+                </td>
+              </tr>
+            )}
+            {charges.unloadingFee && (
+              <tr>
+                <td style={{ border: "1px solid #ddd", padding: 8, width: "50%" }}>取卸料</td>
+                <td style={{ border: "1px solid #ddd", padding: 8 }}>
+                  ¥{charges.unloadingFee.toLocaleString()}
+                </td>
+              </tr>
+            )}
+            {charges.forwardingFee && (
+              <tr>
+                <td style={{ border: "1px solid #ddd", padding: 8, width: "50%" }}>利用運送手数料</td>
+                <td style={{ border: "1px solid #ddd", padding: 8 }}>
+                  ¥{charges.forwardingFee.toLocaleString()}
+                </td>
+              </tr>
+            )}
+            {charges.fuelSurcharge && (
+              <tr>
+                <td style={{ border: "1px solid #ddd", padding: 8, width: "50%" }}>燃料サーチャージ</td>
+                <td style={{ border: "1px solid #ddd", padding: 8 }}>
+                  ¥{charges.fuelSurcharge.toLocaleString()}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
 
       {/* 割増詳細 */}
       <h3 style={{ margin: "16px 0", fontSize: 20 }}>割増料金</h3>

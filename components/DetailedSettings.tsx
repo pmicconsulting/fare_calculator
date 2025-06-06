@@ -64,20 +64,30 @@ const DetailedSettings: React.FC<Props> = ({ value, onChange }) => {
 
   // 割増の設定をレンダリング
   const renderSurcharge = () => (
-    <SurchargeSettings
-      waitingTimeEnabled={value.departureWaitingTimeEnabled}
-      waitingTimeValue={value.departureWaitingTimeValue}
-      loadingWorkEnabled={value.departureLoadingWorkEnabled}
-      loadingWorkValue={value.departureLoadingWorkValue}
-      loadingWorkType={value.departureLoadingWorkType}
-      onWaitingTimeChange={(enabled, val) => {
-        onChange({ ...value, departureWaitingTimeEnabled: enabled, departureWaitingTimeValue: val });
-      }}
-      onLoadingWorkChange={(enabled, val) => {
-        onChange({ ...value, departureLoadingWorkEnabled: enabled, departureLoadingWorkValue: val });
-      }}
-    />
+    <SurchargeSettings value={safeValue} onChange={onChange} />
   );
+
+  // デフォルト値を確実に設定
+  const getDefaultSettings = () => ({
+    specialVehicle: { enabled: false, type: "" },
+    holiday: { enabled: false, distanceRatio: 0 },
+    deepNight: { enabled: false, distanceRatio: 0 },
+    express: { enabled: false, surchargeRate: 20 }, // デフォルト値を追加
+    generalRoad: { enabled: false, surchargeRate: 20 }, // デフォルト値追加
+    waitingTime: {
+      departure: { enabled: false, time: 0 },
+      arrival: { enabled: false, time: 0 },
+    },
+    loadingWork: {
+      departure: { enabled: false, type: "", time: 0 },
+      arrival: { enabled: false, type: "", time: 0 },
+    },
+    forwardingFee: { enabled: false }, // ← 追加
+    fuelSurcharge: { enabled: false, rate: 0 },
+  });
+
+  // DetailedSettingsコンポーネント内でsafeValueを定義
+  const safeValue = { ...getDefaultSettings(), ...value };
 
   return (
     <div style={{ 

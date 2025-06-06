@@ -19,6 +19,7 @@ import {
 } from "../lib/codeMaps";
 // DetailedSettingsのインポートを有効化
 import DetailedSettings from "../components/DetailedSettings";
+import DetailedFareResult from "../components/DetailedFareResult";
 
 type SpecialVehicleType = "none" | "trailer" | "refrigerated" | "wing" | "powerGate";
 
@@ -58,37 +59,23 @@ export default function Home() {
 
   // 詳細設定の状態管理
   const [detailedSettingsEnabled, setDetailedSettingsEnabled] = useState<boolean>(false);
+  // 詳細設定の初期値（forwardingFeeを確実に含める）
   const [detailedSettings, setDetailedSettings] = useState({
-    // 出発時の設定
-    departureWaitingTimeEnabled: false,
-    departureWaitingTimeValue: "",
-    departureLoadingWorkEnabled: false,
-    departureLoadingWorkValue: "",
-    departureLoadingWorkType: "machine",
-    
-    // 到着時の設定
-    arrivalWaitingTimeEnabled: false,
-    arrivalWaitingTimeValue: "",
-    arrivalUnloadingWorkEnabled: false,
-    arrivalUnloadingWorkValue: "",
-    arrivalUnloadingWorkType: "machine",
-    
-    // 料金の設定
-    fuelSurchargeEnabled: false,
-    fuelSurchargeValue: "",
-    forwardingFeeEnabled: false,
-    forwardingFeeValue: "",
-    
-    // 割増の設定
-    specialVehicleType: "none" as SpecialVehicleType, // 型を明示
-    holidayEnabled: false,
-    holidayRate: "20",
-    deepNightEnabled: false,  // deepNight に統一
-    deepNightRate: "30",
-    expressEnabled: false,
-    expressRate: "20",
-    generalRoadEnabled: false,
-    generalRoadRate: "20",
+    specialVehicle: { enabled: false, type: "" },
+    holiday: { enabled: false, distanceRatio: 0 },
+    deepNight: { enabled: false, distanceRatio: 0 },
+    express: { enabled: false, surchargeRate: 20 },
+    generalRoad: { enabled: false, surchargeRate: 20 },
+    waitingTime: {
+      departure: { enabled: false, time: 0 },
+      arrival: { enabled: false, time: 0 },
+    },
+    loadingWork: {
+      departure: { enabled: false, type: "", time: 0 },
+      arrival: { enabled: false, type: "", time: 0 },
+    },
+    forwardingFee: { enabled: false }, // 確実に追加
+    fuelSurcharge: { enabled: false, rate: 0 },
   });
 
   // distanceType切替時に結果stateをリセット
@@ -320,6 +307,188 @@ export default function Home() {
       addressMapRef.current?.calculateRoute();
     }
   }, [distanceType, result]);
+
+  // 詳細設定が有効かどうかの判定ロジック
+  const isDetailedSettingsActive = () => {
+    if (!detailedSettingsEnabled) return false;
+    
+    return (
+      detailedSettings.specialVehicle?.enabled ||
+      detailedSettings.holiday?.enabled ||
+      detailedSettings.deepNight?.enabled ||
+      detailedSettings.express?.enabled ||
+      detailedSettings.generalRoad?.enabled ||
+      detailedSettings.waitingTime?.departure?.enabled ||
+      detailedSettings.waitingTime?.arrival?.enabled ||
+      detailedSettings.loadingWork?.departure?.enabled ||
+      detailedSettings.loadingWork?.arrival?.enabled ||
+      detailedSettings.forwardingFee?.enabled || // 追加
+      detailedSettings.fuelSurcharge?.enabled
+    );
+  };
+
+  // 詳細設定に基づく割増・料金の計算処理を追加
+  const calculateDetailedFare = (baseFare: number, settings: any) => {
+    const charges: any = {};
+    const surcharges: any = {};
+    
+    // 利用運送手数料の計算（基準運賃額の10%）
+    if (settings.forwardingFee?.enabled) {
+      charges.forwardingFee = Math.round(baseFare * 0.1);
+    }
+    
+    // 特殊車両割増の計算
+    if (settings.specialVehicle?.enabled && settings.specialVehicle?.type) {
+      // 車両タイプから割増率を取得
+      const vehicle = specialVehicleTypes.find(v => v.id === settings.specialVehicle.type);
+      if (vehicle) {
+        surcharges.specialVehicle = {
+          type: vehicle.name,
+          rate: vehicle.rate
+        };
+      }
+    }
+    
+    // 休日割増の計算
+    if (settings.holiday?.enabled && settings.holiday?.distanceRatio > 0) {
+      // 休日割増 = 基本運賃 × (走行距離比率 ÷ 100) × 0.3
+      const ratio = settings.holiday.distanceRatio / 100;
+      surcharges.holiday = Math.round(baseFare * ratio * 0.3);
+    }
+    
+    // 深夜・早朝割増の計算
+    if (settings.deepNight?.enabled && settings.deepNight?.distanceRatio > 0) {
+      // 深夜割増 = 基本運賃 × (走行距離比率 ÷ 100) × 0.3
+      const ratio = settings.deepNight.distanceRatio / 100;
+      surcharges.deepNight = Math.round(baseFare * ratio * 0.3);
+    }
+    
+    // 速達割増の計算
+    if (settings.express?.enabled && settings.express?.surchargeRate > 0) {
+      // 速達割増 = 基本運賃 × 割増率 ÷ 100
+      surcharges.express = Math.round(baseFare * settings.express.surchargeRate / 100);
+    }
+    
+    // 一般道利用割増の計算
+    if (settings.generalRoad?.enabled && settings.generalRoad?.surchargeRate > 0) {
+      // 一般道割増 = 基本運賃 × 割増率 ÷ 100
+      surcharges.generalRoad = Math.round(baseFare * settings.generalRoad.surchargeRate / 100);
+    }
+    
+    return { charges, surcharges };
+  };
+
+  // 結果表示の分岐処理
+  const renderFareResult = () => {
+    if (distanceType === "map" && (fare !== null || error !== null)) {
+      // 詳細設定が有効で、実際に何らかの割増が設定されている場合
+      if (detailedSettingsEnabled && isDetailedSettingsActive()) {
+        const { charges, surcharges } = calculateDetailedFare(fare || 0, detailedSettings);
+        
+        return (
+          <DetailedFareResult
+            fare={fare}
+            rawKm={km}
+            roundedKm={roundedKm}
+            originAddr={originAddr}
+            destinationAddr={destinationAddr}
+            useHighway={useHighway}
+            vehicle={vehicle}
+            region={region}
+            charges={charges}
+            surcharges={surcharges}
+            error={error}
+          />
+        );
+      } else {
+        // 通常の運賃結果表示
+        return (
+          <FareResult
+            fare={fare}
+            originAddr={originAddr}
+            destinationAddr={destinationAddr}
+            rawKm={km}
+            roundedKm={roundedKm}
+            useHighway={useHighway}
+            vehicle={vehicle}
+            region={region}
+            error={error}
+          />
+        );
+      }
+    }
+    
+    if (distanceType === "address" && result) {
+      const shouldShowDetailed = isDetailedSettingsActive();
+      
+      return shouldShowDetailed ? (
+        <DetailedFareResult
+          fare={result.fare}
+          rawKm={result.rawKm}
+          roundedKm={result.roundedKm}
+          originAddr={result.originAddr}
+          destinationAddr={result.destinationAddr}
+          useHighway={useHighway}
+          vehicle={vehicle}
+          region={region}
+          detailedSettings={detailedSettings}
+        />
+      ) : (
+        <FareResult
+          fare={result.fare}
+          rawKm={result.rawKm}
+          roundedKm={result.roundedKm}
+          originAddr={result.originAddr}
+          destinationAddr={result.destinationAddr}
+          useHighway={useHighway}
+          vehicle={vehicle}
+          region={region}
+        />
+      );
+    }
+
+    if (distanceType === "manual" && manualFareResult) {
+      return (
+        <ManualFareResult
+          fare={manualFareResult.fare}
+          rawKm={manualFareResult.rawKm}
+          roundedKm={manualFareResult.roundedKm}
+          originAddr={manualFareResult.originAddr}
+          destinationAddr={manualFareResult.destinationAddr}
+          useHighway={useHighway}
+          vehicle={vehicle}
+          region={region}
+        />
+      );
+    }
+
+    if (distanceType === "ferry" && ferryResult) {
+      return (
+        <FerryFareResult
+          totalFare={ferryResult.beforeFare + ferryResult.afterFare}
+          before={{
+            fare: ferryResult.beforeFare,
+            originAddr: ferryResult.beforeOriginAddr,
+            destinationAddr: ferryResult.beforeDestAddr,
+            rawKm: ferryResult.beforeKm,
+            roundedKm: ferryResult.beforeRoundedKm,
+          }}
+          after={{
+            fare: ferryResult.afterFare,
+            originAddr: ferryResult.afterOriginAddr,
+            destinationAddr: ferryResult.afterDestAddr,
+            rawKm: ferryResult.afterKm,
+            roundedKm: ferryResult.afterRoundedKm,
+          }}
+          useHighway={useHighway}
+          vehicle={vehicle}
+          region={region}
+        />
+      );
+    }
+
+    return null;
+  };
 
   // スタイル定義を追加
   const containerStyle: React.CSSProperties = {

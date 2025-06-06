@@ -104,95 +104,134 @@ export function getSpecialVehicleInfo(vehicleType: SpecialVehicleType): SpecialV
 // サーチャージ計算メイン関数
 export function calculateSurcharge(
   baseAmount: number,
-  settings: SurchargeSettings
-): SurchargeCalculationResult {
-  // 固定額料金の計算
-  const fuelSurcharge = settings.fuelSurcharge.enabled ? settings.fuelSurcharge.amount : 0;
-  const forwardingFee = settings.forwardingFee.enabled ? settings.forwardingFee.amount : 0;
-  const totalFixed = fuelSurcharge + forwardingFee;
-
-  // 特殊車両割増の計算
-  const specialVehicleInfo = getSpecialVehicleInfo(settings.specialVehicle.vehicleType);
-  const specialVehicleAmount = specialVehicleInfo.rate > 0 
-    ? Math.round(baseAmount * specialVehicleInfo.rate / 100)
-    : 0;
-
-  // その他の割増計算
-  const holiday = settings.holiday.enabled 
-    ? Math.round(baseAmount * settings.holiday.rate / 100) 
-    : 0;
-  const deepNight = settings.deepNight.enabled 
-    ? Math.round(baseAmount * settings.deepNight.rate / 100) 
-    : 0;
-  const express = settings.express.enabled 
-    ? Math.round(baseAmount * settings.express.rate / 100) 
-    : 0;
-  const generalRoad = settings.generalRoad.enabled 
-    ? Math.round(baseAmount * settings.generalRoad.rate / 100) 
-    : 0;
-
-  // 割増合計
-  const totalSurcharge = specialVehicleAmount + holiday + deepNight + express + generalRoad;
-
-  // 総合計
-  const grandTotal = baseAmount + totalSurcharge + totalFixed;
-
-  // 内訳の作成
-  const breakdown: string[] = [];
-  breakdown.push(`割増対象額: ${baseAmount.toLocaleString()}円`);
-  
-  // 割増の内訳
-  if (totalSurcharge > 0) {
-    breakdown.push('【割増】');
-    if (specialVehicleInfo.rate > 0) {
-      breakdown.push(`　${specialVehicleInfo.name}: ${specialVehicleAmount.toLocaleString()}円 (${specialVehicleInfo.rate}%)`);
-    }
-    if (settings.holiday.enabled) {
-      breakdown.push(`　休日割増: ${holiday.toLocaleString()}円 (${settings.holiday.rate}%)`);
-    }
-    if (settings.deepNight.enabled) {
-      breakdown.push(`　深夜・早朝割増: ${deepNight.toLocaleString()}円 (${settings.deepNight.rate}%)`);
-    }
-    if (settings.express.enabled) {
-      breakdown.push(`　速達割増: ${express.toLocaleString()}円 (${settings.express.rate}%)`);
-    }
-    if (settings.generalRoad.enabled) {
-      breakdown.push(`　一般道利用割増: ${generalRoad.toLocaleString()}円 (${settings.generalRoad.rate}%)`);
-    }
-    breakdown.push(`　割増合計: ${totalSurcharge.toLocaleString()}円`);
+  settings: {
+    specialVehicle: { enabled: boolean; type: string };
+    holiday: { enabled: boolean; distanceRatio: number };
+    deepNight: { enabled: boolean; distanceRatio: number };
+    express: { enabled: boolean; surchargeRate: number };
+    generalRoad: { enabled: boolean; surchargeRate: number };
+    waitingTime: { departure: { enabled: boolean; time: number }; arrival: { enabled: boolean; time: number } };
+    loadingWork: { departure: { enabled: boolean; type: string; time: number }; arrival: { enabled: boolean; type: string; time: number } };
+    forwardingFee: { enabled: boolean };
+    fuelSurcharge: { enabled: boolean; rate: number };
   }
-  
-  // 固定額の内訳
-  if (totalFixed > 0) {
-    breakdown.push('【固定額料金】');
-    if (settings.fuelSurcharge.enabled) {
-      breakdown.push(`　燃料サーチャージ: ${fuelSurcharge.toLocaleString()}円`);
+): SurchargeResult {
+  const surcharges: SurchargeResult['surcharges'] = {};
+  const charges: SurchargeResult['charges'] = {};
+  let totalSurcharge = 0;
+  let totalCharges = 0;
+
+  // 特殊車両割増
+  if (settings.specialVehicle.enabled) {
+    const vehicleInfo = getSpecialVehicleInfo(settings.specialVehicle.type);
+    if (vehicleInfo.rate > 0) {
+      const amount = Math.round(baseAmount * vehicleInfo.rate / 100);
+      surcharges.specialVehicle = {
+        type: vehicleInfo.type,
+        name: vehicleInfo.name,
+        rate: vehicleInfo.rate,
+        amount,
+      };
+      totalSurcharge += amount;
     }
-    if (settings.forwardingFee.enabled) {
-      breakdown.push(`　利用運送手数料: ${forwardingFee.toLocaleString()}円`);
-    }
-    breakdown.push(`　固定額合計: ${totalFixed.toLocaleString()}円`);
   }
-  
-  breakdown.push(`【総合計: ${grandTotal.toLocaleString()}円】`);
+
+  // 休日割増
+  if (settings.holiday.enabled) {
+    const amount = Math.round(baseAmount * settings.holiday.distanceRatio);
+    surcharges.holiday = {
+      rate: settings.holiday.distanceRatio,
+      amount,
+    };
+    totalSurcharge += amount;
+  }
+
+  // 深夜・早朝割増
+  if (settings.deepNight.enabled) {
+    const amount = Math.round(baseAmount * settings.deepNight.distanceRatio);
+    surcharges.deepNight = {
+      rate: settings.deepNight.distanceRatio,
+      amount,
+    };
+    totalSurcharge += amount;
+  }
+
+  // 速達割増
+  if (settings.express.enabled) {
+    const amount = Math.round(baseAmount * settings.express.surchargeRate);
+    surcharges.express = {
+      rate: settings.express.surchargeRate,
+      amount,
+    };
+    totalSurcharge += amount;
+  }
+
+  // 一般道利用割増
+  if (settings.generalRoad.enabled) {
+    const amount = Math.round(baseAmount * settings.generalRoad.surchargeRate);
+    surcharges.generalRoad = {
+      rate: settings.generalRoad.surchargeRate,
+      amount,
+    };
+    totalSurcharge += amount;
+  }
+
+  // 待機時間割増
+  if (settings.waitingTime.departure.enabled) {
+    const amount = Math.round(settings.waitingTime.departure.time * 100);
+    surcharges.waitingTimeDeparture = {
+      time: settings.waitingTime.departure.time,
+      amount,
+    };
+    totalSurcharge += amount;
+  }
+  if (settings.waitingTime.arrival.enabled) {
+    const amount = Math.round(settings.waitingTime.arrival.time * 100);
+    surcharges.waitingTimeArrival = {
+      time: settings.waitingTime.arrival.time,
+      amount,
+    };
+    totalSurcharge += amount;
+  }
+
+  // 荷役作業割増
+  if (settings.loadingWork.departure.enabled) {
+    const amount = Math.round(settings.loadingWork.departure.time * 100);
+    surcharges.loadingWorkDeparture = {
+      type: settings.loadingWork.departure.type,
+      time: settings.loadingWork.departure.time,
+      amount,
+    };
+    totalSurcharge += amount;
+  }
+  if (settings.loadingWork.arrival.enabled) {
+    const amount = Math.round(settings.loadingWork.arrival.time * 100);
+    surcharges.loadingWorkArrival = {
+      type: settings.loadingWork.arrival.type,
+      time: settings.loadingWork.arrival.time,
+      amount,
+    };
+    totalSurcharge += amount;
+  }
+
+  // 利用運送手数料（基準運賃額の10%に変更）
+  if (settings.forwardingFee.enabled) {
+    charges.forwardingFee = Math.round(baseAmount * 0.1);
+    totalCharges += charges.forwardingFee;
+  }
+
+  // 燃料サーチャージ
+  if (settings.fuelSurcharge.enabled) {
+    charges.fuelSurcharge = Math.round(baseAmount * settings.fuelSurcharge.rate);
+    totalCharges += charges.fuelSurcharge;
+  }
 
   return {
-    baseAmount,
-    fuelSurcharge,
-    forwardingFee,
-    specialVehicle: {
-      amount: specialVehicleAmount,
-      vehicleType: specialVehicleInfo.name,
-      rate: specialVehicleInfo.rate
-    },
-    holiday,
-    deepNight,
-    express,
-    generalRoad,
+    surcharges,
+    charges,
     totalSurcharge,
-    totalFixed,
-    grandTotal,
-    breakdown
+    totalCharges,
+    totalAmount: baseAmount + totalSurcharge + totalCharges,
   };
 }
 
