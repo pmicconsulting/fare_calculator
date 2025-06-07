@@ -16,16 +16,64 @@ const DetailedSettings: React.FC<Props> = ({ value, onChange }) => {
   // 出発時の設定をレンダリング
   const renderDeparture = () => (
     <DepartureSettings
-      waitingTimeEnabled={value.departureWaitingTimeEnabled}
-      waitingTimeValue={value.departureWaitingTimeValue}
-      loadingWorkEnabled={value.departureLoadingWorkEnabled}
-      loadingWorkValue={value.departureLoadingWorkValue}
-      loadingWorkType={value.departureLoadingWorkType}
+      waitingTimeEnabled={value.waitingTime?.departure?.enabled || false}
+      waitingTimeValue={(value.waitingTime?.departure?.time || 0).toString()}
+      waitingTimeConfirmed={value.waitingTime?.departure?.confirmed || false}
+      loadingWorkEnabled={value.loadingWork?.departure?.enabled || false}
+      loadingWorkValue={(value.loadingWork?.departure?.time || 0).toString()}
+      loadingWorkConfirmed={value.loadingWork?.departure?.confirmed || false}
+      loadingWorkType={value.loadingWork?.departure?.type}
       onWaitingTimeChange={(enabled, val) => {
-        onChange({ ...value, departureWaitingTimeEnabled: enabled, departureWaitingTimeValue: val });
+        onChange({
+          ...value,
+          waitingTime: {
+            ...value.waitingTime,
+            departure: {
+              ...value.waitingTime?.departure,
+              enabled,
+              time: parseInt(val) || 0,
+              confirmed: enabled ? (value.waitingTime?.departure?.confirmed || false) : false
+            }
+          }
+        });
+      }}
+      onWaitingTimeConfirm={(confirmed) => {
+        onChange({
+          ...value,
+          waitingTime: {
+            ...value.waitingTime,
+            departure: {
+              ...value.waitingTime?.departure,
+              confirmed
+            }
+          }
+        });
       }}
       onLoadingWorkChange={(enabled, val) => {
-        onChange({ ...value, departureLoadingWorkEnabled: enabled, departureLoadingWorkValue: val });
+        onChange({
+          ...value,
+          loadingWork: {
+            ...value.loadingWork,
+            departure: {
+              ...value.loadingWork?.departure,
+              enabled,
+              time: parseInt(val) || 0,
+              confirmed: enabled ? (value.loadingWork?.departure?.confirmed || false) : false
+            }
+          }
+        });
+      }}
+      onLoadingWorkConfirm={(confirmed) => {
+        onChange({
+          ...value,
+          loadingWork: {
+            ...value.loadingWork,
+            departure: {
+              ...value.loadingWork?.departure,
+              confirmed
+            }
+          }
+        });
       }}
     />
   );
@@ -33,34 +81,145 @@ const DetailedSettings: React.FC<Props> = ({ value, onChange }) => {
   // 到着時の設定をレンダリング
   const renderArrival = () => (
     <ArrivalSettings
-      waitingTimeEnabled={value.arrivalWaitingTimeEnabled}
-      waitingTimeValue={value.arrivalWaitingTimeValue}
-      unloadingWorkEnabled={value.arrivalUnloadingWorkEnabled}
-      unloadingWorkValue={value.arrivalUnloadingWorkValue}
-      unloadingWorkType={value.arrivalUnloadingWorkType}
+      waitingTimeEnabled={value.waitingTime?.arrival?.enabled || false}
+      waitingTimeValue={(value.waitingTime?.arrival?.time || 0).toString()}
+      waitingTimeConfirmed={value.waitingTime?.arrival?.confirmed || false}
+      unloadingWorkEnabled={value.loadingWork?.arrival?.enabled || false}
+      unloadingWorkValue={(value.loadingWork?.arrival?.time || 0).toString()}
+      loadingWorkConfirmed={value.loadingWork?.arrival?.confirmed || false}
+      unloadingWorkType={value.loadingWork?.arrival?.type}
       onWaitingTimeChange={(enabled, val) => {
-        onChange({ ...value, arrivalWaitingTimeEnabled: enabled, arrivalWaitingTimeValue: val });
+        onChange({
+          ...value,
+          waitingTime: {
+            ...value.waitingTime,
+            arrival: {
+              ...value.waitingTime?.arrival,
+              enabled,
+              time: parseInt(val) || 0,
+              confirmed: enabled ? (value.waitingTime?.arrival?.confirmed || false) : false
+            }
+          }
+        });
+      }}
+      onWaitingTimeConfirm={(confirmed) => {
+        onChange({
+          ...value,
+          waitingTime: {
+            ...value.waitingTime,
+            arrival: {
+              ...value.waitingTime?.arrival,
+              confirmed
+            }
+          }
+        });
       }}
       onUnloadingWorkChange={(enabled, val) => {
-        onChange({ ...value, arrivalUnloadingWorkEnabled: enabled, arrivalUnloadingWorkValue: val });
+        onChange({
+          ...value,
+          loadingWork: {
+            ...value.loadingWork,
+            arrival: {
+              ...value.loadingWork?.arrival,
+              enabled,
+              time: parseInt(val) || 0,
+              confirmed: enabled ? (value.loadingWork?.arrival?.confirmed || false) : false
+            }
+          }
+        });
+      }}
+      onLoadingWorkConfirm={(confirmed) => {
+        onChange({
+          ...value,
+          loadingWork: {
+            ...value.loadingWork,
+            arrival: {
+              ...value.loadingWork?.arrival,
+              confirmed
+            }
+          }
+        });
       }}
     />
   );
 
-  // 対策2: 料金の設定をレンダリング（修正版）
+  // 料金・実費の設定をレンダリング
   const renderFee = () => (
-    <FuelSurchargeSettings
-      fuelEnabled={value.fuelSurchargeEnabled}
-      fuelPrice={value.fuelSurchargeValue}
-      forwardingEnabled={value.forwardingFeeEnabled}
-      forwardingRate={value.forwardingFeeValue}
-      onFuelChange={(enabled, price) => {
-        onChange({ ...value, fuelSurchargeEnabled: enabled, fuelSurchargeValue: price });
-      }}
-      onForwardingChange={(enabled, rate) => {
-        onChange({ ...value, forwardingFeeEnabled: enabled, forwardingFeeValue: rate });
-      }}
-    />
+    <div>
+      {/* 待機時間料金 */}
+      {/* ...existing code... */}
+      
+      {/* 燃料サーチャージ */}
+      <div style={{ marginBottom: '20px' }}>
+        <h4 style={{ marginBottom: '10px' }}>燃料サーチャージ</h4>
+        <label>
+          <input
+            type="checkbox"
+            checked={value.fuelSurcharge?.enabled || false}
+            onChange={(e) => {
+              onChange({
+                ...value,
+                fuelSurcharge: {
+                  ...value.fuelSurcharge,
+                  enabled: e.target.checked,
+                  fuelEfficiency: value.fuelSurcharge?.fuelEfficiency || 5.0,
+                  fuelPrice: value.fuelSurcharge?.fuelPrice || 120
+                }
+              });
+            }}
+          />
+          適用する
+        </label>
+        {value.fuelSurcharge?.enabled && (
+          <div style={{ marginTop: '10px', marginLeft: '20px' }}>
+            <div style={{ marginBottom: '5px' }}>
+              <label>
+                燃費（km/L）：
+                <input
+                  type="number"
+                  value={value.fuelSurcharge?.fuelEfficiency || 5.0}
+                  onChange={(e) => {
+                    onChange({
+                      ...value,
+                      fuelSurcharge: {
+                        ...value.fuelSurcharge,
+                        fuelEfficiency: parseFloat(e.target.value) || 5.0
+                      }
+                    });
+                  }}
+                  step="0.1"
+                  min="0.1"
+                  style={{ width: '80px', marginLeft: '5px' }}
+                />
+              </label>
+            </div>
+            <div>
+              <label>
+                燃料調達価格（円/L）：
+                <input
+                  type="number"
+                  value={value.fuelSurcharge?.fuelPrice || 120}
+                  onChange={(e) => {
+                    onChange({
+                      ...value,
+                      fuelSurcharge: {
+                        ...value.fuelSurcharge,
+                        fuelPrice: parseFloat(e.target.value) || 120
+                      }
+                    });
+                  }}
+                  step="1"
+                  min="0"
+                  style={{ width: '80px', marginLeft: '5px' }}
+                />
+              </label>
+            </div>
+          </div>
+        )}
+      </div>
+      
+      {/* ...existing code... */}
+    </div>
   );
 
   // 割増の設定をレンダリング

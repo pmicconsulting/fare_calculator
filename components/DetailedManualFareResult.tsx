@@ -42,9 +42,19 @@ export default function DetailedManualFareResult({
 }: Props) {
   if (fare == null) return null;
 
-  // 合計料金計算
+  // 合計料金計算（修正: specialVehicleの処理を追加）
   const totalCharges = Object.values(charges).reduce((sum, charge) => sum + (charge || 0), 0);
-  const totalSurcharges = Object.values(surcharges).reduce((sum, surcharge) => sum + (surcharge || 0), 0);
+  
+  // 割増料金の合計を正しく計算
+  let totalSurcharges = 0;
+  if (surcharges.specialVehicle) {
+    totalSurcharges += Math.round((fare || 0) * surcharges.specialVehicle.rate / 100);
+  }
+  if (surcharges.holiday) totalSurcharges += surcharges.holiday;
+  if (surcharges.deepNight) totalSurcharges += surcharges.deepNight;
+  if (surcharges.express) totalSurcharges += surcharges.express;
+  if (surcharges.generalRoad) totalSurcharges += surcharges.generalRoad;
+  
   const totalFare = fare + totalCharges + totalSurcharges;
 
   return (
@@ -81,65 +91,47 @@ export default function DetailedManualFareResult({
 
       {/* 料金・実費の部（0円の項目は非表示） */}
       <div style={{ margin: "16px 0", lineHeight: 1.5, overflow: "hidden" }}>
-        <h3 style={{ margin: 0, fontSize: 20 }}>料金・実費</h3>
-        <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 8 }}>
-          <tbody>
-            {charges.loadingFee && (
-              <tr>
-                <td style={{ border: "1px solid #ddd", padding: 8, width: "50%" }}>積込料</td>
-                <td style={{ border: "1px solid #ddd", padding: 8 }}>
-                  ¥{charges.loadingFee.toLocaleString()}
-                </td>
-              </tr>
-            )}
-            {charges.departureWaitingFee && (
-              <tr>
-                <td style={{ border: "1px solid #ddd", padding: 8, width: "50%" }}>出発時待機時間料</td>
-                <td style={{ border: "1px solid #ddd", padding: 8 }}>
-                  ¥{charges.departureWaitingFee.toLocaleString()}
-                </td>
-              </tr>
-            )}
-            {charges.arrivalWaitingFee && (
-              <tr>
-                <td style={{ border: "1px solid #ddd", padding: 8, width: "50%" }}>到着時待機時間料</td>
-                <td style={{ border: "1px solid #ddd", padding: 8 }}>
-                  ¥{charges.arrivalWaitingFee.toLocaleString()}
-                </td>
-              </tr>
-            )}
-            {charges.unloadingFee && (
-              <tr>
-                <td style={{ border: "1px solid #ddd", padding: 8, width: "50%" }}>取卸料</td>
-                <td style={{ border: "1px solid #ddd", padding: 8 }}>
-                  ¥{charges.unloadingFee.toLocaleString()}
-                </td>
-              </tr>
-            )}
-            {charges.forwardingFee && (
-              <tr>
-                <td style={{ border: "1px solid #ddd", padding: 8, width: "50%" }}>利用運送手数料</td>
-                <td style={{ border: "1px solid #ddd", padding: 8 }}>
-                  ¥{charges.forwardingFee.toLocaleString()}
-                </td>
-              </tr>
-            )}
-            {charges.fuelSurcharge && (
-              <tr>
-                <td style={{ border: "1px solid #ddd", padding: 8, width: "50%" }}>燃料サーチャージ</td>
-                <td style={{ border: "1px solid #ddd", padding: 8 }}>
-                  ¥{charges.fuelSurcharge.toLocaleString()}
-                </td>
-              </tr>
-            )}
-            <tr>
-              <td style={{ border: "1px solid #ddd", padding: 8, width: "50%", fontWeight: "bold" }}>料金・実費小計</td>
-              <td style={{ border: "1px solid #ddd", padding: 8, fontWeight: "bold" }}>
-                ¥{totalCharges.toLocaleString()}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <h3 style={{ margin: "16px 0", fontSize: 20 }}>料金・実費</h3>
+        <dl style={{ margin: "12px 0", lineHeight: 1.5, overflow: "hidden" }}>
+          {charges.departureWaitingFee !== undefined && charges.departureWaitingFee > 0 && (
+            <>
+              <dt style={{ float: "left", clear: "left", width: 120 }}>待機時間料金（出発地）</dt>
+              <dd style={{ marginLeft: 120 }}>¥{charges.departureWaitingFee.toLocaleString()}</dd>
+            </>
+          )}
+          {charges.loadingFee !== undefined && charges.loadingFee > 0 && (
+            <>
+              <dt style={{ float: "left", clear: "left", width: 120 }}>荷役作業料金（出発地）</dt>
+              <dd style={{ marginLeft: 120 }}>¥{charges.loadingFee.toLocaleString()}</dd>
+            </>
+          )}
+          {charges.arrivalWaitingFee !== undefined && charges.arrivalWaitingFee > 0 && (
+            <>
+              <dt style={{ float: "left", clear: "left", width: 120 }}>待機時間料金（到着地）</dt>
+              <dd style={{ marginLeft: 120 }}>¥{charges.arrivalWaitingFee.toLocaleString()}</dd>
+            </>
+          )}
+          {charges.unloadingFee !== undefined && charges.unloadingFee > 0 && (
+            <>
+              <dt style={{ float: "left", clear: "left", width: 120 }}>荷役作業料金（到着地）</dt>
+              <dd style={{ marginLeft: 120 }}>¥{charges.unloadingFee.toLocaleString()}</dd>
+            </>
+          )}
+          {charges.forwardingFee !== undefined && charges.forwardingFee > 0 && (
+            <>
+              <dt style={{ float: "left", clear: "left", width: 120 }}>回送料金</dt>
+              <dd style={{ marginLeft: 120 }}>¥{charges.forwardingFee.toLocaleString()}</dd>
+            </>
+          )}
+          {charges.fuelSurcharge !== undefined && charges.fuelSurcharge >= 0 && (
+            <>
+              <dt style={{ float: "left", clear: "left", width: 120 }}>燃料サーチャージ</dt>
+              <dd style={{ marginLeft: 120 }}>¥{charges.fuelSurcharge.toLocaleString()}</dd>
+            </>
+          )}
+          <dt style={{ float: "left", clear: "left", width: 120, fontWeight: "bold" }}>料金・実費小計</dt>
+          <dd style={{ marginLeft: 120, fontWeight: "bold" }}>¥{totalCharges.toLocaleString()}</dd>
+        </dl>
       </div>
 
       {/* 割増詳細 */}

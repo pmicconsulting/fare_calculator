@@ -1,25 +1,40 @@
 import React, { useState } from "react";
 
-// DepartureSettingsProps → FuelSurchargeSettingsPropsに変更
-type FuelSurchargeSettingsProps = {
-  // Props名を燃料サーチャージ用に変更
-  fuelEnabled: boolean;
-  fuelPrice: string;
-  onFuelChange: (enabled: boolean, price: string) => void;
+// SurchargeSettingsProps の定義（valueとonChangeを追加）
+type SurchargeSettingsProps = {
+  value: any;
+  onChange: (value: any) => void;
 };
 
-// DepartureSettings → FuelSurchargeSettingsに変更
-const FuelSurchargeSettings: React.FC<FuelSurchargeSettingsProps> = ({
-  fuelEnabled,
-  fuelPrice,
-  onFuelChange,
-}) => {
+const FuelSurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }) => {
+  // onChangeが関数でない場合のフォールバック
+  const handleChange = (newValue: any) => {
+    if (typeof onChange === 'function') {
+      onChange(newValue);
+    } else {
+      console.warn('onChange is not a function');
+    }
+  };
+
+  // valueから初期値を取得するように修正
+  const initialValue = value || {
+    fuelSurcharge: { enabled: false, price: "", consumption: "" }
+  };
+
   // 状態変数名を燃料サーチャージ用に変更
-  const [tempFuelPrice, setTempFuelPrice] = useState(fuelPrice);
-  const [tempFuelConsumption, setTempFuelConsumption] = useState("");
-  const [showFuel, setShowFuel] = useState(fuelEnabled);
-  const [isFuelPriceConfirmed, setIsFuelPriceConfirmed] = useState(false);
-  const [isFuelConsumptionConfirmed, setIsFuelConsumptionConfirmed] = useState(false);
+  const [tempFuelPrice, setTempFuelPrice] = useState(
+    initialValue.fuelSurcharge?.price?.toString() || ""
+  );
+  const [tempFuelConsumption, setTempFuelConsumption] = useState(
+    initialValue.fuelSurcharge?.consumption?.toString() || ""
+  );
+  const [showFuel, setShowFuel] = useState(initialValue.fuelSurcharge?.enabled || false);
+  const [isFuelPriceConfirmed, setIsFuelPriceConfirmed] = useState(
+    !!initialValue.fuelSurcharge?.price
+  );
+  const [isFuelConsumptionConfirmed, setIsFuelConsumptionConfirmed] = useState(
+    !!initialValue.fuelSurcharge?.consumption
+  );
 
   // 全角→半角変換関数
   const toHalfWidth = (str: string): string => {
@@ -28,34 +43,29 @@ const FuelSurchargeSettings: React.FC<FuelSurchargeSettingsProps> = ({
     });
   };
 
-  // 燃料調達価格の検証（50〜200、小数点第1位）
+  // 燃料調達価格の検証（130〜200、5円刻み）
   const isValidFuelPrice = (value: string): boolean => {
     if (!value) return false;
-    const num = parseFloat(value);
+    const num = parseInt(value, 10);
     if (isNaN(num)) return false;
     
     // 範囲チェック
-    if (num < 50 || num > 200) return false;
+    if (num < 130 || num > 200) return false;
     
-    // 小数点チェック（第1位まで）
-    const parts = value.split('.');
-    if (parts.length > 1 && parts[1].length > 1) return false;
+    // 5円刻みチェック
+    if (num % 5 !== 0) return false;
     
     return true;
   };
 
-  // 燃費の検証（1〜20、小数点第2位）
+  // 燃費の検証（1〜12）
   const isValidFuelConsumption = (value: string): boolean => {
     if (!value) return false;
-    const num = parseFloat(value);
+    const num = parseInt(value, 10);
     if (isNaN(num)) return false;
     
     // 範囲チェック
-    if (num < 1 || num > 20) return false;
-    
-    // 小数点チェック（第2位まで）
-    const parts = value.split('.');
-    if (parts.length > 1 && parts[1].length > 2) return false;
+    if (num < 1 || num > 12) return false;
     
     return true;
   };
@@ -74,46 +84,28 @@ const FuelSurchargeSettings: React.FC<FuelSurchargeSettingsProps> = ({
       setTempFuelConsumption("");
       setIsFuelPriceConfirmed(false);
       setIsFuelConsumptionConfirmed(false);
-      onFuelChange(false, "");
+      handleChange({
+        ...value,
+        fuelSurcharge: { enabled: false, price: "", consumption: "" }
+      });
+    } else {
+      handleChange({
+        ...value,
+        fuelSurcharge: { 
+          enabled: true, 
+          price: tempFuelPrice || "", 
+          consumption: tempFuelConsumption || "" 
+        }
+      });
     }
   };
 
-  const handleFuelPriceInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawValue = e.target.value;
-    const halfWidthValue = toHalfWidth(rawValue);
-    
-    // 数字と小数点以外を除去
-    const cleaned = halfWidthValue.replace(/[^0-9.]/g, '');
-    
-    // 複数の小数点を防ぐ
-    const parts = cleaned.split('.');
-    if (parts.length > 2) return;
-    
-    // 小数点以下の桁数制限（第1位まで）
-    if (parts.length === 2 && parts[1].length > 1) {
-      return;
-    }
-    
-    setTempFuelPrice(cleaned);
+  const handleFuelPriceInputChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setTempFuelPrice(e.target.value);
   };
 
-  const handleFuelConsumptionInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawValue = e.target.value;
-    const halfWidthValue = toHalfWidth(rawValue);
-    
-    // 数字と小数点以外を除去
-    const cleaned = halfWidthValue.replace(/[^0-9.]/g, '');
-    
-    // 複数の小数点を防ぐ
-    const parts = cleaned.split('.');
-    if (parts.length > 2) return;
-    
-    // 小数点以下の桁数制限（第2位まで）
-    if (parts.length === 2 && parts[1].length > 2) {
-      return;
-    }
-    
-    setTempFuelConsumption(cleaned);
+  const handleFuelConsumptionInputChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setTempFuelConsumption(e.target.value);
   };
 
   const handleFuelPriceConfirm = () => {
@@ -122,8 +114,15 @@ const FuelSurchargeSettings: React.FC<FuelSurchargeSettingsProps> = ({
     } else {
       if (isValidFuelPrice(tempFuelPrice)) {
         setIsFuelPriceConfirmed(true);
-        onFuelChange(true, tempFuelPrice);
         console.log("燃料調達価格確定:", tempFuelPrice + "円/ℓ");
+        handleChange({
+          ...value,
+          fuelSurcharge: { 
+            ...value.fuelSurcharge,
+            enabled: true,
+            price: tempFuelPrice
+          }
+        });
       }
     }
   };
@@ -135,6 +134,14 @@ const FuelSurchargeSettings: React.FC<FuelSurchargeSettingsProps> = ({
       if (isValidFuelConsumption(tempFuelConsumption)) {
         setIsFuelConsumptionConfirmed(true);
         console.log("燃費確定:", tempFuelConsumption + "km/ℓ");
+        handleChange({
+          ...value,
+          fuelSurcharge: { 
+            ...value.fuelSurcharge,
+            enabled: true,
+            consumption: tempFuelConsumption
+          }
+        });
       }
     }
   };
@@ -148,6 +155,7 @@ const FuelSurchargeSettings: React.FC<FuelSurchargeSettingsProps> = ({
     padding: "12px 0",
   };
 
+  // スタイルの高さを統一（80px → 40px、80 → 48）
   const itemLabelStyle: React.CSSProperties = {
     background: "#f8d7da",
     color: "#b94a48",
@@ -157,9 +165,9 @@ const FuelSurchargeSettings: React.FC<FuelSurchargeSettingsProps> = ({
     fontSize: 18,
     minWidth: 140,
     textAlign: "center",
-    padding: "8px 16px",
+    padding: "4px 16px",  // 8px → 4px
     marginRight: 24,
-    height: "80px",
+    height: "40px",  // 80px → 40px
     display: "flex",
     alignItems: "center",
     justifyContent: "center"
@@ -170,7 +178,7 @@ const FuelSurchargeSettings: React.FC<FuelSurchargeSettingsProps> = ({
     borderRadius: 4,
     background: "#fff",
     width: 200,
-    height: 80,
+    height: 48,  // 80 → 48
     padding: "0 16px",
     display: "flex",
     alignItems: "center",
@@ -206,16 +214,16 @@ const FuelSurchargeSettings: React.FC<FuelSurchargeSettingsProps> = ({
     gap: 8,
   };
 
-  const inputBoxStyle = (isConfirmed: boolean): React.CSSProperties => ({
-    width: 80,
+  const selectBoxStyle = (isConfirmed: boolean): React.CSSProperties => ({
+    width: 100,
     height: 36,
     padding: '0 8px',
     border: '1.5px solid #b94a48',
     borderRadius: 4,
     fontSize: 14,
-    textAlign: 'center',
     backgroundColor: isConfirmed ? '#f8f9fa' : '#fff',
     color: isConfirmed ? '#6c757d' : '#000',
+    cursor: isConfirmed ? 'not-allowed' : 'pointer',
   });
 
   const confirmButtonStyle = (isConfirmed: boolean, isDisabled: boolean): React.CSSProperties => ({
@@ -289,60 +297,66 @@ const FuelSurchargeSettings: React.FC<FuelSurchargeSettingsProps> = ({
           <div style={inputGroupStyle}>
             <div style={inputContainerStyle}>
               <span style={labelStyle}>燃料調達価格</span>
-              <input
-                type="text"
+              <select
                 value={tempFuelPrice}
                 onChange={handleFuelPriceInputChange}
-                style={inputBoxStyle(isFuelPriceConfirmed)}
+                style={selectBoxStyle(isFuelPriceConfirmed)}
                 disabled={isFuelPriceConfirmed}
-                maxLength={5}
-              />
+              >
+                <option value="">選択</option>
+                {[130, 135, 140, 145, 150, 155, 160, 165, 170, 175, 180, 185, 190, 195, 200].map(price => (
+                  <option key={price} value={price}>{price}</option>
+                ))}
+              </select>
               <span style={unitStyle}>円/ℓ</span>
               <button 
                 onClick={handleFuelPriceConfirm} 
-                style={confirmButtonStyle(isFuelPriceConfirmed, !isValidFuelPrice(tempFuelPrice))}
-                disabled={!isValidFuelPrice(tempFuelPrice) && !isFuelPriceConfirmed}
+                style={confirmButtonStyle(isFuelPriceConfirmed, !tempFuelPrice)}
+                disabled={!tempFuelPrice && !isFuelPriceConfirmed}
                 onMouseEnter={(e) => {
-                  if (!(!isValidFuelPrice(tempFuelPrice) && !isFuelPriceConfirmed)) {
+                  if (!(!tempFuelPrice && !isFuelPriceConfirmed)) {
                     e.currentTarget.style.backgroundColor = isFuelPriceConfirmed ? '#218838' : '#a03937';
                   }
                 }}
                 onMouseLeave={(e) => {
-                  if (!(!isValidFuelPrice(tempFuelPrice) && !isFuelPriceConfirmed)) {
+                  if (!(!tempFuelPrice && !isFuelPriceConfirmed)) {
                     e.currentTarget.style.backgroundColor = isFuelPriceConfirmed ? '#28a745' : '#b94a48';
                   }
                 }}
               >
-                {getButtonText(isFuelPriceConfirmed, !isValidFuelPrice(tempFuelPrice) && !isFuelPriceConfirmed)}
+                {getButtonText(isFuelPriceConfirmed, !tempFuelPrice && !isFuelPriceConfirmed)}
               </button>
             </div>
             <div style={inputContainerStyle}>
               <span style={labelStyle}>燃　　　費</span>
-              <input
-                type="text"
+              <select
                 value={tempFuelConsumption}
                 onChange={handleFuelConsumptionInputChange}
-                style={inputBoxStyle(isFuelConsumptionConfirmed)}
+                style={selectBoxStyle(isFuelConsumptionConfirmed)}
                 disabled={isFuelConsumptionConfirmed}
-                maxLength={5}
-              />
+              >
+                <option value="">選択</option>
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(consumption => (
+                  <option key={consumption} value={consumption}>{consumption}</option>
+                ))}
+              </select>
               <span style={unitStyle}>km/ℓ</span>
               <button 
                 onClick={handleFuelConsumptionConfirm} 
-                style={confirmButtonStyle(isFuelConsumptionConfirmed, !isValidFuelConsumption(tempFuelConsumption))}
-                disabled={!isValidFuelConsumption(tempFuelConsumption) && !isFuelConsumptionConfirmed}
+                style={confirmButtonStyle(isFuelConsumptionConfirmed, !tempFuelConsumption)}
+                disabled={!tempFuelConsumption && !isFuelConsumptionConfirmed}
                 onMouseEnter={(e) => {
-                  if (!(!isValidFuelConsumption(tempFuelConsumption) && !isFuelConsumptionConfirmed)) {
+                  if (!(!tempFuelConsumption && !isFuelConsumptionConfirmed)) {
                     e.currentTarget.style.backgroundColor = isFuelConsumptionConfirmed ? '#218838' : '#a03937';
                   }
                 }}
                 onMouseLeave={(e) => {
-                  if (!(!isValidFuelConsumption(tempFuelConsumption) && !isFuelConsumptionConfirmed)) {
+                  if (!(!tempFuelConsumption && !isFuelConsumptionConfirmed)) {
                     e.currentTarget.style.backgroundColor = isFuelConsumptionConfirmed ? '#28a745' : '#b94a48';
                   }
                 }}
               >
-                {getButtonText(isFuelConsumptionConfirmed, !isValidFuelConsumption(tempFuelConsumption) && !isFuelConsumptionConfirmed)}
+                {getButtonText(isFuelConsumptionConfirmed, !tempFuelConsumption && !isFuelConsumptionConfirmed)}
               </button>
             </div>
           </div>
@@ -352,5 +366,5 @@ const FuelSurchargeSettings: React.FC<FuelSurchargeSettingsProps> = ({
   );
 };
 
-// 名前付きエクスポートからデフォルトエクスポートに変更
-export default FuelSurchargeSettings;
+// 名前付きエクスポートに変更
+export { FuelSurchargeSettings };

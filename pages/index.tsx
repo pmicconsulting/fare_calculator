@@ -62,6 +62,10 @@ export default function Home() {
 
   // 詳細設定の状態管理
   const [detailedSettingsEnabled, setDetailedSettingsEnabled] = useState<boolean>(false);
+  // 計算結果の状態を追加
+  const [calculatedCharges, setCalculatedCharges] = useState<any>({});
+  const [calculatedSurcharges, setCalculatedSurcharges] = useState<any>({});
+
   // 詳細設定の初期値（forwardingFeeを確実に含める）
   const [detailedSettings, setDetailedSettings] = useState({
     specialVehicle: { enabled: false, type: "" },
@@ -70,15 +74,15 @@ export default function Home() {
     express: { enabled: false, surchargeRate: 20 },
     generalRoad: { enabled: false, surchargeRate: 20 },
     waitingTime: {
-      departure: { enabled: false, time: 0 },
-      arrival: { enabled: false, time: 0 },
+      departure: { enabled: false, time: "", type: 'A' as 'A' | 'B' }, // 修正: 0 → ""
+      arrival: { enabled: false, time: "", type: 'A' as 'A' | 'B' }, // 修正: 0 → ""
     },
     loadingWork: {
-      departure: { enabled: false, type: "", time: 0 },
-      arrival: { enabled: false, type: "", time: 0 },
+      departure: { enabled: false, type: "", time: "" }, // 修正: 0 → ""
+      arrival: { enabled: false, type: "", time: "" }, // 修正: 0 → ""
     },
     forwardingFee: { enabled: false }, // 確実に追加
-    fuelSurcharge: { enabled: false, rate: 0 },
+    fuelSurcharge: { enabled: false, fuelEfficiency: 5.0, fuelPrice: 120 }, // 修正: rate → fuelEfficiency, fuelPrice
   });
 
   // distanceType切替時に結果stateをリセット
@@ -335,7 +339,16 @@ export default function Home() {
     if (distanceType === "map" && (fare !== null || error !== null)) {
       // 詳細設定が有効で、実際に何らかの割増が設定されている場合
       if (detailedSettingsEnabled && isDetailedSettingsActive()) {
-        const { charges, surcharges } = calculateDetailedFare(fare || 0, detailedSettings);
+        console.log("Calculating detailed fare with km:", km);
+        console.log("Detailed settings:", detailedSettings);
+        calculateDetailedFare(fare || 0, detailedSettings, km, vehicle).then(({ charges, surcharges }) => {
+          console.log("Calculated charges:", charges);
+          console.log("Calculated surcharges:", surcharges);
+          
+          // 状態を更新して再レンダリング
+          setCalculatedCharges(charges);
+          setCalculatedSurcharges(surcharges);
+        });
         
         return (
           <DetailedFareResult
@@ -347,8 +360,8 @@ export default function Home() {
             useHighway={useHighway}
             vehicle={vehicle}
             region={region}
-            charges={charges}
-            surcharges={surcharges}
+            charges={calculatedCharges}
+            surcharges={calculatedSurcharges}
           />
         );
       } else {
@@ -373,7 +386,10 @@ export default function Home() {
       const shouldShowDetailed = detailedSettingsEnabled && isDetailedSettingsActive();
       
       if (shouldShowDetailed) {
-        const { charges, surcharges } = calculateDetailedFare(result.fare || 0, detailedSettings);
+        calculateDetailedFare(result.fare || 0, detailedSettings, result.rawKm, vehicle).then(({ charges, surcharges }) => {
+          setCalculatedCharges(charges);
+          setCalculatedSurcharges(surcharges);
+        });
         
         return (
           <DetailedFareResult
@@ -385,8 +401,8 @@ export default function Home() {
             useHighway={useHighway}
             vehicle={vehicle}
             region={region}
-            charges={charges}
-            surcharges={surcharges}
+            charges={calculatedCharges}
+            surcharges={calculatedSurcharges}
           />
         );
       } else {
@@ -409,7 +425,10 @@ export default function Home() {
       const shouldShowDetailed = detailedSettingsEnabled && isDetailedSettingsActive();
       
       if (shouldShowDetailed) {
-        const { charges, surcharges } = calculateDetailedFare(manualFareResult.fare || 0, detailedSettings);
+        calculateDetailedFare(manualFareResult.fare || 0, detailedSettings, manualFareResult.rawKm, vehicle).then(({ charges, surcharges }) => {
+          setCalculatedCharges(charges);
+          setCalculatedSurcharges(surcharges);
+        });
         
         return (
           <DetailedManualFareResult
@@ -421,8 +440,8 @@ export default function Home() {
             useHighway={useHighway}
             vehicle={vehicle}
             region={region}
-            charges={charges}
-            surcharges={surcharges}
+            charges={calculatedCharges}
+            surcharges={calculatedSurcharges}
           />
         );
       } else {
