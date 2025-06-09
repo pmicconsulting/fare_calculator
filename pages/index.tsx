@@ -23,6 +23,7 @@ import DetailedFareResult from "../components/DetailedFareResult";
 import { calculateDetailedFare } from '../lib/calculateDetailedFare'; // 修正: パスを変更
 import { DetailedSettingsType } from '../types/DetailedSettingsType';
 import DetailedManualFareResult from "../components/DetailedManualFareResult"; // 追加
+import NoticeBox from "../components/NoticeBox";
 
 type SpecialVehicleType = "none" | "trailer" | "refrigerated" | "wing" | "powerGate";
 
@@ -649,7 +650,7 @@ export default function Home() {
       </div>
       
       <div style={rightPanelStyle}>
-        {/* 既存の右パネルの内容をそのまま */}
+        {/* 各種入力フォームと結果表示 */}
         {distanceType === "manual" && (
           <>
             <ManualDistanceInput
@@ -706,7 +707,7 @@ export default function Home() {
             {renderFareResult()}
           </>
         )}
-        
+
         {distanceType === "ferry" && (
           <>
             <FerryForm
@@ -771,6 +772,9 @@ export default function Home() {
             />
           </div>
         )}
+
+        {/* NoticeBoxを最下段に追加 */}
+        <NoticeBox />
       </div>
     </div>
   );
