@@ -4,7 +4,7 @@ import { DetailedSettingsType, SpecialVehicleData } from '../../types/DetailedSe
 
 // specialVehicleTypesをこのファイル内で定義
 const specialVehicleTypes: SpecialVehicleData[] = [
- { id: "refrigerated", name: "冷蔵車・冷凍車", rate: 20 },
+  { id: "refrigerated", name: "冷蔵車・冷凍車", rate: 20 },
   { id: "container", name: "海上コンテナ輸送車", rate: 40 },
   { id: "cement_bulk", name: "セメントバルク車", rate: 20 },
   { id: "dump", name: "ダンプ車", rate: 20 },
@@ -24,6 +24,7 @@ type SurchargeSettingsProps = {
 const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }) => {
   // valueから初期値を取得するように修正
   const initialValue = value || {
+    fuelSurcharge: { enabled: false, fuelPrice: 0, fuelEfficiency: 0 },
     specialVehicle: { enabled: false, type: "" },
     holiday: { enabled: false, distanceRatio: 0 },
     deepNight: { enabled: false, distanceRatio: 0 },
@@ -32,50 +33,49 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
     forwardingFee: { enabled: false }
   };
 
+  // 燃料サーチャージ用の状態を追加
+  const [showFuelSurcharge, setShowFuelSurcharge] = useState(
+    initialValue.fuelSurcharge?.enabled || false
+  );
+  const [tempFuelPrice, setTempFuelPrice] = useState(
+    initialValue.fuelSurcharge?.fuelPrice?.toString() || ""
+  );
+  const [tempFuelEfficiency, setTempFuelEfficiency] = useState(
+    initialValue.fuelSurcharge?.fuelEfficiency?.toString() || ""
+  );
+
   // 特殊車両割増用の状態（初期値をvalueから取得）
   const [showSpecialVehicle, setShowSpecialVehicle] = useState(initialValue.specialVehicle?.enabled || false);
   const [selectedVehicleType, setSelectedVehicleType] = useState<string | null>(initialValue.specialVehicle?.type || null);
   const [selectedVehicleRate, setSelectedVehicleRate] = useState<number>(0);
   const [isVehicleListExpanded, setIsVehicleListExpanded] = useState(false);
 
-  // 休日割増用の状態（初期値をvalueから取得）
+  // 休日割増用の状態（確定状態を削除）
   const [showHoliday, setShowHoliday] = useState(initialValue.holiday?.enabled || false);
   const [tempHolidayDistanceRatio, setTempHolidayDistanceRatio] = useState(
     initialValue.holiday?.distanceRatio?.toString() || ""
   );
-  const [isHolidayConfirmed, setIsHolidayConfirmed] = useState(
-    initialValue.holiday?.distanceRatio > 0
-  );
   
-  // 深夜割増用の状態（初期値をvalueから取得）
+  // 深夜割増用の状態（確定状態を削除）
   const [showDeepNight, setShowDeepNight] = useState(initialValue.deepNight?.enabled || false);
   const [tempDeepNightDistanceRatio, setTempDeepNightDistanceRatio] = useState(
     initialValue.deepNight?.distanceRatio?.toString() || ""
   );
-  const [isDeepNightConfirmed, setIsDeepNightConfirmed] = useState(
-    initialValue.deepNight?.distanceRatio > 0
-  );
   
-  // 他の割増用の状態（初期値をvalueから取得）
+  // 他の割増用の状態（確定状態を削除）
   const [showExpress, setShowExpress] = useState(initialValue.express?.enabled || false);
   const [tempExpressRate, setTempExpressRate] = useState(
     initialValue.express?.surchargeRate?.toString() || "20"
-  );
-  const [isExpressConfirmed, setIsExpressConfirmed] = useState(
-    initialValue.express?.surchargeRate > 0
   );
   
   const [showGeneralRoad, setShowGeneralRoad] = useState(initialValue.generalRoad?.enabled || false);
   const [tempGeneralRoadRate, setTempGeneralRoadRate] = useState(
     initialValue.generalRoad?.surchargeRate?.toString() || "20"
   );
-  const [isGeneralRoadConfirmed, setIsGeneralRoadConfirmed] = useState(
-    initialValue.generalRoad?.surchargeRate > 0
-  );
   
   const [showForwardingFee, setShowForwardingFee] = useState(initialValue.forwardingFee?.enabled || false);
 
-  // ユーティリティ関数
+  // ユーティリティ関数（getButtonTextを削除）
   // 全角→半角変換関数
   const toHalfWidth = (str: string): string => {
     return str.replace(/[０-９]/g, (s) => {
@@ -90,11 +90,57 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
     return !isNaN(num) && num >= 1 && num <= 100 && value === num.toString();
   };
 
-  // ボタンのテキストを決定する関数
-  const getButtonText = (isConfirmed: boolean, isDisabled: boolean): string => {
-    if (isDisabled) return '無効';
-    if (isConfirmed) return '確定済';
-    return '確定';
+  // 燃料サーチャージのハンドラー
+  const handleFuelSurchargeToggle = () => {
+    const newValue = !showFuelSurcharge;
+    setShowFuelSurcharge(newValue);
+    if (!newValue) {
+      setTempFuelPrice("");
+      setTempFuelEfficiency("");
+      onChange({
+        ...value,
+        fuelSurcharge: { enabled: false, fuelPrice: 0, fuelEfficiency: 0 },
+      });
+    } else {
+      onChange({
+        ...value,
+        fuelSurcharge: { 
+          enabled: true, 
+          fuelPrice: parseInt(tempFuelPrice) || 0,
+          fuelEfficiency: parseFloat(tempFuelEfficiency) || 0
+        },
+      });
+    }
+  };
+
+  const handleFuelPriceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newPrice = e.target.value;
+    setTempFuelPrice(newPrice);
+    if (showFuelSurcharge && newPrice) {
+      onChange({
+        ...value,
+        fuelSurcharge: { 
+          enabled: true, 
+          fuelPrice: parseInt(newPrice),
+          fuelEfficiency: parseFloat(tempFuelEfficiency) || 0
+        },
+      });
+    }
+  };
+
+  const handleFuelEfficiencyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newEfficiency = e.target.value;
+    setTempFuelEfficiency(newEfficiency);
+    if (showFuelSurcharge && newEfficiency) {
+      onChange({
+        ...value,
+        fuelSurcharge: { 
+          enabled: true, 
+          fuelPrice: parseInt(tempFuelPrice) || 0,
+          fuelEfficiency: parseFloat(newEfficiency)
+        },
+      });
+    }
   };
 
   // 特殊車両割増のハンドラー
@@ -144,7 +190,6 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
     setShowHoliday(newValue);
     if (!newValue) {
       setTempHolidayDistanceRatio("");
-      setIsHolidayConfirmed(false);
       onChange({
         ...value,
         holiday: { enabled: false, distanceRatio: 0 },
@@ -152,29 +197,19 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
     } else {
       onChange({
         ...value,
-        holiday: { enabled: true, distanceRatio: 0 },
+        holiday: { enabled: true, distanceRatio: parseInt(tempHolidayDistanceRatio) || 0 },
       });
     }
   };
 
   const handleHolidaySelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setTempHolidayDistanceRatio(e.target.value);
-  };
-
-  const handleHolidayConfirm = () => {
-    if (isHolidayConfirmed) {
-      // 確定済みの場合：編集モードに戻る
-      setIsHolidayConfirmed(false);
-    } else {
-      // 未確定の場合：確定処理
-      if (tempHolidayDistanceRatio) {
-        setIsHolidayConfirmed(true);
-        console.log("休日割増確定 - 走行距離比率:", tempHolidayDistanceRatio + "%");
-        onChange({
-          ...value,
-          holiday: { enabled: true, distanceRatio: parseInt(tempHolidayDistanceRatio, 10) },
-        });
-      }
+    const newValue = e.target.value;
+    setTempHolidayDistanceRatio(newValue);
+    if (showHoliday && newValue) {
+      onChange({
+        ...value,
+        holiday: { enabled: true, distanceRatio: parseInt(newValue, 10) },
+      });
     }
   };
 
@@ -184,7 +219,6 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
     setShowDeepNight(newValue);
     if (!newValue) {
       setTempDeepNightDistanceRatio("");
-      setIsDeepNightConfirmed(false);
       onChange({
         ...value,
         deepNight: { enabled: false, distanceRatio: 0 },
@@ -192,29 +226,19 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
     } else {
       onChange({
         ...value,
-        deepNight: { enabled: true, distanceRatio: 0 },
+        deepNight: { enabled: true, distanceRatio: parseInt(tempDeepNightDistanceRatio) || 0 },
       });
     }
   };
 
   const handleDeepNightSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setTempDeepNightDistanceRatio(e.target.value);
-  };
-
-  const handleDeepNightConfirm = () => {
-    if (isDeepNightConfirmed) {
-      // 確定済みの場合：編集モードに戻る
-      setIsDeepNightConfirmed(false);
-    } else {
-      // 未確定の場合：確定処理
-      if (tempDeepNightDistanceRatio) {
-        setIsDeepNightConfirmed(true);
-        console.log("深夜割増確定 - 走行距離比率:", tempDeepNightDistanceRatio + "%");
-        onChange({
-          ...value,
-          deepNight: { enabled: true, distanceRatio: parseInt(tempDeepNightDistanceRatio, 10) },
-        });
-      }
+    const newValue = e.target.value;
+    setTempDeepNightDistanceRatio(newValue);
+    if (showDeepNight && newValue) {
+      onChange({
+        ...value,
+        deepNight: { enabled: true, distanceRatio: parseInt(newValue, 10) },
+      });
     }
   };
 
@@ -224,7 +248,6 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
     setShowExpress(newValue);
     if (!newValue) {
       setTempExpressRate("");
-      setIsExpressConfirmed(false);
       onChange({
         ...value,
         express: { enabled: false, surchargeRate: 0 },
@@ -232,27 +255,19 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
     } else {
       onChange({
         ...value,
-        express: { enabled: true, surchargeRate: 0 },
+        express: { enabled: true, surchargeRate: parseInt(tempExpressRate) || 0 },
       });
     }
   };
 
   const handleExpressSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setTempExpressRate(e.target.value);
-  };
-
-  const handleExpressConfirm = () => {
-    if (isExpressConfirmed) {
-      setIsExpressConfirmed(false);
-    } else {
-      if (tempExpressRate) {
-        setIsExpressConfirmed(true);
-        console.log("速達割増確定 - 割増率:", tempExpressRate + "%");
-        onChange({
-          ...value,
-          express: { enabled: true, surchargeRate: parseInt(tempExpressRate, 10) },
-        });
-      }
+    const newValue = e.target.value;
+    setTempExpressRate(newValue);
+    if (showExpress && newValue) {
+      onChange({
+        ...value,
+        express: { enabled: true, surchargeRate: parseInt(newValue, 10) },
+      });
     }
   };
 
@@ -262,7 +277,6 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
     setShowGeneralRoad(newValue);
     if (!newValue) {
       setTempGeneralRoadRate("");
-      setIsGeneralRoadConfirmed(false);
       onChange({
         ...value,
         generalRoad: { enabled: false, surchargeRate: 0 },
@@ -270,27 +284,19 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
     } else {
       onChange({
         ...value,
-        generalRoad: { enabled: true, surchargeRate: 0 },
+        generalRoad: { enabled: true, surchargeRate: parseInt(tempGeneralRoadRate) || 0 },
       });
     }
   };
 
   const handleGeneralRoadSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setTempGeneralRoadRate(e.target.value);
-  };
-
-  const handleGeneralRoadConfirm = () => {
-    if (isGeneralRoadConfirmed) {
-      setIsGeneralRoadConfirmed(false);
-    } else {
-      if (tempGeneralRoadRate) {
-        setIsGeneralRoadConfirmed(true);
-        console.log("一般道利用割増確定 - 割増率:", tempGeneralRoadRate + "%");
-        onChange({
-          ...value,
-          generalRoad: { enabled: true, surchargeRate: parseInt(tempGeneralRoadRate, 10) },
-        });
-      }
+    const newValue = e.target.value;
+    setTempGeneralRoadRate(newValue);
+    if (showGeneralRoad && newValue) {
+      onChange({
+        ...value,
+        generalRoad: { enabled: true, surchargeRate: parseInt(newValue, 10) },
+      });
     }
   };
 
@@ -311,7 +317,7 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
     }
   };
 
-  // スタイル定義（以前のファイルと完全に同じ）
+  // スタイル定義を他のスタイル定義と同じ場所に移動
   const containerStyle: React.CSSProperties = {
     display: "flex",
     flexDirection: "column",
@@ -372,10 +378,48 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
     accentColor: '#b94a48',
   };
 
-  const inputContainerWithLabelStyle: React.CSSProperties = {
+  // 燃料サーチャージ用のスタイル定義を追加
+  const fuelInputContainerStyle: React.CSSProperties = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 12,
+    marginLeft: 16,
+  };
+
+  const fuelInputRowStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
     gap: 8,
+  };
+
+  const fuelLabelStyle: React.CSSProperties = {
+    fontSize: 14,
+    color: '#333',
+    minWidth: 100,
+    fontWeight: 'normal',
+  };
+
+  const fuelSelectStyle: React.CSSProperties = {
+    width: 120,
+    height: 36,
+    padding: '0 8px',
+    border: '1.5px solid #b94a48',
+    borderRadius: 4,
+    fontSize: 14,
+    backgroundColor: '#fff',
+    cursor: 'pointer',
+  };
+
+  const fuelUnitStyle: React.CSSProperties = {
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 4,
+  };
+
+  const inputContainerStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8
   };
 
   const distanceRatioLabelStyle: React.CSSProperties = {
@@ -398,17 +442,18 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
     color: isConfirmed ? '#6c757d' : '#000',
   });
 
-  const selectBoxStyle = (isConfirmed: boolean): React.CSSProperties => ({
+  // selectBoxStyleを関数ではなく、直接オブジェクトとして定義
+  const selectBoxStyle: React.CSSProperties = {
     width: 80,
     height: 36,
     padding: '0 8px',
     border: '1.5px solid #b94a48',
     borderRadius: 4,
     fontSize: 14,
-    backgroundColor: isConfirmed ? '#f8f9fa' : '#fff',
-    color: isConfirmed ? '#6c757d' : '#000',
-    cursor: isConfirmed ? 'not-allowed' : 'pointer',
-  });
+    backgroundColor: '#fff',
+    color: '#000',
+    cursor: 'pointer',
+  };
 
   const percentUnitStyle: React.CSSProperties = {
     fontSize: 14,
@@ -418,21 +463,7 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
     fontWeight: 'normal',
   };
 
-  const confirmButtonStyle = (isConfirmed: boolean, isDisabled: boolean): React.CSSProperties => ({
-    height: 36,
-    padding: '0 16px',
-    backgroundColor: isDisabled ? '#ccc' : (isConfirmed ? '#28a745' : '#b94a48'),
-    color: isDisabled ? '#666' : '#fff',
-    border: 'none',
-    borderRadius: 4,
-    fontSize: 14,
-    fontWeight: 'bold',
-    cursor: isDisabled ? 'not-allowed' : 'pointer',
-    transition: 'all 0.3s ease',
-    minWidth: 80,
-    opacity: isDisabled ? 0.6 : 1,
-    pointerEvents: isDisabled ? 'none' : 'auto',
-  });
+  // confirmButtonStyleとその他の不要なスタイルを削除
 
   // 特殊車両用の追加スタイル
   const accordionContainerStyle: React.CSSProperties = {
@@ -486,6 +517,106 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
 
   return (
     <div style={containerStyle}>
+      {/* 燃料サーチャージ - 最上段に配置 */}
+      <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 16 }}>
+        <div style={itemLabelStyle}>燃料サーチャージ</div>
+        <div style={radioContainerStyle}>
+          <div style={radioGroupStyle}>
+            <label style={radioLabelStyle(!showFuelSurcharge)}>
+              <input
+                type="radio"
+                name="fuelSurcharge"
+                checked={!showFuelSurcharge}
+                onChange={handleFuelSurchargeToggle}
+                style={radioInputStyle}
+              />
+              適用しない
+            </label>
+            <label style={radioLabelStyle(showFuelSurcharge)}>
+              <input
+                type="radio"
+                name="fuelSurcharge"
+                checked={showFuelSurcharge}
+                onChange={handleFuelSurchargeToggle}
+                style={radioInputStyle}
+              />
+              適用する
+            </label>
+          </div>
+        </div>
+        {showFuelSurcharge && (
+          <div style={fuelInputContainerStyle}>
+            <div style={fuelInputRowStyle}>
+              <span style={fuelLabelStyle}>燃費</span>
+              <select
+                value={tempFuelEfficiency}
+                onChange={handleFuelEfficiencyChange}
+                style={fuelSelectStyle}
+              >
+                <option value="">選択</option>
+                <option value="1.0">1.0</option>
+                <option value="1.5">1.5</option>
+                <option value="2.0">2.0</option>
+                <option value="2.5">2.5</option>
+                <option value="3.0">3.0</option>
+                <option value="3.5">3.5</option>
+                <option value="4.0">4.0</option>
+                <option value="4.5">4.5</option>
+                <option value="5.0">5.0</option>
+                <option value="5.5">5.5</option>
+                <option value="6.0">6.0</option>
+                <option value="6.5">6.5</option>
+                <option value="7.0">7.0</option>
+                <option value="7.5">7.5</option>
+                <option value="8.0">8.0</option>
+                <option value="8.5">8.5</option>
+                <option value="9.0">9.0</option>
+                <option value="9.5">9.5</option>
+                <option value="10.0">10.0</option>
+                <option value="10.5">10.5</option>
+                <option value="11.0">11.0</option>
+                <option value="11.5">11.5</option>
+                <option value="12.0">12.0</option>
+                <option value="12.5">12.5</option>
+                <option value="13.0">13.0</option>
+                <option value="13.5">13.5</option>
+                <option value="14.0">14.0</option>
+                <option value="14.5">14.5</option>
+                <option value="15.0">15.0</option>
+              </select>
+              <span style={fuelUnitStyle}>km/L</span>
+            </div>
+            <div style={fuelInputRowStyle}>
+              <span style={fuelLabelStyle}>燃料調達価格</span>
+              <select
+                value={tempFuelPrice}
+                onChange={handleFuelPriceChange}
+                style={fuelSelectStyle}
+              >
+                <option value="">選択</option>
+                <option value="125">125</option>
+                <option value="130">130</option>
+                <option value="135">135</option>
+                <option value="140">140</option>
+                <option value="145">145</option>
+                <option value="150">150</option>
+                <option value="155">155</option>
+                <option value="160">160</option>
+                <option value="165">165</option>
+                <option value="170">170</option>
+                <option value="175">175</option>
+                <option value="180">180</option>
+                <option value="185">185</option>
+                <option value="190">190</option>
+                <option value="195">195</option>
+                <option value="200">200</option>
+              </select>
+              <span style={fuelUnitStyle}>円/L</span>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* 特殊車両割増 */}
       <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 16 }}>
         <div style={itemLabelStyle}>特殊車両割増</div>
@@ -559,13 +690,12 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
           </div>
         </div>
         {showHoliday && (
-          <div style={inputContainerWithLabelStyle}>
+          <div style={inputContainerStyle}>
             <span style={distanceRatioLabelStyle}>走行距離比率</span>
             <select
               value={tempHolidayDistanceRatio}
               onChange={handleHolidaySelectChange}
-              style={selectBoxStyle(isHolidayConfirmed)}
-              disabled={isHolidayConfirmed}
+              style={selectBoxStyle}
             >
               <option value="">選択</option>
               <option value="10">10%</option>
@@ -579,23 +709,6 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
               <option value="90">90%</option>
               <option value="100">100%</option>
             </select>
-            <button 
-              onClick={handleHolidayConfirm} 
-              style={confirmButtonStyle(isHolidayConfirmed, !tempHolidayDistanceRatio)}
-              disabled={!tempHolidayDistanceRatio && !isHolidayConfirmed}
-              onMouseEnter={(e) => {
-                if (!(!tempHolidayDistanceRatio && !isHolidayConfirmed)) {
-                  e.currentTarget.style.backgroundColor = isHolidayConfirmed ? '#218838' : '#a03937';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!(!tempHolidayDistanceRatio && !isHolidayConfirmed)) {
-                  e.currentTarget.style.backgroundColor = isHolidayConfirmed ? '#28a745' : '#b94a48';
-                }
-              }}
-            >
-              {getButtonText(isHolidayConfirmed, !tempHolidayDistanceRatio && !isHolidayConfirmed)}
-            </button>
           </div>
         )}
       </div>
@@ -628,13 +741,12 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
           </div>
         </div>
         {showDeepNight && (
-          <div style={inputContainerWithLabelStyle}>
+          <div style={inputContainerStyle}>
             <span style={distanceRatioLabelStyle}>走行距離比率</span>
             <select
               value={tempDeepNightDistanceRatio}
               onChange={handleDeepNightSelectChange}
-              style={selectBoxStyle(isDeepNightConfirmed)}
-              disabled={isDeepNightConfirmed}
+              style={selectBoxStyle}
             >
               <option value="">選択</option>
               <option value="10">10%</option>
@@ -648,23 +760,6 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
               <option value="90">90%</option>
               <option value="100">100%</option>
             </select>
-            <button 
-              onClick={handleDeepNightConfirm} 
-              style={confirmButtonStyle(isDeepNightConfirmed, !tempDeepNightDistanceRatio)}
-              disabled={!tempDeepNightDistanceRatio && !isDeepNightConfirmed}
-              onMouseEnter={(e) => {
-                if (!(!tempDeepNightDistanceRatio && !isDeepNightConfirmed)) {
-                  e.currentTarget.style.backgroundColor = isDeepNightConfirmed ? '#218838' : '#a03937';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!(!tempDeepNightDistanceRatio && !isDeepNightConfirmed)) {
-                  e.currentTarget.style.backgroundColor = isDeepNightConfirmed ? '#28a745' : '#b94a48';
-                }
-              }}
-            >
-              {getButtonText(isDeepNightConfirmed, !tempDeepNightDistanceRatio && !isDeepNightConfirmed)}
-            </button>
           </div>
         )}
       </div>
@@ -697,13 +792,12 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
           </div>
         </div>
         {showExpress && (
-          <div style={inputContainerWithLabelStyle}>
+          <div style={inputContainerStyle}>
             <span style={surchargeRateLabelStyle}>割 　増 　率 </span>
             <select
               value={tempExpressRate}
               onChange={handleExpressSelectChange}
-              style={selectBoxStyle(isExpressConfirmed)}
-              disabled={isExpressConfirmed}
+              style={selectBoxStyle}
             >
               <option value="">選択</option>
               <option value="10">10%</option>
@@ -717,23 +811,6 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
               <option value="90">90%</option>
               <option value="100">100%</option>
             </select>
-            <button 
-              onClick={handleExpressConfirm} 
-              style={confirmButtonStyle(isExpressConfirmed, !tempExpressRate)}
-              disabled={!tempExpressRate && !isExpressConfirmed}
-              onMouseEnter={(e) => {
-                if (!(!tempExpressRate && !isExpressConfirmed)) {
-                  e.currentTarget.style.backgroundColor = isExpressConfirmed ? '#218838' : '#a03937';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!(!tempExpressRate && !isExpressConfirmed)) {
-                  e.currentTarget.style.backgroundColor = isExpressConfirmed ? '#28a745' : '#b94a48';
-                }
-              }}
-            >
-              {getButtonText(isExpressConfirmed, !tempExpressRate && !isExpressConfirmed)}
-            </button>
           </div>
         )}
       </div>
@@ -766,13 +843,12 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
           </div>
         </div>
         {showGeneralRoad && (
-          <div style={inputContainerWithLabelStyle}>
+          <div style={inputContainerStyle}>
             <span style={surchargeRateLabelStyle}>割 　増 　率 </span>
             <select
               value={tempGeneralRoadRate}
               onChange={handleGeneralRoadSelectChange}
-              style={selectBoxStyle(isGeneralRoadConfirmed)}
-              disabled={isGeneralRoadConfirmed}
+              style={selectBoxStyle}
             >
               <option value="">選択</option>
               <option value="10">10%</option>
@@ -786,23 +862,6 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
               <option value="90">90%</option>
               <option value="100">100%</option>
             </select>
-            <button 
-              onClick={handleGeneralRoadConfirm} 
-              style={confirmButtonStyle(isGeneralRoadConfirmed, !tempGeneralRoadRate)}
-              disabled={!tempGeneralRoadRate && !isGeneralRoadConfirmed}
-              onMouseEnter={(e) => {
-                if (!(!tempGeneralRoadRate && !isGeneralRoadConfirmed)) {
-                  e.currentTarget.style.backgroundColor = isGeneralRoadConfirmed ? '#218838' : '#a03937';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!(!tempGeneralRoadRate && !isGeneralRoadConfirmed)) {
-                  e.currentTarget.style.backgroundColor = isGeneralRoadConfirmed ? '#28a745' : '#b94a48';
-                }
-              }}
-            >
-              {getButtonText(isGeneralRoadConfirmed, !tempGeneralRoadRate && !isGeneralRoadConfirmed)}
-            </button>
           </div>
         )}
       </div>

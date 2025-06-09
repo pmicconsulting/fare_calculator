@@ -138,10 +138,14 @@ export default function TopPanel(props: Props) {
           <button
             className={`panel-btn${toll === "apply" ? " selected" : ""}`}
             onClick={() => {
-              setToll("apply");
-              setDetailedSettingsEnabled(true); // 詳細設定画面を表示
+              if (distanceType !== "ferry") {
+                setToll("apply");
+                setDetailedSettingsEnabled(true);
+              }
             }}
             type="button"
+            disabled={distanceType === "ferry"}
+            style={distanceType === "ferry" ? { opacity: 0.5, cursor: "not-allowed" } : {}}
           >
             適用する
           </button>
@@ -149,9 +153,11 @@ export default function TopPanel(props: Props) {
             className={`panel-btn${toll === "not_apply" ? " selected" : ""}`}
             onClick={() => {
               setToll("not_apply");
-              setDetailedSettingsEnabled(false); // 詳細設定画面を非表示
+              setDetailedSettingsEnabled(false);
             }}
             type="button"
+            disabled={distanceType === "ferry"}
+            style={distanceType === "ferry" ? { opacity: 0.5, cursor: "not-allowed" } : {}}
           >
             適用しない
           </button>

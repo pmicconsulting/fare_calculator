@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useMemo, useCallback } from "react";
 import TopPanel from "../components/TopPanel";
 import MapArea from "../components/MapArea";
 import FareResult from "../components/FareResult";
@@ -93,6 +93,12 @@ export default function Home() {
     setKm(0);
     setRoundedKm(null);
     setError(null);
+    
+    // フェリーに切り替えた場合は詳細設定を無効化
+    if (distanceType === "ferry") {
+      setDetailedSettingsEnabled(false);
+      setToll("not_apply");
+    }
   }, [distanceType]);
 
   // MapAreaから経路・距離を受け取る
@@ -334,22 +340,81 @@ export default function Home() {
     );
   };
 
-  // 結果表示の分岐処理
+  // デバウンスタイマーの参照を保持
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // 詳細料金計算用のuseEffect
+  useEffect(() => {
+    // 既存のタイマーをクリア
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    // 新しいタイマーを設定（500ms後に実行）
+    debounceTimerRef.current = setTimeout(async () => {
+      // 詳細設定が無効または何も設定されていない場合は計算しない
+      if (!detailedSettingsEnabled || !isDetailedSettingsActive()) {
+        setCalculatedCharges({});
+        setCalculatedSurcharges({});
+        return;
+      }
+
+      // 基本運賃を取得
+      let baseFare = 0;
+      let rawKm = 0;
+      
+      if (distanceType === "map" && fare !== null) {
+        baseFare = fare;
+        rawKm = km;
+      } else if (distanceType === "address" && result?.fare !== null) {
+        baseFare = result.fare;
+        rawKm = result.rawKm;
+      } else if (distanceType === "manual" && manualFareResult && manualFareResult.fare !== null) {
+        baseFare = manualFareResult.fare;
+        rawKm = manualFareResult.rawKm;
+      }
+      
+      if (!baseFare || baseFare === 0) return;
+      
+      console.log('Calculating detailed fare with km:', rawKm);
+      console.log('Detailed settings:', detailedSettings);
+      
+      try {
+        const { charges, surcharges } = await calculateDetailedFare(
+          baseFare,
+          detailedSettings,
+          rawKm,
+          vehicle
+        );
+        
+        console.log('Calculated charges:', charges);
+        console.log('Calculated surcharges:', surcharges);
+        
+        setCalculatedCharges(charges);
+        setCalculatedSurcharges(surcharges);
+      } catch (error) {
+        console.error('Error calculating detailed fare:', error);
+      }
+    }, 500);
+
+    // クリーンアップ関数
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [fare, vehicle, km, detailedSettings, detailedSettingsEnabled, distanceType, result, manualFareResult]);
+
+  // detailedSettingsのメモ化されたonChangeハンドラー
+  const handleDetailedSettingsChange = useCallback((newSettings: any) => {
+    setDetailedSettings(newSettings);
+  }, []);
+
+  // 結果表示の分岐処理（calculateDetailedFareの呼び出しを削除）
   const renderFareResult = () => {
     if (distanceType === "map" && (fare !== null || error !== null)) {
-      // 詳細設定が有効で、実際に何らかの割増が設定されている場合
       if (detailedSettingsEnabled && isDetailedSettingsActive()) {
-        console.log("Calculating detailed fare with km:", km);
-        console.log("Detailed settings:", detailedSettings);
-        calculateDetailedFare(fare || 0, detailedSettings, km, vehicle).then(({ charges, surcharges }) => {
-          console.log("Calculated charges:", charges);
-          console.log("Calculated surcharges:", surcharges);
-          
-          // 状態を更新して再レンダリング
-          setCalculatedCharges(charges);
-          setCalculatedSurcharges(surcharges);
-        });
-        
+        // calculateDetailedFareの呼び出しを削除
         return (
           <DetailedFareResult
             fare={fare}
@@ -362,10 +427,23 @@ export default function Home() {
             region={region}
             charges={calculatedCharges}
             surcharges={calculatedSurcharges}
+            chargeDetails={{
+              departureWaitingMinutes: detailedSettings?.waitingTime?.departure?.time ? parseInt(detailedSettings.waitingTime.departure.time) : undefined,
+              loadingMinutes: detailedSettings?.loadingWork?.departure?.time ? parseInt(detailedSettings.loadingWork.departure.time) : undefined,
+              arrivalWaitingMinutes: detailedSettings?.waitingTime?.arrival?.time ? parseInt(detailedSettings.waitingTime.arrival.time) : undefined,
+              unloadingMinutes: detailedSettings?.loadingWork?.arrival?.time ? parseInt(detailedSettings.loadingWork.arrival.time) : undefined,
+              forwardingRate: 10,
+              fuelConsumption: detailedSettings?.fuelSurcharge?.fuelEfficiency,
+              fuelPrice: detailedSettings?.fuelSurcharge?.fuelPrice,
+              holidayDistanceRatio: detailedSettings?.holiday?.distanceRatio,
+              deepNightDistanceRatio: detailedSettings?.deepNight?.distanceRatio,
+              expressRate: detailedSettings?.express?.surchargeRate || 20,
+              generalRoadRate: detailedSettings?.generalRoad?.surchargeRate || 20,
+              specialVehicleType: detailedSettings?.specialVehicle?.type
+            }}
           />
         );
       } else {
-        // 通常の運賃結果表示
         return (
           <FareResult
             fare={fare}
@@ -386,11 +464,7 @@ export default function Home() {
       const shouldShowDetailed = detailedSettingsEnabled && isDetailedSettingsActive();
       
       if (shouldShowDetailed) {
-        calculateDetailedFare(result.fare || 0, detailedSettings, result.rawKm, vehicle).then(({ charges, surcharges }) => {
-          setCalculatedCharges(charges);
-          setCalculatedSurcharges(surcharges);
-        });
-        
+        // calculateDetailedFareの呼び出しを削除
         return (
           <DetailedFareResult
             fare={result.fare}
@@ -403,6 +477,20 @@ export default function Home() {
             region={region}
             charges={calculatedCharges}
             surcharges={calculatedSurcharges}
+            chargeDetails={{
+              departureWaitingMinutes: detailedSettings?.waitingTime?.departure?.time ? parseInt(detailedSettings.waitingTime.departure.time) : undefined,
+              loadingMinutes: detailedSettings?.loadingWork?.departure?.time ? parseInt(detailedSettings.loadingWork.departure.time) : undefined,
+              arrivalWaitingMinutes: detailedSettings?.waitingTime?.arrival?.time ? parseInt(detailedSettings.waitingTime.arrival.time) : undefined,
+              unloadingMinutes: detailedSettings?.loadingWork?.arrival?.time ? parseInt(detailedSettings.loadingWork.arrival.time) : undefined,
+              forwardingRate: 10,
+              fuelConsumption: detailedSettings?.fuelSurcharge?.fuelEfficiency,
+              fuelPrice: detailedSettings?.fuelSurcharge?.fuelPrice,
+              holidayDistanceRatio: detailedSettings?.holiday?.distanceRatio,
+              deepNightDistanceRatio: detailedSettings?.deepNight?.distanceRatio,
+              expressRate: detailedSettings?.express?.surchargeRate || 20,
+              generalRoadRate: detailedSettings?.generalRoad?.surchargeRate || 20,
+              specialVehicleType: detailedSettings?.specialVehicle?.type
+            }}
           />
         );
       } else {
@@ -425,11 +513,7 @@ export default function Home() {
       const shouldShowDetailed = detailedSettingsEnabled && isDetailedSettingsActive();
       
       if (shouldShowDetailed) {
-        calculateDetailedFare(manualFareResult.fare || 0, detailedSettings, manualFareResult.rawKm, vehicle).then(({ charges, surcharges }) => {
-          setCalculatedCharges(charges);
-          setCalculatedSurcharges(surcharges);
-        });
-        
+        // calculateDetailedFareの呼び出しを削除
         return (
           <DetailedManualFareResult
             fare={manualFareResult.fare}
@@ -442,6 +526,20 @@ export default function Home() {
             region={region}
             charges={calculatedCharges}
             surcharges={calculatedSurcharges}
+            chargeDetails={{
+              departureWaitingMinutes: detailedSettings?.waitingTime?.departure?.time ? parseInt(detailedSettings.waitingTime.departure.time) : undefined,
+              loadingMinutes: detailedSettings?.loadingWork?.departure?.time ? parseInt(detailedSettings.loadingWork.departure.time) : undefined,
+              arrivalWaitingMinutes: detailedSettings?.waitingTime?.arrival?.time ? parseInt(detailedSettings.waitingTime.arrival.time) : undefined,
+              unloadingMinutes: detailedSettings?.loadingWork?.arrival?.time ? parseInt(detailedSettings.loadingWork.arrival.time) : undefined,
+              forwardingRate: 10,
+              fuelConsumption: detailedSettings?.fuelSurcharge?.fuelEfficiency,
+              fuelPrice: detailedSettings?.fuelSurcharge?.fuelPrice,
+              holidayDistanceRatio: detailedSettings?.holiday?.distanceRatio,
+              deepNightDistanceRatio: detailedSettings?.deepNight?.distanceRatio,
+              expressRate: detailedSettings?.express?.surchargeRate || 20,
+              generalRoadRate: detailedSettings?.generalRoad?.surchargeRate || 20,
+              specialVehicleType: detailedSettings?.specialVehicle?.type
+            }}
           />
         );
       } else {
@@ -562,12 +660,6 @@ export default function Home() {
               onFareResult={handleManualFareResult}
             />
             {renderFareResult()}
-            {detailedSettingsEnabled && (
-              <DetailedSettings
-                value={detailedSettings}
-                onChange={setDetailedSettings}
-              />
-            )}
           </>
         )}
         
@@ -580,12 +672,6 @@ export default function Home() {
               onRouteDraw={handleRouteDraw}
             />
             {renderFareResult()}
-            {detailedSettingsEnabled && (
-              <DetailedSettings
-                value={detailedSettings}
-                onChange={setDetailedSettings}
-              />
-            )}
           </>
         )}
         
@@ -618,12 +704,6 @@ export default function Home() {
               }}
             />
             {renderFareResult()}
-            {detailedSettingsEnabled && (
-              <DetailedSettings
-                value={detailedSettings}
-                onChange={setDetailedSettings}
-              />
-            )}
           </>
         )}
         
@@ -679,13 +759,17 @@ export default function Home() {
                 region={region}
               />
             )}
-            {detailedSettingsEnabled && (
-              <DetailedSettings
-                value={detailedSettings}
-                onChange={setDetailedSettings}
-              />
-            )}
           </>
+        )}
+
+        {/* 詳細設定（フェリー以外の場合のみ、かつ料金・実費が「適用する」の場合のみ表示） */}
+        {distanceType !== "ferry" && detailedSettingsEnabled && (
+          <div style={{ marginTop: 20, padding: 20, backgroundColor: '#f8f9fa', borderRadius: 8 }}>
+            <DetailedSettings 
+              value={detailedSettings} 
+              onChange={handleDetailedSettingsChange}
+            />
+          </div>
         )}
       </div>
     </div>

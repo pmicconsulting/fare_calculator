@@ -142,10 +142,10 @@ const FerryMap = forwardRef(({ vehicle, region, useHighway, origin, embarkPort, 
         afterKm,
         beforeRoundedKm,
         afterRoundedKm,
-        beforeOriginAddr: beforeRoute.routes[0].legs[0].start_address,
-        beforeDestAddr: beforeRoute.routes[0].legs[0].end_address,
-        afterOriginAddr: afterRoute.routes[0].legs[0].start_address,
-        afterDestAddr: afterRoute.routes[0].legs[0].end_address,
+        beforeOriginAddr: beforeRoute.routes[0].legs[0].start_address.replace(/^日本、\s*/, ''),
+        beforeDestAddr: beforeRoute.routes[0].legs[0].end_address.replace(/^日本、\s*/, ''),
+        afterOriginAddr: afterRoute.routes[0].legs[0].start_address.replace(/^日本、\s*/, ''),
+        afterDestAddr: afterRoute.routes[0].legs[0].end_address.replace(/^日本、\s*/, ''),
       });
     } catch (e: any) {
       console.error("calculateRouteエラー:", e);

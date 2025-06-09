@@ -5,8 +5,8 @@ import { VehicleType } from "../lib/codeMaps";
 export interface WorkTimeFee {
   enabled: boolean;        // 適用有無
   minutes: number;         // 実際の作業時間（分）
-  freeMinutes: number;     // 無料時間（30分）
-  unitMinutes: number;     // 課金単位（10分単位）
+  freeMinutes: number;     // 無料時間（0分）
+  unitMinutes: number;     // 課金単位（30分単位）
   workType: 'manual' | 'mechanical'; // 手荷役 or 機械荷役
   fee: number;             // 計算された料金
   breakdown?: {            // 内訳
@@ -26,11 +26,12 @@ export const fetchWorkTimeRates = async (
     const idCode = workType === 'manual' ? 2 : 3; // 手荷役: 2, 機械荷役: 3
     
     const { data, error } = await supabase
-      .from("waiting_time_rates")
+      .from("charge_data")  // waiting_time_rates から charge_data に変更
       .select("charge_yen, time_code")
       .eq("id_code", idCode)
       .eq("vehicle_code", vehicleCode)
-      .order("time_code", { ascending: true }); // 0: 2時間以内, 1: 2時間超
+      .in("time_code", [0, 9])  // 0: 120分以内, 9: 120分超
+      .order("time_code", { ascending: true });
 
     if (error || !data || data.length < 2) {
       console.error("作業時間単価の取得エラー:", error);
@@ -38,8 +39,8 @@ export const fetchWorkTimeRates = async (
     }
 
     return {
-      within2Hours: data[0].charge_yen, // time_code = 0
-      over2Hours: data[1].charge_yen   // time_code = 1
+      within2Hours: data.find(d => d.time_code === 0)?.charge_yen || 0,
+      over2Hours: data.find(d => d.time_code === 9)?.charge_yen || 0
     };
   } catch (error) {
     console.error("作業時間単価の取得エラー:", error);
@@ -62,8 +63,8 @@ export const calculateWorkTimeFee = (
     };
   }
 
-  // 作業時間を10分単位に切り上げ
-  const roundedMinutes = Math.ceil(config.minutes / 10) * 10;
+  // 作業時間を30分単位に切り上げ
+  const roundedMinutes = Math.ceil(config.minutes / 30) * 30;
   
   let fee = 0;
   let within2HoursFee = 0;
@@ -117,8 +118,8 @@ export const calculateWorkTimeFee = (
 export const createDefaultWorkTimeFee = (): WorkTimeFee => ({
   enabled: false,
   minutes: 0,
-  freeMinutes: 0, // 作業時間は無料時間なし
-  unitMinutes: 10,
+  freeMinutes: 0, // 無料時間なし
+  unitMinutes: 30, // 30分単位に変更
   workType: 'manual',
   fee: 0
 });
@@ -145,7 +146,7 @@ export const formatWorkTimeFeeDetails = (config: WorkTimeFee): string[] => {
   
   if (config.breakdown) {
     details.push(config.breakdown.workTimeText);
-    details.push(`課金対象時間: ${config.breakdown.chargeableMinutes}分（10分単位切り上げ）`);
+    details.push(`課金対象時間: ${config.breakdown.chargeableMinutes}分（30分単位切り上げ）`);
     
     if (config.breakdown.within2HoursFee > 0) {
       details.push(`2時間以内: ${config.breakdown.within2HoursFee.toLocaleString()}円`);

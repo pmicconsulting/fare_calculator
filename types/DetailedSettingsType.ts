@@ -12,14 +12,35 @@ export type DetailedSettingsType = {
   generalRoad: { enabled: boolean; surchargeRate: number };
   forwardingFee: { enabled: boolean };
   waitingTime: {
-    departure: { enabled: boolean; time: number };
-    arrival: { enabled: boolean; time: number };
+    departure: { 
+      enabled: boolean; 
+      type?: 'A' | 'B' | '';  // typeプロパティを追加
+      time: number;
+    };
+    arrival: { 
+      enabled: boolean; 
+      type?: 'A' | 'B' | '';  // typeプロパティを追加
+      time: number; 
+    };
   };
   loadingWork: {
-    departure: { enabled: boolean; type: string; time: number };
-    arrival: { enabled: boolean; type: string; time: number };
+    departure: { 
+      enabled: boolean; 
+      type: 'manual' | 'machine' | '';  // 手荷役 or 機械荷役
+      time: number; 
+    };
+    arrival: { 
+      enabled: boolean; 
+      type: 'manual' | 'machine' | ''; 
+      time: number; 
+    };
   };
-  fuelSurcharge: { enabled: boolean; rate: number };
+  fuelSurcharge: { 
+    enabled: boolean; 
+    rate?: number;
+    fuelEfficiency?: number;  // 追加
+    fuelPrice?: number;        // 追加
+  };
 };
 
 export type FareCalculationResult = {
