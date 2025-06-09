@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useMemo, useCallback } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import TopPanel from "../components/TopPanel";
 import MapArea from "../components/MapArea";
 import FareResult from "../components/FareResult";
@@ -25,8 +25,6 @@ import { DetailedSettingsType } from '../types/DetailedSettingsType';
 import DetailedManualFareResult from "../components/DetailedManualFareResult"; // 追加
 import NoticeBox from "../components/NoticeBox";
 
-type SpecialVehicleType = "none" | "trailer" | "refrigerated" | "wing" | "powerGate";
-
 export type DistanceType = "map" | "address" | "manual" | "ferry";
 export type TollType = "apply" | "not_apply";
 
@@ -34,7 +32,6 @@ export default function Home() {
   const mapRef = useRef<{ drawRoute: () => void }>(null);
   const addressFormRef = useRef<{ calc: () => void }>(null);
   const addressMapRef = useRef<{ calculateRoute: () => void }>(null);
-  const ferryFormRef = useRef<{ calc: () => void }>(null);
   const ferryMapRef = useRef<{ calculateRoute: () => void }>(null);
 
   // UI state
@@ -45,9 +42,7 @@ export default function Home() {
   const [toll, setToll] = useState<TollType>("not_apply");
 
   // 経路・距離・住所
-  const [pins, setPins] = useState<any[]>([]);
   const [km, setKm] = useState<number>(0);
-  const [route, setRoute] = useState<google.maps.DirectionsRoute | null>(null);
   const [originAddr, setOriginAddr] = useState("");
   const [destinationAddr, setDestinationAddr] = useState("");
   const [roundedKm, setRoundedKm] = useState<number | null>(null);
@@ -64,8 +59,8 @@ export default function Home() {
   // 詳細設定の状態管理
   const [detailedSettingsEnabled, setDetailedSettingsEnabled] = useState<boolean>(false);
   // 計算結果の状態を追加
-  const [calculatedCharges, setCalculatedCharges] = useState<any>({});
-  const [calculatedSurcharges, setCalculatedSurcharges] = useState<any>({});
+  const [calculatedCharges, setCalculatedCharges] = useState<Record<string, number>>({});
+  const [calculatedSurcharges, setCalculatedSurcharges] = useState<Record<string, number>>({});
 
   // 詳細設定の初期値（forwardingFeeを確実に含める）
   const [detailedSettings, setDetailedSettings] = useState({
@@ -103,12 +98,10 @@ export default function Home() {
   }, [distanceType]);
 
   // MapAreaから経路・距離を受け取る
-  const handleRouteDraw = async (pins: any[], km: number, route: google.maps.DirectionsRoute | null) => {
-    setPins(pins);
+  const handleRouteDraw = async (_pins: google.maps.LatLngLiteral[], km: number, _route: google.maps.DirectionsRoute | null) => {
     setKm(km);
-    setRoute(route);
 
-    if (!route || !route.legs.length) {
+    if (!_route || !_route.legs.length) {
       setFare(0);
       setOriginAddr("");
       setDestinationAddr("");
@@ -116,8 +109,8 @@ export default function Home() {
       return;
     }
 
-    setOriginAddr(route.legs[0].start_address.replace(/^日本、,?\s*/,""));
-    setDestinationAddr(route.legs[0].end_address.replace(/^日本、,?\s*/,""));
+    setOriginAddr(_route.legs[0].start_address.replace(/^日本、,?\s*/,""));
+    setDestinationAddr(_route.legs[0].end_address.replace(/^日本、,?\s*/,""));
 
     // 距離丸め
     const rounded = roundDistance(km, region);
@@ -143,8 +136,6 @@ export default function Home() {
   const handleCalcFare = async () => {
     setError(null);
     setFare(null);
-    setFerryError(null);
-    setFerryResult(null);
 
     switch (distanceType) {
       case "map":
@@ -162,32 +153,6 @@ export default function Home() {
       default:
         setError("無効な距離タイプが選択されています。");
     }
-  };
-
-  // 住所で距離計算の結果を受け取る
-  const handleAddressFareResult = (result: {
-    fare: number | null;
-    originAddr: string;
-    destinationAddr: string;
-    rawKm: number;
-    roundedKm: number;
-  } | null, errorMsg?: string) => {
-    console.log("handleAddressFareResult called", result, errorMsg);
-    if (!result) {
-      setFare(0);
-      setOriginAddr("");
-      setDestinationAddr("");
-      setKm(0);
-      setRoundedKm(null);
-      setError(errorMsg || "計算失敗");
-      return;
-    }
-    setFare(result.fare);
-    setOriginAddr(result.originAddr);
-    setDestinationAddr(result.destinationAddr);
-    setKm(result.rawKm);
-    setRoundedKm(result.roundedKm);
-    setError(errorMsg || null);
   };
 
   // Ferry関連の状態管理
@@ -253,11 +218,15 @@ export default function Home() {
     destinationLatLng?: { lat: number; lng: number };
     waypointsLatLng?: { lat: number; lng: number }[];
   } | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string | undefined>(undefined);
 
-  const handleFareResult = async (res: any, err: any) => {
+  const handleFareResult = async (res: {
+    fare: number | null;
+    originAddr: string;
+    destinationAddr: string;
+    rawKm: number;
+    roundedKm: number;
+  } | null, err: string | undefined) => {
     console.log("handleFareResult called", res, err);
-    setErrorMsg(err);
     if (!res) {
       setResult(null);
       return;
@@ -299,7 +268,6 @@ export default function Home() {
     );
 
     if (!originLatLng || !destinationLatLng) {
-      setErrorMsg("出発地または到着地の住所から座標を取得できませんでした。住所を確認してください。");
       setResult(null);
       return;
     }
@@ -404,10 +372,10 @@ export default function Home() {
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [fare, vehicle, km, detailedSettings, detailedSettingsEnabled, distanceType, result, manualFareResult]);
+  }, [fare, vehicle, km, detailedSettings, detailedSettingsEnabled, distanceType, result, manualFareResult, isDetailedSettingsActive]);
 
   // detailedSettingsのメモ化されたonChangeハンドラー
-  const handleDetailedSettingsChange = useCallback((newSettings: any) => {
+  const handleDetailedSettingsChange = useCallback((newSettings: typeof detailedSettings) => {
     setDetailedSettings(newSettings);
   }, []);
 

@@ -1,7 +1,7 @@
 import React from "react";
-import AddressForm from "./AddressForm";
+// import AddressForm from "./AddressForm"; // 削除（未使用）
 import { VehicleType, RegionType, DistanceType, TollType } from "../pages/index";
-import { DetailedSettings, DetailedSettingsState } from "./DetailedSettings"; // 追加
+// import { DetailedSettings, DetailedSettingsState } from "./DetailedSettings"; // 削除（未使用）
 
 type Props = {
   vehicle: VehicleType;
@@ -47,14 +47,19 @@ const DISTANCE_TYPE_LABELS: { value: DistanceType; label: string }[] = [
 
 export default function TopPanel(props: Props) {
   const {
-    vehicle, setVehicle,
-    region, setRegion,
-    distanceType, setDistanceType,
-    useHighway, setUseHighway,
-    toll, setToll,
+    vehicle,
+    setVehicle,
+    region,
+    setRegion,
+    distanceType,
+    setDistanceType,
+    useHighway,
+    setUseHighway,
+    toll,
+    setToll,
     onCalcFare,
-    from, setFrom, tos, setTos, to, setTo,
-    detailedSettingsEnabled, setDetailedSettingsEnabled, detailedSettings, setDetailedSettings,
+    // 未使用のpropsは分割代入から除外
+    setDetailedSettingsEnabled,
   } = props;
 
   return (

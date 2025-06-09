@@ -5,25 +5,12 @@ import { DetailedTimeSettings } from './SurchargeSubMenu/DetailedTimeSettings';
 import { DetailedSettingsType } from '../types/DetailedSettingsType';
 
 type Props = {
-  value: any;
-  onChange: (newValue: any) => void;
+  value: DetailedSettingsType;
+  onChange: (newValue: DetailedSettingsType) => void;
 };
 
 const DetailedSettings: React.FC<Props> = ({ value, onChange }) => {
   const [activeTab, setActiveTab] = useState<'time' | 'surcharge'>('time'); // 'fee'を削除
-
-  // ArrivalSettingsから受け取った値をstateに設定する例
-  const [settings, setSettings] = useState<DetailedSettingsType>({
-    waitingTime: {
-      arrival: { enabled: false, time: 0 },
-      departure: { enabled: false, type: '', time: 0 },
-    },
-    loadingWork: {
-      arrival: { enabled: false, type: '', time: 0 },
-      departure: { enabled: false, type: '', time: 0 },
-    },
-    // ...他の設定...
-  });
 
   // onChangeハンドラーをメモ化
   const handleTimeSettingsChange = useCallback((timeSettings: any) => {
