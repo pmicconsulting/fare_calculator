@@ -39,7 +39,7 @@ export const calculateDetailedFare = async (
           departureWaitingFee = (unitsA * chargeA) + (unitsB * chargeB);
         }
       } catch (error) {
-        console.error("待機時間料金の取得エラー（departure）:", error);
+        console.error("departure）:", error);
         departureWaitingFee = 0;
       }
     }

@@ -16,6 +16,14 @@ export function useGoogleMaps() {
       setLoaded(true);
       return;
     }
+    
+    if (!GOOGLE_MAPS_API_KEY) {
+      if (process.env.NODE_ENV === 'production') {
+        throw new Error("Google Maps APIキーが設定されていません。");
+      }
+      return;
+    }
+    
     const script = document.createElement("script");
     script.id = scriptId;
     script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
@@ -25,7 +33,9 @@ export function useGoogleMaps() {
       setLoaded(true);
     };
     script.onerror = () => {
-      console.error("Google Maps APIの読み込みに失敗しました。");
+      if (process.env.NODE_ENV === 'production') {
+        throw new Error("Google Maps APIの読み込みに失敗しました。");
+      }
     };
     document.head.appendChild(script);
 

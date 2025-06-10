@@ -27,13 +27,11 @@ export const getWaitingTimeCharge = async (
       .single();
 
     if (error) {
-      console.warn(`待機時間料金の取得エラー (${vehicleType}, ${timeCode}):`, error.message);
       return 0;
     }
 
     return Number(data?.charge_yen) || 0;
   } catch (error) {
-    console.warn('待機時間料金の取得エラー:', error);
     return 0;
   }
 };

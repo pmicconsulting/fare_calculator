@@ -326,7 +326,7 @@ export default function Home() {
       if (distanceType === "map" && fare !== null) {
         baseFare = fare;
         rawKm = km;
-      } else if (distanceType === "address" && result?.fare !== null) {
+      } else if (distanceType === "address" && result?.fare !== null && result?.fare !== undefined) {
         baseFare = result.fare;
         rawKm = result.rawKm;
       } else if (distanceType === "manual" && manualFareResult && manualFareResult.fare !== null) {

@@ -142,7 +142,6 @@ const AddressMap = forwardRef<({ calculateRoute: () => void }), Props>(
         }
         directionsService.current.route(request, (result, status) => {
           if (!isMounted.current) return;
-          // debugger; // この行を削除
 
           if (status === google.maps.DirectionsStatus.OK && result) {
             directionsRenderer.current?.setDirections(result);
@@ -150,7 +149,7 @@ const AddressMap = forwardRef<({ calculateRoute: () => void }), Props>(
 
             const distM = result.routes[0].legs.reduce((sum, leg) => sum + (leg.distance?.value || 0), 0);
             const distKm = distM / 1000;
-            const roundedKm = roundDistance(distKm, region); // props.region を使用
+            const roundedKm = roundDistance(distKm, region);
 
             onRouteResult?.({
               originAddr: result.routes[0].legs[0].start_address.replace(/^日本、,?\s*/, ""),
