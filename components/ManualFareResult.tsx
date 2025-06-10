@@ -45,7 +45,7 @@ export default function ManualFareResult({
         <dd style={{ marginLeft: 120 }}>{roundedKm != null ? `${roundedKm.toLocaleString()}km` : ""}</dd>
         <dt style={{ float: "left", clear: "left", width: 120 }}>高速道路利用</dt>
         <dd style={{ marginLeft: 120 }}>{useHighway ? "利用する" : "利用しない"}</dd>
-        <dt style={{ float: "left", clear: "left", width: 120 }}>車種</dt>
+        <dt style={{ float: "left", clear: "left", width: 120 }}>算出対象車種</dt>
         <dd style={{ marginLeft: 120 }}>{vehicleLabel[vehicle]}</dd>
         <dt style={{ float: "left", clear: "left", width: 120 }}>届出：運輸局</dt>
         <dd style={{ marginLeft: 120 }}>{region}運輸局</dd>

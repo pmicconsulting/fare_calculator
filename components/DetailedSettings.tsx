@@ -1,5 +1,4 @@
-import React, { useState, useCallback } from 'react';
-// import FuelSurchargeSettings from './SurchargeSubMenu/FuelSurchargeSettings'; // この行を削除
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { SurchargeSettings } from './SurchargeSubMenu/SurchargeSettings';
 import { DetailedTimeSettings } from './SurchargeSubMenu/DetailedTimeSettings';
 import { DetailedSettingsType } from '../types/DetailedSettingsType';
@@ -10,25 +9,39 @@ type Props = {
 };
 
 const DetailedSettings: React.FC<Props> = ({ value, onChange }) => {
-  const [activeTab, setActiveTab] = useState<'time' | 'surcharge'>('time'); // 'fee'を削除
+  const [activeTab, setActiveTab] = useState<'time' | 'surcharge'>('time');
+  const onChangeRef = useRef(onChange);
 
-  // onChangeハンドラーをメモ化
+  // onChangeの最新値をrefに保存
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  // onChangeハンドラーをメモ化（依存配列を完全に空にし、refのみ使用）
   const handleTimeSettingsChange = useCallback((timeSettings: any) => {
-    console.log("DetailedSettingsで受け取ったtimeSettings:", timeSettings);
-    onChange({
-      ...value,
-      waitingTime: timeSettings.waitingTime,
-      loadingWork: timeSettings.loadingWork,
-    });
-  }, [value, onChange]);
+    // 現在の値と新しい値を比較して変更がある場合のみ更新
+    const hasWaitingTimeChanged = JSON.stringify(value.waitingTime) !== JSON.stringify(timeSettings.waitingTime);
+    const hasLoadingWorkChanged = JSON.stringify(value.loadingWork) !== JSON.stringify(timeSettings.loadingWork);
+    
+    if (hasWaitingTimeChanged || hasLoadingWorkChanged) {
+      onChangeRef.current((prevValue: DetailedSettingsType) => ({
+        ...prevValue,
+        waitingTime: timeSettings.waitingTime,
+        loadingWork: timeSettings.loadingWork,
+      }));
+    }
+  }, []);
+
+  // 時間設定の値をメモ化
+  const timeSettingsValue = useMemo(() => ({
+    waitingTime: value.waitingTime || { departure: { enabled: false, time: 0 }, arrival: { enabled: false, time: 0 } },
+    loadingWork: value.loadingWork || { departure: { enabled: false, type: '', time: 0 }, arrival: { enabled: false, type: '', time: 0 } },
+  }), [value.waitingTime, value.loadingWork]);
 
   // 時間設定をレンダリング
   const renderTimeSettings = () => (
     <DetailedTimeSettings
-      value={{
-        waitingTime: value.waitingTime || { departure: { enabled: false, time: 0 }, arrival: { enabled: false, time: 0 } },
-        loadingWork: value.loadingWork || { departure: { enabled: false, type: '', time: 0 }, arrival: { enabled: false, type: '', time: 0 } },
-      }}
+      value={timeSettingsValue}
       onChange={handleTimeSettingsChange}
     />
   );

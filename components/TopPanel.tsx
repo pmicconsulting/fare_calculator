@@ -66,11 +66,11 @@ export default function TopPanel(props: Props) {
     <div className="panel-group">
       {/* 最上段 運賃計算ボタン */}
       <button className="calc-main-btn" onClick={onCalcFare}>
-        標準的運賃の計算
+        標準的運賃を計算！
       </button>
       {/* 車種 2列4ボタン */}
       <div className="panel-section">
-        <div className="panel-label">車種</div>
+        <div className="panel-label">算出対象車種</div>
         <div className="vehicle-btns grid-2col">
           {VEHICLE_LABELS.map((v) => (
             <button
@@ -86,7 +86,7 @@ export default function TopPanel(props: Props) {
       </div>
       {/* 運輸局 2列10個 */}
       <div className="panel-section">
-        <div className="panel-label">運輸局</div>
+        <div className="panel-label">届出の運輸局</div>
         <div className="region-grid">
           {REGIONS.map((r) => (
             <button
@@ -102,7 +102,7 @@ export default function TopPanel(props: Props) {
       </div>
       {/* 運行距離 2列4ボタン */}
       <div className="panel-section">
-        <div className="panel-label">運行距離</div>
+        <div className="panel-label">運行距離の計測</div>
         <div className="distance-type-btns grid-2col">
           {DISTANCE_TYPE_LABELS.map((d) => (
             <button
@@ -138,7 +138,7 @@ export default function TopPanel(props: Props) {
       </div>
       {/* 料金・実費 2列2ボタン */}
       <div className="panel-section">
-        <div className="panel-label">料金・実費</div>
+        <div className="panel-label">料金・割増</div>
         <div className="toll-btns grid-2col">
           <button
             className={`panel-btn${toll === "apply" ? " selected" : ""}`}

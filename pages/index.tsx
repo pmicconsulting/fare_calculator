@@ -226,7 +226,6 @@ export default function Home() {
     rawKm: number;
     roundedKm: number;
   } | null, err: string | undefined) => {
-    console.log("handleFareResult called", res, err);
     if (!res) {
       setResult(null);
       return;
@@ -234,25 +233,19 @@ export default function Home() {
 
     // 住所→緯度経度変換
     const geocode = async (address: string) => {
-      console.log("geocode called with address:", address);
       return new Promise<{ lat: number; lng: number } | null>((resolve) => {
         if (!window.google) {
-          console.error("Google Maps APIがwindowに存在しません。");
           return resolve(null);
         }
         if (!address || address.trim() === "") {
-          console.error("ジオコーディング失敗: 空の住所が指定されました");
           return resolve(null);
         }
         const geocoder = new window.google.maps.Geocoder();
         geocoder.geocode({ address }, (results, status) => {
-          console.log("geocode status:", status, "address:", address, "results:", results);
           if (status === "OK" && results && results[0]) {
             const loc = results[0].geometry.location;
-            console.log("ジオコーディング成功:", address, loc.lat(), loc.lng());
             resolve({ lat: loc.lat(), lng: loc.lng() });
           } else {
-            console.error("ジオコーディング失敗:", address, status, results);
             resolve(null);
           }
         });
@@ -260,9 +253,7 @@ export default function Home() {
     };
 
     const originLatLng = await geocode(res.originAddr);
-    console.log("originLatLng:", originLatLng);
     const destinationLatLng = await geocode(res.destinationAddr);
-    console.log("destinationLatLng:", destinationLatLng);
     const waypointsLatLng = await Promise.all(
       tos.filter(t => t.trim()).map(addr => geocode(addr))
     );
@@ -291,7 +282,7 @@ export default function Home() {
   }, [distanceType, result]);
 
   // 詳細設定が有効かどうかの判定ロジック
-  const isDetailedSettingsActive = () => {
+  const isDetailedSettingsActive = useCallback(() => {
     if (!detailedSettingsEnabled) return false;
     
     return (
@@ -307,7 +298,7 @@ export default function Home() {
       detailedSettings.forwardingFee?.enabled || // 追加
       detailedSettings.fuelSurcharge?.enabled
     );
-  };
+  }, [detailedSettings, detailedSettingsEnabled]);
 
   // デバウンスタイマーの参照を保持
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -345,9 +336,6 @@ export default function Home() {
       
       if (!baseFare || baseFare === 0) return;
       
-      console.log('Calculating detailed fare with km:', rawKm);
-      console.log('Detailed settings:', detailedSettings);
-      
       try {
         const { charges, surcharges } = await calculateDetailedFare(
           baseFare,
@@ -355,9 +343,6 @@ export default function Home() {
           rawKm,
           vehicle
         );
-        
-        console.log('Calculated charges:', charges);
-        console.log('Calculated surcharges:', surcharges);
         
         setCalculatedCharges(charges);
         setCalculatedSurcharges(surcharges);
@@ -669,7 +654,7 @@ export default function Home() {
               useHighway={useHighway}
               region={region}
               onRouteResult={(routeResult, routeError) => {
-                console.log("AddressMap onRouteResult:", routeResult, routeError);
+                // 必要に応じて処理を追加
               }}
             />
             {renderFareResult()}

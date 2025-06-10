@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 
 type RouteOptions = {
   origin: google.maps.LatLngLiteral,
@@ -9,17 +9,21 @@ type RouteOptions = {
 };
 
 export function useDirections() {
-  const getRoute = useCallback(async (opts: RouteOptions) => {
-    return new Promise<google.maps.DirectionsResult>((resolve, reject) => {
-      const service = new window.google.maps.DirectionsService();
-      service.route(
+  const directionsService = useRef<google.maps.DirectionsService | null>(null);
+
+  const getRoute = useCallback(async (request: google.maps.DirectionsRequest): Promise<google.maps.DirectionsResult> => {
+    return new Promise((resolve, reject) => {
+      if (!directionsService.current) {
+        directionsService.current = new google.maps.DirectionsService();
+      }
+      directionsService.current.route(
         {
-          origin: opts.origin,
-          destination: opts.destination,
-          waypoints: opts.waypoints,
+          origin: request.origin,
+          destination: request.destination,
+          waypoints: request.waypoints,
           travelMode: google.maps.TravelMode.DRIVING,
-          avoidHighways: opts.avoidHighways,
-          avoidFerries: opts.avoidFerries,
+          avoidHighways: request.avoidHighways,
+          avoidFerries: request.avoidFerries,
         },
         (result, status) => {
           if (status === "OK" && result) {

@@ -41,13 +41,14 @@ const MapArea = forwardRef(function MapArea(props: Props, ref) {
   const { useHighway, region = "関東", onRouteDraw } = props; // regionを追加、デフォルトは関東
   const mapRef = useRef<HTMLDivElement>(null);
   const mapIns = useRef<google.maps.Map | null>(null);
+  const directionsRenderer = useRef<google.maps.DirectionsRenderer | null>(null);
+  const directionsService = useRef<google.maps.DirectionsService | null>(null);
+  const geocoder = useRef<google.maps.Geocoder | null>(null);
 
   const [pins, setPins] = useState<PinInfo[]>([]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
   const [clickedLatLng, setClickedLatLng] = useState<google.maps.LatLngLiteral | null>(null);
-
-  const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
 
   useEffect(() => {
     if (!window.google || !mapRef.current || mapIns.current) return;
@@ -56,8 +57,8 @@ const MapArea = forwardRef(function MapArea(props: Props, ref) {
     const initialRegion = REGION_COORDINATES[region];
     
     const map = new window.google.maps.Map(mapRef.current, {
-      center: { lat: initialRegion.lat, lng: initialRegion.lng }, // 変更
-      zoom: initialRegion.zoom, // 変更
+      center: { lat: initialRegion.lat, lng: initialRegion.lng },
+      zoom: initialRegion.zoom,
       mapTypeId: "roadmap",
     });
     mapIns.current = map;
@@ -68,7 +69,10 @@ const MapArea = forwardRef(function MapArea(props: Props, ref) {
       polylineOptions: { strokeColor: "#0000FF" },
       preserveViewport: true,
     });
-    directionsRendererRef.current = renderer;
+    directionsRenderer.current = renderer;
+
+    // DirectionsServiceを初期化
+    directionsService.current = new window.google.maps.DirectionsService();
 
     map.addListener("click", (e: google.maps.MapMouseEvent) => {
       if (!e.latLng) return;
@@ -86,8 +90,8 @@ const MapArea = forwardRef(function MapArea(props: Props, ref) {
       
       // メニューをカーソルの右上に表示（少しずらす）
       setMenuPos({ 
-        x: relativeX + 10,  // 右に10pxずらす
-        y: relativeY - 30   // 上に30pxずらす（メニューの高さを考慮）
+        x: relativeX + 10,
+        y: relativeY - 30
       });
       setClickedLatLng({ lat: e.latLng.lat(), lng: e.latLng.lng() });
       setMenuOpen(true);
@@ -138,47 +142,52 @@ const MapArea = forwardRef(function MapArea(props: Props, ref) {
 
   // 経路描画（親から呼び出し用）
   const drawRoute = () => {
-    if (!directionsRendererRef.current) return;
-    const originPin = pins.find((p) => p.type === "origin");
-    const destPin = pins.find((p) => p.type === "destination");
-    if (!originPin || !destPin) {
-      directionsRendererRef.current.setDirections({ routes: [] });
-      onRouteDraw(pins, 0, null);
+    if (!mapIns.current || !directionsService.current || pins.length < 2) {
       return;
     }
 
-    new window.google.maps.DirectionsService().route(
-      {
-        origin: originPin.position,
-        destination: destPin.position,
-        travelMode: window.google.maps.TravelMode.DRIVING,
-        avoidHighways: !useHighway,
-        avoidFerries: true,
-      },
-      (result, status) => {
-        if (status !== "OK" || !result || !result.routes.length) {
-          directionsRendererRef.current!.setDirections({ routes: [] });
-          onRouteDraw(pins, 0, null);
-          return;
-        }
-        const landOnly = result.routes.find(
-          (r) =>
-            !r.legs.some((l) =>
-              l.steps.some((s) => (s.instructions || "").includes("フェリー"))
-            )
-        );
-        const route = landOnly || result.routes[0];
-        directionsRendererRef.current!.setDirections({
-          ...result,
-          routes: [route],
+    const origin = pins.find(p => p.type === "origin");
+    const destination = pins.find(p => p.type === "destination");
+    
+    if (!origin || !destination) {
+      return;
+    }
+
+    const request: google.maps.DirectionsRequest = {
+      origin: origin.position,
+      destination: destination.position,
+      travelMode: google.maps.TravelMode.DRIVING,
+      avoidHighways: !useHighway,
+    };
+
+    directionsService.current.route(request, (result, status) => {
+      if (status === google.maps.DirectionsStatus.OK && result) {
+        directionsRenderer.current?.setDirections(result);
+        
+        // 経路に合わせてズームとセンターを調整
+        const route = result.routes[0];
+        const bounds = new google.maps.LatLngBounds();
+        
+        // 経路の全ポイントを境界に追加
+        route.legs.forEach(leg => {
+          leg.steps.forEach(step => {
+            bounds.extend(step.start_location);
+            bounds.extend(step.end_location);
+          });
         });
-        const totalMeters = route.legs.reduce(
-          (sum, leg) => sum + (leg.distance?.value || 0),
-          0
-        );
-        onRouteDraw(pins, totalMeters / 1000, route);
+        
+        // 地図を経路に合わせてフィット
+        mapIns.current?.fitBounds(bounds, { padding: 50 });
+        
+        // 距離を計算
+        const distanceMeters = route.legs.reduce((total, leg) => total + (leg.distance?.value || 0), 0);
+        const distanceKm = distanceMeters / 1000;
+        
+        // 親コンポーネントに結果を通知
+        onRouteDraw(pins, distanceKm, route);
       }
-    );
+    });
+
   };
 
   useImperativeHandle(ref, () => ({

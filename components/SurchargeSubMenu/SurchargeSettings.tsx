@@ -174,7 +174,6 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
       const vehicle = specialVehicleTypes.find(v => v.id === vehicleId);
       if (vehicle) {
         setSelectedVehicleRate(vehicle.rate);
-        console.log("特殊車両選択:", vehicleId, vehicle.rate);
         onChange({
           ...value,
           specialVehicle: { enabled: true, type: vehicleId },

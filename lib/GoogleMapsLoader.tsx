@@ -22,7 +22,6 @@ export function useGoogleMaps() {
     script.async = true;
     script.defer = true;
     script.onload = () => {
-      console.log("Google Maps APIが読み込まれました。");
       setLoaded(true);
     };
     script.onerror = () => {

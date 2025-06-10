@@ -54,7 +54,27 @@ const AddressMap = forwardRef<({ calculateRoute: () => void }), Props>(
       }
 
       if (!directionsRenderer.current) {
-        directionsRenderer.current = new google.maps.DirectionsRenderer();
+        directionsRenderer.current = new google.maps.DirectionsRenderer({
+          suppressMarkers: false,
+          polylineOptions: {
+            strokeColor: "#0000FF",
+            strokeWeight: 4,
+          },
+          markerOptions: {
+            origin: {
+              icon: {
+                url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+                scaledSize: new google.maps.Size(32, 32),
+              }
+            },
+            destination: {
+              icon: {
+                url: "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
+                scaledSize: new google.maps.Size(32, 32),
+              }
+            }
+          }
+        });
         directionsRenderer.current.setMap(map.current);
       }
 
@@ -122,6 +142,8 @@ const AddressMap = forwardRef<({ calculateRoute: () => void }), Props>(
         }
         directionsService.current.route(request, (result, status) => {
           if (!isMounted.current) return;
+          // debugger; // この行を削除
+
           if (status === google.maps.DirectionsStatus.OK && result) {
             directionsRenderer.current?.setDirections(result);
             setError(null);
