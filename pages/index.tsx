@@ -226,7 +226,6 @@ export default function Home() {
     rawKm: number;
     roundedKm: number;
   } | null, err: string | undefined) => {
-    console.log("handleFareResult called", res, err);
     if (!res) {
       setResult(null);
       return;
@@ -234,25 +233,19 @@ export default function Home() {
 
     // 住所→緯度経度変換
     const geocode = async (address: string) => {
-      console.log("geocode called with address:", address);
       return new Promise<{ lat: number; lng: number } | null>((resolve) => {
         if (!window.google) {
-          console.error("Google Maps APIがwindowに存在しません。");
           return resolve(null);
         }
         if (!address || address.trim() === "") {
-          console.error("ジオコーディング失敗: 空の住所が指定されました");
           return resolve(null);
         }
         const geocoder = new window.google.maps.Geocoder();
         geocoder.geocode({ address }, (results, status) => {
-          console.log("geocode status:", status, "address:", address, "results:", results);
           if (status === "OK" && results && results[0]) {
             const loc = results[0].geometry.location;
-            console.log("ジオコーディング成功:", address, loc.lat(), loc.lng());
             resolve({ lat: loc.lat(), lng: loc.lng() });
           } else {
-            console.error("ジオコーディング失敗:", address, status, results);
             resolve(null);
           }
         });
@@ -260,9 +253,7 @@ export default function Home() {
     };
 
     const originLatLng = await geocode(res.originAddr);
-    console.log("originLatLng:", originLatLng);
     const destinationLatLng = await geocode(res.destinationAddr);
-    console.log("destinationLatLng:", destinationLatLng);
     const waypointsLatLng = await Promise.all(
       tos.filter(t => t.trim()).map(addr => geocode(addr))
     );
@@ -291,7 +282,7 @@ export default function Home() {
   }, [distanceType, result]);
 
   // 詳細設定が有効かどうかの判定ロジック
-  const isDetailedSettingsActive = () => {
+  const isDetailedSettingsActive = useCallback(() => {
     if (!detailedSettingsEnabled) return false;
     
     return (
@@ -307,7 +298,7 @@ export default function Home() {
       detailedSettings.forwardingFee?.enabled || // 追加
       detailedSettings.fuelSurcharge?.enabled
     );
-  };
+  }, [detailedSettings, detailedSettingsEnabled]);
 
   // デバウンスタイマーの参照を保持
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -335,7 +326,7 @@ export default function Home() {
       if (distanceType === "map" && fare !== null) {
         baseFare = fare;
         rawKm = km;
-      } else if (distanceType === "address" && result?.fare !== null) {
+      } else if (distanceType === "address" && result?.fare !== null && result?.fare !== undefined) {
         baseFare = result.fare;
         rawKm = result.rawKm;
       } else if (distanceType === "manual" && manualFareResult && manualFareResult.fare !== null) {
@@ -345,9 +336,6 @@ export default function Home() {
       
       if (!baseFare || baseFare === 0) return;
       
-      console.log('Calculating detailed fare with km:', rawKm);
-      console.log('Detailed settings:', detailedSettings);
-      
       try {
         const { charges, surcharges } = await calculateDetailedFare(
           baseFare,
@@ -355,9 +343,6 @@ export default function Home() {
           rawKm,
           vehicle
         );
-        
-        console.log('Calculated charges:', charges);
-        console.log('Calculated surcharges:', surcharges);
         
         setCalculatedCharges(charges);
         setCalculatedSurcharges(surcharges);
@@ -571,14 +556,11 @@ export default function Home() {
     height: '100vh',
     overflowY: 'auto',
     overflowX: 'hidden',
-    borderRight: '1px solid #ddd',
-    backgroundColor: '#fff',
-    // モバイル対応を追加
-    '@media (max-width: 768px)': {
-      width: '100%',
-      height: 'auto',
-      position: 'relative',
-    }
+    borderRight: '2px solid #dee2e6',
+    backgroundColor: '#f8f9fa',
+    padding: '20px',
+    boxSizing: 'border-box',
+    position: 'relative',
   };
 
   const rightPanelStyle: React.CSSProperties = {
@@ -587,58 +569,14 @@ export default function Home() {
     overflowY: 'auto',
     overflowX: 'hidden',
     padding: '20px',
-    backgroundColor: '#f8f9fa',
-    // モバイル対応を追加
-    '@media (max-width: 768px)': {
-      padding: '12px',
-      height: 'auto',
-    }
-  };
-
-  // モバイル判定のフック
-  const [isMobile, setIsMobile] = useState(false);
-  
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // モバイル用のスタイル
-  const mobileContainerStyle: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column',
-    minHeight: '100vh',
-    width: '100%',
-    overflow: 'visible',
+    boxSizing: 'border-box',
+    backgroundColor: '#ffffff',
     position: 'relative',
   };
 
-  const mobileLeftPanelStyle: React.CSSProperties = {
-    width: '100%',
-    borderRight: 'none',
-    borderBottom: '1px solid #ddd',
-    backgroundColor: '#fff',
-    position: 'sticky',
-    top: 0,
-    zIndex: 100,
-  };
-
-  const mobileRightPanelStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '12px',
-    backgroundColor: '#f8f9fa',
-    minHeight: 'calc(100vh - 200px)',
-  };
-
   return (
-    <div style={isMobile ? mobileContainerStyle : containerStyle}>
-      <div style={isMobile ? mobileLeftPanelStyle : leftPanelStyle}>
+    <div style={containerStyle}>
+      <div style={leftPanelStyle}>
         <TopPanel
           vehicle={vehicle}
           setVehicle={setVehicle}
@@ -664,7 +602,7 @@ export default function Home() {
         />
       </div>
       
-      <div style={isMobile ? mobileRightPanelStyle : rightPanelStyle}>
+      <div style={rightPanelStyle}>
         {/* 各種入力フォームと結果表示 */}
         {distanceType === "manual" && (
           <>
@@ -716,7 +654,7 @@ export default function Home() {
               useHighway={useHighway}
               region={region}
               onRouteResult={(routeResult, routeError) => {
-                console.log("AddressMap onRouteResult:", routeResult, routeError);
+                // 必要に応じて処理を追加
               }}
             />
             {renderFareResult()}

@@ -30,13 +30,11 @@ export const getLoadingWorkCharge = async (
       .single();
 
     if (error || !data) {
-      console.error('積込料率の取得エラー:', error);
       return 0;
     }
 
     return data.charge_yen;
   } catch (error) {
-    console.error('積込料率の取得エラー:', error);
     return 0;
   }
 };

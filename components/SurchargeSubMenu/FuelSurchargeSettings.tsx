@@ -11,8 +11,6 @@ const FuelSurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChan
   const handleChange = (newValue: any) => {
     if (typeof onChange === 'function') {
       onChange(newValue);
-    } else {
-      console.warn('onChange is not a function');
     }
   };
 
@@ -114,7 +112,6 @@ const FuelSurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChan
     } else {
       if (isValidFuelPrice(tempFuelPrice)) {
         setIsFuelPriceConfirmed(true);
-        console.log("燃料調達価格確定:", tempFuelPrice + "円/ℓ");
         handleChange({
           ...value,
           fuelSurcharge: { 
@@ -133,7 +130,6 @@ const FuelSurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChan
     } else {
       if (isValidFuelConsumption(tempFuelConsumption)) {
         setIsFuelConsumptionConfirmed(true);
-        console.log("燃費確定:", tempFuelConsumption + "km/ℓ");
         handleChange({
           ...value,
           fuelSurcharge: { 

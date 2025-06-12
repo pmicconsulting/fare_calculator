@@ -18,15 +18,6 @@ export const getWaitingTimeCharge = async (
   try {
     const vehicle_code = vehicleTypeToCode(vehicleType);
     
-    // ↓↓↓ デバッグログ追加 ↓↓↓
-    console.log('getWaitingTimeCharge - 入力値:', {
-      vehicleType,
-      vehicle_code,
-      timeCode,
-      id_code: 1
-    });
-    // ↑↑↑ デバッグログ追加ここまで ↑↑↑
-    
     const { data, error } = await supabase
       .from('charge_data')
       .select('charge_yen')
@@ -36,21 +27,11 @@ export const getWaitingTimeCharge = async (
       .single();
 
     if (error) {
-      console.warn(`待機時間料金の取得エラー (${vehicleType}, ${timeCode}):`, error.message);
       return 0;
     }
 
-    // ↓↓↓ デバッグログ追加 ↓↓↓
-    console.log('getWaitingTimeCharge - 取得結果:', {
-      data,
-      charge_yen: data?.charge_yen,
-      返却値: Number(data?.charge_yen) || 0
-    });
-    // ↑↑↑ デバッグログ追加ここまで ↑↑↑
-
     return Number(data?.charge_yen) || 0;
   } catch (error) {
-    console.warn('待機時間料金の取得エラー:', error);
     return 0;
   }
 };

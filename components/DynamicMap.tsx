@@ -21,8 +21,6 @@ const DynamicMap = forwardRef(function DynamicMap(props: any, ref) {
     
     // Google Maps APIが読み込まれているか確認
     if (!window.google || !window.google.maps) {
-      console.log("Google Maps API not loaded yet");
-      // APIが読み込まれるまで待つ
       const checkInterval = setInterval(() => {
         if (window.google && window.google.maps) {
           clearInterval(checkInterval);
@@ -35,17 +33,9 @@ const DynamicMap = forwardRef(function DynamicMap(props: any, ref) {
     initializeMap();
     
     function initializeMap() {
-      // console.log系のログを削除
-      
       if (!mapRef.current || mapInstance.current) {
-        console.log("Skipping map initialization", { 
-          mapRef: !!mapRef.current, 
-          mapInstance: !!mapInstance.current 
-        });
         return;
       }
-      
-      console.log("Creating new map instance");
       
       try {
         mapInstance.current = new window.google.maps.Map(mapRef.current, {
@@ -53,26 +43,16 @@ const DynamicMap = forwardRef(function DynamicMap(props: any, ref) {
           zoom: 6,
         });
 
-        console.log("Map instance created successfully");
-        console.log("Adding click listener");
-        
         mapInstance.current.addListener("click", (e: google.maps.MapMouseEvent) => {
-          // console.log("Map clicked!"); // 削除
-          
           if (!e.latLng) return;
           
           const ev = e.domEvent as MouseEvent;
           const mapContainer = mapRef.current;
-          if (!mapContainer) {
-            console.log("mapContainer is null");
-            return;
-          }
+          if (!mapContainer) return;
           
           const rect = mapContainer.getBoundingClientRect();
           const relativeX = ev.clientX - rect.left;
           const relativeY = ev.clientY - rect.top;
-          
-          // console.log("Click coordinates:", {...}); // 削除
           
           setMenuPos({ 
             x: relativeX + 10,
@@ -81,10 +61,8 @@ const DynamicMap = forwardRef(function DynamicMap(props: any, ref) {
           setClickedLatLng({ lat: e.latLng.lat(), lng: e.latLng.lng() });
           setMenuOpen(true);
         });
-        
-        console.log("Click listener added successfully");
       } catch (error) {
-        console.error("Error initializing map:", error);
+        // 本番環境ではエラーログを削除
       }
     }
   }, []); // 空の依存配列で、初回のみ実行

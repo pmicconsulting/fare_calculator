@@ -45,134 +45,32 @@ const DISTANCE_TYPE_LABELS: { value: DistanceType; label: string }[] = [
   { value: "ferry", label: "フェリー利用" },
 ];
 
-export const TopPanel: React.FC<Props> = ({
-  vehicle,
-  setVehicle,
-  region,
-  setRegion,
-  distanceType,
-  setDistanceType,
-  useHighway,
-  setUseHighway,
-  toll,
-  setToll,
-  onCalcFare,
-  setDetailedSettingsEnabled,
-}) => {
-  // スタイル定義を更新
-  const containerStyle: React.CSSProperties = {
-    width: "100%",
-    padding: "8px",
-    backgroundColor: "#fff",
-    boxSizing: "border-box",
-  };
-
-  const sectionStyle: React.CSSProperties = {
-    marginBottom: "10px",
-  };
-
-  const labelStyle: React.CSSProperties = {
-    background: "#ffc0cb",
-    color: "#b94a48",
-    border: "1.5px solid #b94a48",
-    borderRadius: "4px",
-    fontWeight: "bold",
-    fontSize: "14px",
-    padding: "6px 10px",
-    marginBottom: "6px",
-    textAlign: "center",
-    display: "block",
-  };
-
-  const gridStyle: React.CSSProperties = {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: "6px",
-    marginBottom: "6px",
-  };
-
-  const grid3ColStyle: React.CSSProperties = {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr 1fr",
-    gap: "6px",
-  };
-
-  const buttonStyle: React.CSSProperties = {
-    border: "1.5px solid #b94a48",
-    borderRadius: "4px",
-    background: "#fff",
-    color: "#000",
-    fontSize: "13px",
-    fontWeight: "500",
-    padding: "8px 4px",
-    minHeight: "36px",
-    cursor: "pointer",
-    transition: "all 0.2s",
-    width: "100%",
-    whiteSpace: "nowrap",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    WebkitTapHighlightColor: "transparent",
-  };
-
-  const buttonHoverStyle: React.CSSProperties = {
-    ...buttonStyle,
-    background: "#f8f8f8",
-  };
-
-  const selectedButtonStyle: React.CSSProperties = {
-    ...buttonStyle,
-    background: "#e8f5e9",
-    color: "#2e7d32",
-    fontWeight: "bold",
-  };
-
-  // デバイス判定
-  const [isMobile, setIsMobile] = useState(false);
-  const [isSmallMobile, setIsSmallMobile] = useState(false);
-
-  useEffect(() => {
-    const checkDevice = () => {
-      setIsMobile(window.innerWidth <= 480);
-      setIsSmallMobile(window.innerWidth <= 320);
-    };
-    
-    checkDevice();
-    window.addEventListener('resize', checkDevice);
-    
-    return () => window.removeEventListener('resize', checkDevice);
-  }, []);
-
-  // モバイル用のスタイル調整
-  const mobileAdjustedButtonStyle: React.CSSProperties = isMobile ? {
-    ...buttonStyle,
-    fontSize: isSmallMobile ? "10px" : "11px",
-    padding: isSmallMobile ? "5px 1px" : "6px 2px",
-    minHeight: isSmallMobile ? "28px" : "32px",
-    lineHeight: "1.2",
-  } : buttonStyle;
-
-  const mobileAdjustedLabelStyle: React.CSSProperties = isMobile ? {
-    ...labelStyle,
-    fontSize: isSmallMobile ? "11px" : "12px",
-    padding: isSmallMobile ? "4px 6px" : "5px 8px",
-  } : labelStyle;
-
-  // 小型モバイルでは3列グリッドを2列に
-  const adjustedGrid3ColStyle: React.CSSProperties = isSmallMobile ? {
-    ...grid3ColStyle,
-    gridTemplateColumns: "1fr 1fr",
-  } : grid3ColStyle;
+export default function TopPanel(props: Props) {
+  const {
+    vehicle,
+    setVehicle,
+    region,
+    setRegion,
+    distanceType,
+    setDistanceType,
+    useHighway,
+    setUseHighway,
+    toll,
+    setToll,
+    onCalcFare,
+    // 未使用のpropsは分割代入から除外
+    setDetailedSettingsEnabled,
+  } = props;
 
   return (
     <div className="panel-group">
       {/* 最上段 運賃計算ボタン */}
       <button className="calc-main-btn" onClick={onCalcFare}>
-        標準的運賃の計算
+        標準的運賃を計算！
       </button>
       {/* 車種 2列4ボタン */}
       <div className="panel-section">
-        <div className="panel-label">車種</div>
+        <div className="panel-label">算出対象車種</div>
         <div className="vehicle-btns grid-2col">
           {VEHICLE_LABELS.map((v) => (
             <button
@@ -188,7 +86,7 @@ export const TopPanel: React.FC<Props> = ({
       </div>
       {/* 運輸局 2列10個 */}
       <div className="panel-section">
-        <div className="panel-label">運輸局</div>
+        <div className="panel-label">届出の運輸局</div>
         <div className="region-grid">
           {REGIONS.map((r) => (
             <button
@@ -204,7 +102,7 @@ export const TopPanel: React.FC<Props> = ({
       </div>
       {/* 運行距離 2列4ボタン */}
       <div className="panel-section">
-        <div className="panel-label">運行距離</div>
+        <div className="panel-label">運行距離の計測</div>
         <div className="distance-type-btns grid-2col">
           {DISTANCE_TYPE_LABELS.map((d) => (
             <button
@@ -240,7 +138,7 @@ export const TopPanel: React.FC<Props> = ({
       </div>
       {/* 料金・実費 2列2ボタン */}
       <div className="panel-section">
-        <div className="panel-label">料金・実費</div>
+        <div className="panel-label">料金・割増</div>
         <div className="toll-btns grid-2col">
           <button
             className={`panel-btn${toll === "apply" ? " selected" : ""}`}

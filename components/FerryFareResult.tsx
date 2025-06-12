@@ -60,7 +60,7 @@ export default function FerryFareResult({
 
       <h3 style={{ fontSize: 16, margin: "16px 0 4px 0" }}>◆計算の条件</h3>
       <dl style={dlStyle}>
-        <dt style={dtStyle}>車種</dt>
+        <dt style={dtStyle}>算出対象車種</dt>
         <dd style={ddStyle}>{vehicleLabel[vehicle]}</dd>
 
         <dt style={dtStyle}>届出：運輸局</dt>

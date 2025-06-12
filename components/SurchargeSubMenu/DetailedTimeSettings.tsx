@@ -23,8 +23,6 @@ const DetailedTimeSettings: React.FC<DetailedTimeSettingsProps> = ({ value, onCh
   const handleChange = (newValue: any) => {
     if (typeof onChange === 'function') {
       onChange(newValue);
-    } else {
-      console.warn('onChange is not a function');
     }
   };
 
@@ -300,8 +298,20 @@ const DetailedTimeSettings: React.FC<DetailedTimeSettingsProps> = ({ value, onCh
     showDepartureWaitingTime, tempDepartureWaitingTime,
     showDepartureLoadingWork, selectedDepartureLoadingType, tempDepartureLoadingTime,
     showArrivalWaitingTime, tempArrivalWaitingTime,
-    showArrivalLoadingWork, selectedArrivalLoadingType, tempArrivalLoadingTime
+    showArrivalLoadingWork, selectedArrivalLoadingType, tempArrivalLoadingTime,
+    onChange
   ]);
+
+  // 確定ボタンのクリックハンドラ
+  const handleConfirmClick = () => {
+    // 既存の状態更新処理
+    if (tempDepartureWaitingTime && showDepartureWaitingTime && !isValidTime(tempDepartureWaitingTime)) {
+      alert("出発地の待機時間は1~600の間の数値を入力してください。");
+      return;
+    }
+    
+    // 残りのコード
+  };
 
   return (
     <div style={containerStyle}>

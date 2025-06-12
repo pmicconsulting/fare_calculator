@@ -2,9 +2,16 @@
 const nextConfig = {
   reactStrictMode: true,
   eslint: {
-    // 警告やエラーがあってもビルドを成功させる
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: process.env.NODE_ENV === 'production',
   },
+  productionBrowserSourceMaps: false,
+  ...(process.env.NODE_ENV === 'production' && {
+    compiler: {
+      removeConsole: {
+        exclude: ['error', 'warn'],
+      },
+    },
+  }),
 }
 
 module.exports = nextConfig

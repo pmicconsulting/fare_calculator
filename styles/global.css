@@ -1,200 +1,17 @@
-/* 基本設定 */
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  color: #000; /* 黒色に変更 */
-  background-color: #f5f5f5;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* レスポンシブ対応の基本設定 */
-html {
-  font-size: 16px;
-}
-
-@media (max-width: 768px) {
-  html {
-    font-size: 14px;
-  }
-}
-
-/* TopPanel styles - モバイル対応 */
-.top-panel {
-  width: 100%;
-  max-width: 100%;
-  padding: 10px; /* 12pxから10pxに変更 */
-}
-
-@media (max-width: 768px) {
-  .left-panel {
-    width: 100%;
-    max-width: 300px; /* モバイル時の最大幅を設定 */
-    padding: 16px 8px; /* パディングを調整 */
-  }
-  
-  .top-panel {
-    padding: 6px; /* 8pxから6pxに変更 */
-  }
-  
-  .panel-section {
-    margin-bottom: 10px; /* 12pxから10pxに変更 */
-  }
-  
-  .panel-label {
-    font-size: 0.85rem; /* 0.9remから0.85remに変更 */
-    padding: 6px 10px; /* 8px 12pxから変更 */
-    margin-bottom: 6px; /* 8pxから6pxに変更 */
-  }
-  
-  .grid-2col {
-    gap: 6px; /* 8pxから6pxに変更 */
-  }
-  
-  .panel-btn {
-    font-size: 0.85rem; /* 0.9remから0.85remに変更 */
-    padding: 8px 6px; /* 10px 8pxから変更 */
-    min-height: 40px; /* 44pxから40pxに変更 */
-  }
-  
-  .calc-main-btn {
-    font-size: 0.95rem; /* 1remから0.95remに変更 */
-    padding: 14px 0; /* パディングを調整 */
-    min-height: 44px; /* 48pxから44pxに変更 */
-  }
-  
-  .panel-group {
-    gap: 20px; /* 28pxから20pxに変更 */
-  }
-}
-
-/* AddressForm モバイル対応 */
-@media (max-width: 768px) {
-  .address-form {
-    gap: 12px;
-  }
-  
-  .address-row {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-  }
-  
-  .address-label {
-    width: 100%;
-    min-width: unset;
-    padding: 10px;
-    font-size: 0.9rem;
-  }
-  
-  .address-row input {
-    width: 100%;
-    margin-left: 0;
-    font-size: 16px; /* iOS のズーム防止 */
-  }
-  
-  .address-btn {
-    min-height: 44px;
-    font-size: 1rem;
-  }
-}
-
-/* ManualDistanceInput モバイル対応 */
-@media (max-width: 768px) {
-  .manual-distance-input {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-  }
-  
-  .manual-label {
-    width: 100%;
-    min-width: unset;
-    height: auto;
-    padding: 10px;
-    font-size: 0.9rem;
-  }
-  
-  .manual-input {
-    width: 100%;
-    font-size: 16px; /* iOS のズーム防止 */
-  }
-  
-  .manual-btn {
-    width: 100%;
-    min-height: 44px;
-  }
-}
-
-/* FareResult モバイル対応 */
-@media (max-width: 768px) {
-  .fare-result {
-    padding: 16px;
-    margin-top: 12px;
-  }
-  
-  .fare-title {
-    font-size: 1.1rem;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-  
-  .fare-value {
-    font-size: 1.3rem;
-  }
-  
-  .fare-detail dt {
-    width: 100px;
-    font-size: 0.9rem;
-  }
-  
-  .fare-detail dd {
-    margin-left: 110px;
-    font-size: 0.9rem;
-  }
-}
-
-/* 計算ボタン モバイル対応 */
-.calc-main-btn {
-  width: 100%;
-  min-height: 48px;
-  font-size: 1rem;
-  touch-action: manipulation; /* ダブルタップズーム防止 */
-}
-
-/* テキストの色を黒に統一 */
-p, span, div, label, dt, dd, h1, h2, h3, h4, h5, h6 {
-  color: #000;
-}
-
-/* 入力フィールドのテキストも黒に */
-input, select, textarea {
-  color: #000;
-}
-
-/* プレースホルダーの色を少し薄く */
-input::placeholder,
-textarea::placeholder {
-  color: #666;
-}
-
 .main-container {
   display: flex;
-  width: 100%;
-  min-height: 100vh;
-  box-sizing: border-box;
+  height: 100vh;
+  background: #f5f5f5;
+  overflow: hidden; /* スクロールバーを非表示 */
 }
 .left-panel {
-  width: 320px; /* 340pxから320pxに変更 */
-  padding: 20px 8px 20px 20px; /* 24px 10px 24px 24pxから変更 */
-  background: #f7f7fa;
-  border-right: 1px solid #ddd;
+  flex-shrink: 0;
+  padding: 20px;
+  width: 280px;
+  height: 100vh; /* 画面の高さいっぱいに */
+  overflow-y: auto; /* 必要に応じてスクロール可能 */
+  display: flex;
+  flex-direction: column;
 }
 .right-panel {
   flex: 1;
@@ -204,19 +21,25 @@ textarea::placeholder {
 }
 
 .panel-group {
+  background: #fff;
+  border-radius: 10px;
+  padding: 16px; /* 20px から 16px に縮小 */
+  box-shadow: 0 1px 4px #0002;
+  flex: 1; /* 残りのスペースを使用 */
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 16px; /* 20px から 16px に縮小 */
 }
 .panel-section {
   display: flex;
   flex-direction: column;
-  margin-bottom: 0;
+  gap: 8px; /* 間隔を調整 */
 }
 .panel-label {
+  margin: 0 0 8px 0; /* 12px から 8px に縮小 */
+  font-size: 1rem;
   font-weight: bold;
-  margin-bottom: 8px;
-  font-size: 14px; /* 15pxから14pxに変更 */
+  color: #333;
 }
 
 .vehicle-btns,
@@ -229,19 +52,22 @@ textarea::placeholder {
 .grid-2col {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 6px; /* 8px から 6px に縮小 */
 }
 
 .panel-btn {
-  width: 100%;
-  margin-bottom: 0;
-  padding: 10px 0; /* 12px 0から10px 0に変更 */
+  flex: 1;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 8px 6px; /* 10px から 8px に縮小 */
   background: #fff;
-  border: 1px solid #b0b0b0;
-  border-radius: 4px;
-  font-size: 14px; /* 15pxから14pxに変更 */
+  color: #333;
+  border: 2px solid #ddd;
+  border-radius: 5px;
   cursor: pointer;
-  transition: background 0.15s, border 0.15s;
+  text-align: center;
+  transition: all 0.18s;
+  min-height: 36px; /* 最小高さを設定 */
 }
 .panel-btn.selected,
 .panel-btn:active {
@@ -249,13 +75,26 @@ textarea::placeholder {
   color: #fff;
   border-color: #428dfb;
 }
+
+/* 地域グリッドの調整 */
 .region-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px; /* 8px から 6px に縮小 */
 }
+
 .region-btn {
-  margin-bottom: 0;
+  font-size: 0.85rem; /* 0.875rem から 0.85rem に縮小 */
+  font-weight: 600;
+  padding: 8px 4px; /* パディングを調整 */
+  background: #fff;
+  color: #333;
+  border: 2px solid #ddd;
+  border-radius: 5px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.18s;
+  min-height: 32px; /* 最小高さを設定 */
 }
 
 .map-area {
@@ -268,13 +107,14 @@ textarea::placeholder {
   margin-bottom: 0;
 }
 
+/* ボタンのテーマ別色分け - 料金・割増関連をピンク系に */
 .calc-main-btn {
   width: 100%;
-  font-size: 1.2rem; /* 1.3remから1.2remに変更 */
+  font-size: 1.2rem;
   font-weight: bold;
-  padding: 16px 0; /* 18px 0から16px 0に変更 */
-  margin: 0 0 14px 0; /* 0 0 16px 0から変更 */
-  background: #428dfb;
+  padding: 14px 0; /* 16px から 14px に縮小 */
+  margin: 0 0 12px 0; /* 16px から 12px に縮小 */
+  background: #E91E63;
   color: #fff;
   border: none;
   border-radius: 7px;
@@ -283,7 +123,109 @@ textarea::placeholder {
   transition: background 0.18s;
 }
 .calc-main-btn:hover {
-  background: #1769c5;
+  background: #C2185B; /* ピンク系（濃い色）に変更 */
+}
+
+/* 車種選択ボタン - オレンジ系 */
+.vehicle-btns .panel-btn {
+  background: #fff;
+  border-color: #FF9800;
+}
+.vehicle-btns .panel-btn.selected,
+.vehicle-btns .panel-btn:active {
+  background: #FF9800;
+  color: #fff;
+  border-color: #FF9800;
+}
+.vehicle-btns .panel-btn:hover {
+  background: #FFE0B2;
+  border-color: #F57C00;
+}
+
+/* 運輸局選択ボタン - 緑系 */
+.region-btn {
+  background: #fff;
+  border-color: #4CAF50;
+}
+.region-btn.selected,
+.region-btn:active {
+  background: #4CAF50;
+  color: #fff;
+  border-color: #4CAF50;
+}
+.region-btn:hover {
+  background: #C8E6C9;
+  border-color: #388E3C;
+}
+
+/* 運行距離の計測ボタン - 紫系 */
+.distance-type-btns .panel-btn {
+  background: #fff;
+  border-color: #9C27B0;
+}
+.distance-type-btns .panel-btn.selected,
+.distance-type-btns .panel-btn:active {
+  background: #9C27B0;
+  color: #fff;
+  border-color: #9C27B0;
+}
+.distance-type-btns .panel-btn:hover {
+  background: #E1BEE7;
+  border-color: #7B1FA2;
+}
+
+/* 高速道路利用ボタン - 青系 */
+.highway-btns .panel-btn {
+  background: #fff;
+  border-color: #2196F3;
+}
+.highway-btns .panel-btn.selected,
+.highway-btns .panel-btn:active {
+  background: #2196F3;
+  color: #fff;
+  border-color: #2196F3;
+}
+.highway-btns .panel-btn:hover {
+  background: #BBDEFB;
+  border-color: #1976D2;
+}
+
+/* 料金・割増ボタン - ピンク系 */
+.toll-btns .panel-btn {
+  background: #fff;
+  border-color: #E91E63;
+}
+.toll-btns .panel-btn.selected,
+.toll-btns .panel-btn:active {
+  background: #E91E63;
+  color: #fff;
+  border-color: #E91E63;
+}
+.toll-btns .panel-btn:hover {
+  background: #FCE4EC;
+  border-color: #C2185B;
+}
+.toll-btns .panel-btn:disabled {
+  background: #f5f5f5;
+  border-color: #ccc;
+  color: #999;
+}
+
+/* パネルラベルもテーマ色に合わせる */
+.panel-section:nth-child(2) .panel-label { /* 車種 */
+  color: #F57C00;
+}
+.panel-section:nth-child(3) .panel-label { /* 運輸局 */
+  color: #388E3C;
+}
+.panel-section:nth-child(4) .panel-label { /* 運行距離 */
+  color: #7B1FA2;
+}
+.panel-section:nth-child(5) .panel-label { /* 高速道路 */
+  color: #1976D2;
+}
+.panel-section:nth-child(6) .panel-label { /* 料金・割増 */
+  color: #C2185B;
 }
 
 .fare-result {
@@ -471,4 +413,68 @@ textarea::placeholder {
 .manual-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* 車種ボタンのテキストを改行 */
+.vehicle-btns .panel-btn {
+  white-space: pre-line; /* 改行を有効にする */
+  line-height: 1.3;
+}
+
+/* 画面サイズに応じた調整 */
+@media (max-height: 800px) {
+  .left-panel {
+    padding: 15px;
+  }
+  .panel-group {
+    padding: 12px;
+    gap: 12px;
+  }
+  .panel-label {
+    margin: 0 0 6px 0;
+    font-size: 0.95rem;
+  }
+  .panel-btn {
+    padding: 6px 4px;
+    font-size: 0.85rem;
+    min-height: 32px;
+  }
+  .calc-main-btn {
+    padding: 12px 0;
+    font-size: 1.1rem;
+  }
+  .region-btn {
+    font-size: 0.8rem;
+    padding: 6px 3px;
+    min-height: 28px;
+  }
+}
+
+@media (max-height: 700px) {
+  .left-panel {
+    padding: 10px;
+  }
+  .panel-group {
+    padding: 10px;
+    gap: 10px;
+  }
+  .panel-label {
+    margin: 0 0 4px 0;
+    font-size: 0.9rem;
+  }
+  .panel-btn {
+    padding: 5px 3px;
+    font-size: 0.8rem;
+    min-height: 28px;
+  }
+  .calc-main-btn {
+    padding: 10px 0;
+    font-size: 1rem;
+    margin: 0 0 8px 0;
+  }
+  .region-btn {
+    font-size: 0.75rem;
+    padding: 5px 2px;
+    min-height: 26px;
+  }
 }

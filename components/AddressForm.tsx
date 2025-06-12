@@ -107,7 +107,6 @@ const AddressForm = forwardRef((props: Props, ref) => {
         roundedKm: rounded,
       });
     } catch (e: any) {
-      console.error("運賃計算エラー:", e);
       onFareResult(null, e.message || "計算失敗");
     }
     setLoading(false);
