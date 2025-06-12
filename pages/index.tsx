@@ -571,11 +571,14 @@ export default function Home() {
     height: '100vh',
     overflowY: 'auto',
     overflowX: 'hidden',
-    borderRight: '2px solid #dee2e6',
-    backgroundColor: '#f8f9fa',
-    padding: '20px',
-    boxSizing: 'border-box',
-    position: 'relative',
+    borderRight: '1px solid #ddd',
+    backgroundColor: '#fff',
+    // モバイル対応を追加
+    '@media (max-width: 768px)': {
+      width: '100%',
+      height: 'auto',
+      position: 'relative',
+    }
   };
 
   const rightPanelStyle: React.CSSProperties = {
@@ -584,14 +587,58 @@ export default function Home() {
     overflowY: 'auto',
     overflowX: 'hidden',
     padding: '20px',
-    boxSizing: 'border-box',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f8f9fa',
+    // モバイル対応を追加
+    '@media (max-width: 768px)': {
+      padding: '12px',
+      height: 'auto',
+    }
+  };
+
+  // モバイル判定のフック
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // モバイル用のスタイル
+  const mobileContainerStyle: React.CSSProperties = {
+    display: 'flex',
+    flexDirection: 'column',
+    minHeight: '100vh',
+    width: '100%',
+    overflow: 'visible',
     position: 'relative',
   };
 
+  const mobileLeftPanelStyle: React.CSSProperties = {
+    width: '100%',
+    borderRight: 'none',
+    borderBottom: '1px solid #ddd',
+    backgroundColor: '#fff',
+    position: 'sticky',
+    top: 0,
+    zIndex: 100,
+  };
+
+  const mobileRightPanelStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '12px',
+    backgroundColor: '#f8f9fa',
+    minHeight: 'calc(100vh - 200px)',
+  };
+
   return (
-    <div style={containerStyle}>
-      <div style={leftPanelStyle}>
+    <div style={isMobile ? mobileContainerStyle : containerStyle}>
+      <div style={isMobile ? mobileLeftPanelStyle : leftPanelStyle}>
         <TopPanel
           vehicle={vehicle}
           setVehicle={setVehicle}
@@ -617,7 +664,7 @@ export default function Home() {
         />
       </div>
       
-      <div style={rightPanelStyle}>
+      <div style={isMobile ? mobileRightPanelStyle : rightPanelStyle}>
         {/* 各種入力フォームと結果表示 */}
         {distanceType === "manual" && (
           <>

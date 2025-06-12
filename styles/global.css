@@ -1,3 +1,189 @@
+/* 基本設定 */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: #000; /* 黒色に変更 */
+  background-color: #f5f5f5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* レスポンシブ対応の基本設定 */
+html {
+  font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+/* TopPanel styles - モバイル対応 */
+.top-panel {
+  width: 100%;
+  max-width: 100%;
+  padding: 10px; /* 12pxから10pxに変更 */
+}
+
+@media (max-width: 768px) {
+  .left-panel {
+    width: 100%;
+    max-width: 300px; /* モバイル時の最大幅を設定 */
+    padding: 16px 8px; /* パディングを調整 */
+  }
+  
+  .top-panel {
+    padding: 6px; /* 8pxから6pxに変更 */
+  }
+  
+  .panel-section {
+    margin-bottom: 10px; /* 12pxから10pxに変更 */
+  }
+  
+  .panel-label {
+    font-size: 0.85rem; /* 0.9remから0.85remに変更 */
+    padding: 6px 10px; /* 8px 12pxから変更 */
+    margin-bottom: 6px; /* 8pxから6pxに変更 */
+  }
+  
+  .grid-2col {
+    gap: 6px; /* 8pxから6pxに変更 */
+  }
+  
+  .panel-btn {
+    font-size: 0.85rem; /* 0.9remから0.85remに変更 */
+    padding: 8px 6px; /* 10px 8pxから変更 */
+    min-height: 40px; /* 44pxから40pxに変更 */
+  }
+  
+  .calc-main-btn {
+    font-size: 0.95rem; /* 1remから0.95remに変更 */
+    padding: 14px 0; /* パディングを調整 */
+    min-height: 44px; /* 48pxから44pxに変更 */
+  }
+  
+  .panel-group {
+    gap: 20px; /* 28pxから20pxに変更 */
+  }
+}
+
+/* AddressForm モバイル対応 */
+@media (max-width: 768px) {
+  .address-form {
+    gap: 12px;
+  }
+  
+  .address-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  
+  .address-label {
+    width: 100%;
+    min-width: unset;
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+  
+  .address-row input {
+    width: 100%;
+    margin-left: 0;
+    font-size: 16px; /* iOS のズーム防止 */
+  }
+  
+  .address-btn {
+    min-height: 44px;
+    font-size: 1rem;
+  }
+}
+
+/* ManualDistanceInput モバイル対応 */
+@media (max-width: 768px) {
+  .manual-distance-input {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  
+  .manual-label {
+    width: 100%;
+    min-width: unset;
+    height: auto;
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+  
+  .manual-input {
+    width: 100%;
+    font-size: 16px; /* iOS のズーム防止 */
+  }
+  
+  .manual-btn {
+    width: 100%;
+    min-height: 44px;
+  }
+}
+
+/* FareResult モバイル対応 */
+@media (max-width: 768px) {
+  .fare-result {
+    padding: 16px;
+    margin-top: 12px;
+  }
+  
+  .fare-title {
+    font-size: 1.1rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .fare-value {
+    font-size: 1.3rem;
+  }
+  
+  .fare-detail dt {
+    width: 100px;
+    font-size: 0.9rem;
+  }
+  
+  .fare-detail dd {
+    margin-left: 110px;
+    font-size: 0.9rem;
+  }
+}
+
+/* 計算ボタン モバイル対応 */
+.calc-main-btn {
+  width: 100%;
+  min-height: 48px;
+  font-size: 1rem;
+  touch-action: manipulation; /* ダブルタップズーム防止 */
+}
+
+/* テキストの色を黒に統一 */
+p, span, div, label, dt, dd, h1, h2, h3, h4, h5, h6 {
+  color: #000;
+}
+
+/* 入力フィールドのテキストも黒に */
+input, select, textarea {
+  color: #000;
+}
+
+/* プレースホルダーの色を少し薄く */
+input::placeholder,
+textarea::placeholder {
+  color: #666;
+}
+
 .main-container {
   display: flex;
   width: 100%;
@@ -5,8 +191,8 @@
   box-sizing: border-box;
 }
 .left-panel {
-  width: 340px;
-  padding: 24px 10px 24px 24px;
+  width: 320px; /* 340pxから320pxに変更 */
+  padding: 20px 8px 20px 20px; /* 24px 10px 24px 24pxから変更 */
   background: #f7f7fa;
   border-right: 1px solid #ddd;
 }
@@ -30,7 +216,7 @@
 .panel-label {
   font-weight: bold;
   margin-bottom: 8px;
-  font-size: 15px;
+  font-size: 14px; /* 15pxから14pxに変更 */
 }
 
 .vehicle-btns,
@@ -49,11 +235,11 @@
 .panel-btn {
   width: 100%;
   margin-bottom: 0;
-  padding: 12px 0;
+  padding: 10px 0; /* 12px 0から10px 0に変更 */
   background: #fff;
   border: 1px solid #b0b0b0;
   border-radius: 4px;
-  font-size: 15px;
+  font-size: 14px; /* 15pxから14pxに変更 */
   cursor: pointer;
   transition: background 0.15s, border 0.15s;
 }
@@ -84,10 +270,10 @@
 
 .calc-main-btn {
   width: 100%;
-  font-size: 1.3rem;
+  font-size: 1.2rem; /* 1.3remから1.2remに変更 */
   font-weight: bold;
-  padding: 18px 0;
-  margin: 0 0 16px 0;
+  padding: 16px 0; /* 18px 0から16px 0に変更 */
+  margin: 0 0 14px 0; /* 0 0 16px 0から変更 */
   background: #428dfb;
   color: #fff;
   border: none;

@@ -71,15 +71,15 @@ const FerryMap = forwardRef(({ vehicle, region, useHighway, origin, embarkPort, 
 
     const { data, error } = await supabase
       .from("fare_rates")
-      .select("fare_yen")
-      .eq("region_code", regionCode)
-      .eq("vehicle_code", vehicleCode)
-      .eq("upto_km", Number(roundedKm))
-      .maybeSingle();
+      .select("fare")
+      .eq("vehicle_type", vehicleCode)
+      .eq("region", regionCode)
+      .eq("distance", roundedKm)
+      .single();
 
     if (error) {
-      console.error("Supabaseエラー:", error);
-      throw new Error("運賃データ取得エラー");
+      console.error("運賃データの取得エラー:", error); // 削除対象
+      return 0;
     }
 
     if (!data) {

@@ -324,6 +324,10 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
     gap: 16,
     fontFamily: "sans-serif",
     padding: "12px 0",
+    '@media (max-width: 768px)': {
+      gap: 12,
+      padding: "8px 0",
+    }
   };
 
   const itemLabelStyle: React.CSSProperties = {
@@ -340,7 +344,13 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
     height: "40px",
     display: "flex",
     alignItems: "center",
-    justifyContent: "center"
+    justifyContent: "center",
+    '@media (max-width: 768px)': {
+      fontSize: 14,
+      minWidth: 100,
+      marginRight: 12,
+      padding: "4px 8px",
+    }
   };
 
   const radioContainerStyle: React.CSSProperties = {
@@ -353,6 +363,12 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
     display: "flex",
     alignItems: "center",
     marginRight: 16,
+    '@media (max-width: 768px)': {
+      width: 'auto',
+      flex: 1,
+      marginRight: 0,
+      padding: "0 12px",
+    }
   };
 
   const radioGroupStyle: React.CSSProperties = {
