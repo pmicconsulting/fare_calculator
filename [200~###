@@ -1,0 +1,122 @@
+モバイル専用の表示を、本体の機能に影響を与えずに実装する作業計画を示します。
+
+## 作業計画
+
+### 1. **アーキテクチャ設計**
+- デバイス判定による表示切り替え
+- ビジネスロジックは共通化
+- UIコンポーネントのみ分離
+
+### 2. **修正対象ファイル**
+
+#### 新規作成ファイル：
+```
+pages/
+├── index.tsx (既存 - デスクトップ版として維持)
+└── m/
+    └── index.tsx (新規 - モバイル版)
+
+components/
+├── desktop/ (新規フォルダ)
+│   └── (既存コンポーネントを移動)
+└── mobile/ (新規フォルダ)
+    ├── MobileLayout.tsx
+    ├── MobileVehicleSelect.tsx
+    ├── MobileRegionSelect.tsx
+    ├── MobileDistanceInput.tsx
+    └── MobileFareResult.tsx
+
+hooks/
+└── useDeviceDetect.ts (新規 - デバイス判定)
+```
+
+#### 修正対象ファイル：
+```
+pages/_app.tsx (デバイス判定とリダイレクト追加)
+styles/mobile.module.css (新規 - モバイル専用スタイル)
+```
+
+### 3. **実装手順**
+
+#### Step 1: デバイス判定フックの作成
+```tsx
+// hooks/useDeviceDetect.ts
+export const useDeviceDetect = () => {
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkDevice = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkDevice();
+    window.addEventListener('resize', checkDevice);
+    return () => window.removeEventListener('resize', checkDevice);
+  }, []);
+  
+  return { isMobile };
+};
+```
+
+#### Step 2: _app.tsxでの自動リダイレクト
+```tsx
+// pages/_app.tsx に追加
+useEffect(() => {
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const isDesktopPath = !router.pathname.startsWith('/m');
+  
+  if (isMobile && isDesktopPath) {
+    router.push('/m' + router.pathname);
+  } else if (!isMobile && !isDesktopPath) {
+    router.push(router.pathname.replace('/m', ''));
+  }
+}, [router]);
+```
+
+#### Step 3: ロジックの共通化
+```tsx
+// hooks/useFareCalculator.ts (新規)
+// index.tsxから計算ロジックを抽出
+export const useFareCalculator = () => {
+  // 既存の状態管理とロジックを移動
+  return {
+    vehicle, setVehicle,
+    region, setRegion,
+    // ... その他の状態と関数
+    handleCalcFare
+  };
+};
+```
+
+#### Step 4: モバイル版UIの実装
+```tsx
+// pages/m/index.tsx
+import { useFareCalculator } from '@/hooks/useFareCalculator';
+import MobileLayout from '@/components/mobile/MobileLayout';
+
+export default function MobileHome() {
+  const fareCalculator = useFareCalculator();
+  
+  return (
+    <MobileLayout>
+      {/* モバイル専用UI */}
+    </MobileLayout>
+  );
+}
+```
+
+### 4. **メリット**
+- **機能の完全な共通化**: ビジネスロジックは一箇所で管理
+- **独立したUI**: デスクトップとモバイルで異なるUXを提供
+- **段階的な移行**: 既存コードを壊さずに実装可能
+- **保守性**: UIとロジックの分離により保守が容易
+
+### 5. **実装優先順位**
+1. useFareCalculatorフックの作成（ロジック抽出）
+2. デバイス判定と自動リダイレクト
+3. モバイル版の基本レイアウト
+4. 各機能のモバイルUI実装
+
+この方法により、既存の機能を保持しながら、モバイル専用の最適化されたUIを提供できます。どこから始めますか？
+
+Similar code found with 1 license type
