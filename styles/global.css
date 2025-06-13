@@ -480,21 +480,43 @@
   }
 }
 
-/* モバイル用のクラスを追加 */
-.main-container.mobile-menu-open {
-  overflow: hidden;
-}
-
-/* タッチ操作の制限を調整 */
-@media (max-width: 599px) {
-  .main-container,
-  .left-panel,
-  .right-panel,
-  .panel-group {
-    touch-action: pan-y; /* 縦スクロールのみ許可 */
+/* モバイル対応 */
+@media (max-width: 768px) {
+  .main-container {
+    flex-direction: column;
+    height: auto;
   }
   
-  .map-placeholder {
-    touch-action: auto; /* 地図は全方向操作可能 */
+  .left-panel {
+    width: 100%;
+    height: auto;
   }
+  
+  .right-panel {
+    min-width: unset;
+  }
+  
+  .address-input {
+    width: 100%;
+  }
+  
+  .address-row {
+    flex-wrap: wrap;
+  }
+  
+  .manual-input {
+    width: 100%;
+  }
+  
+  .manual-distance-input {
+    flex-wrap: wrap;
+  }
+}
+
+/* その他の要素のタッチ操作を制限 */
+.main-container,
+.left-panel,
+.right-panel,
+.panel-group {
+  touch-action: pan-y;
 }

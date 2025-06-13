@@ -117,8 +117,8 @@ export default function ManualDistanceInput({
   return (
     <div className="manual-distance-input" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
       <span className="manual-label" style={{
-        minWidth: 140,
-        background: "#28a745", // 緑色背景
+        minWidth: 100,
+        background: "#8B5CF6", // 変更：パープルに変更
         color: "#fff", // 白色文字
         borderRadius: 8, // 角丸を強調
         textAlign: "center",
@@ -128,7 +128,7 @@ export default function ManualDistanceInput({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        height: 56, // ラベルの高さ
+        height: 25, // 変更：高さを25pxに調整
         boxSizing: "border-box",
       }}>
         運行距離
@@ -141,9 +141,9 @@ export default function ManualDistanceInput({
         type="text"
         maxLength={4}
         style={{
-          width: 200, // 入力枠の幅
-          height: 56, // 入力枠の高さ
-          fontSize: 25,
+          width: 100, // 入力枠の幅
+          height: 32, // 変更：高さを25pxに調整
+          fontSize: 15,
           borderRadius: 10, // 入力枠の角丸
           border: "3px solid #999", // 入力枠の太さと色
           padding: "0 16px", // 内側余白
@@ -164,7 +164,7 @@ export default function ManualDistanceInput({
           background: getButtonColor(), // ボタンの色を動的に変更
           color: isButtonDisabled() ? "#666" : "#fff", // ボタンの文字色
           cursor: isButtonDisabled() ? "not-allowed" : "pointer",
-          height: 40, // ボタンの高さ
+          height: 32, // ボタンの高さ
           minWidth: 80, // ボタンの最小幅
           opacity: isButtonDisabled() ? 0.6 : 1,
           transition: "all 0.3s ease",

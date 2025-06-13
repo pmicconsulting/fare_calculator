@@ -124,14 +124,15 @@ const AddressForm = forwardRef((props: Props, ref) => {
         <span
           className="address-label"
           style={{
-            minWidth: 140,
-            background: "#28a745",
+            minWidth: 110,
+            background: "#8B5CF6", // 変更：パープルに変更
             color: "#fff",
             borderRadius: 6,
             textAlign: "center",
             padding: "10px 0",
             fontWeight: "bold",
             fontSize: 15,
+            height: 35, // 変更：高さを25pxに調整
           }}
         >
           出発地
@@ -143,7 +144,7 @@ const AddressForm = forwardRef((props: Props, ref) => {
           style={{
             marginLeft: 20,
             width: 480, // FerryFormと同じ幅
-            height: 56, // FerryFormと同じ高さ
+            height: 35, // 変更：高さを25pxに調整
             fontSize: 15,
             borderRadius: 6,
             border: "2px solid #bbb",
@@ -157,14 +158,15 @@ const AddressForm = forwardRef((props: Props, ref) => {
           <span
             className="address-label"
             style={{
-              minWidth: 140,
-              background: "#28a745",
+              minWidth: 110,
+              background: "#8B5CF6",
               color: "#fff",
               borderRadius: 6,
               textAlign: "center",
               padding: "10px 0",
               fontWeight: "bold",
               fontSize: 15,
+              height: 35, // 追加：高さを35pxに統一
             }}
           >
             経由地
@@ -176,7 +178,7 @@ const AddressForm = forwardRef((props: Props, ref) => {
             style={{
               marginLeft: 20,
               width: 480, // FerryFormと同じ幅
-              height: 56, // FerryFormと同じ高さ
+              height: 35, // FerryFormと同じ高さ
               fontSize: 15,
               borderRadius: 6,
               border: "2px solid #bbb",
@@ -224,14 +226,15 @@ const AddressForm = forwardRef((props: Props, ref) => {
         <span
           className="address-label"
           style={{
-            minWidth: 140,
-            background: "#28a745",
+            minWidth: 110,
+            background: "#8B5CF6",
             color: "#fff",
             borderRadius: 6,
             textAlign: "center",
             padding: "10px 0",
             fontWeight: "bold",
             fontSize: 15,
+            height: 35, // 追加：高さを35pxに統一
           }}
         >
           到着地
@@ -243,7 +246,7 @@ const AddressForm = forwardRef((props: Props, ref) => {
           style={{
             marginLeft: 20,
             width: 480, // FerryFormと同じ幅
-            height: 56, // FerryFormと同じ高さ
+            height: 35, // FerryFormと同じ高さ
             fontSize: 15,
             borderRadius: 6,
             border: "2px solid #bbb",

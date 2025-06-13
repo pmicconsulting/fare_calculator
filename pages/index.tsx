@@ -151,7 +151,7 @@ export default function Home() {
         // manualの場合の処理をここに追加（必要に応じて）
         break;
       default:
-        setError("無効な距離タイプが選択されています。");
+        setError("無効となる地点が選択されています。");
     }
   };
 
@@ -181,7 +181,7 @@ export default function Home() {
   const handleFerryFareResult = (result: typeof ferryResult, err?: string) => {
     if (err || !result) {
       setFerryResult(null);
-      setFerryError(err || "運賃計算に失敗しました。再度入力を確認してください。");
+      setFerryError(err || "運賃計算できませんでした。再度入力を確認してください。");
       return;
     }
     setFerryResult(result);
@@ -319,7 +319,7 @@ export default function Home() {
         return;
       }
 
-      // 基本運賃を取得
+      // 基準運賃額を取得
       let baseFare = 0;
       let rawKm = 0;
       
@@ -574,213 +574,216 @@ export default function Home() {
     position: 'relative',
   };
 
-  // ハンバーガーメニューの状態を追加
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  // モバイルメニューの制御
+  // Phase 2: レスポンシブ対応のための動的スタイル変更
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth > 599) {
-        setIsMobileMenuOpen(false);
+      const container = document.querySelector('body > div > div');
+      const leftPanel = document.querySelector('body > div > div > div:first-child');
+      const rightPanel = document.querySelector('body > div > div > div:last-child');
+      
+      if (container && leftPanel && rightPanel) {
+        if (window.innerWidth <= 599) {
+          // スマートフォン用レイアウト
+          container.style.position = 'static';
+          container.style.height = 'auto';
+          container.style.flexDirection = 'column';
+          container.style.overflow = 'visible';
+          
+          leftPanel.style.width = '100%';
+          leftPanel.style.height = 'auto';
+          leftPanel.style.order = '1';
+          leftPanel.style.padding = '15px';
+          
+          rightPanel.style.width = '100%';
+          rightPanel.style.height = 'auto';
+          rightPanel.style.order = '2';
+          rightPanel.style.padding = '15px';
+        } else {
+          // PC・タブレット用レイアウト（元に戻す）
+          container.style.position = 'fixed';
+          container.style.height = '100vh';
+          container.style.flexDirection = 'row';
+          container.style.overflow = 'hidden';
+          
+          leftPanel.style.width = '400px';
+          leftPanel.style.height = '100vh';
+          leftPanel.style.order = '';
+          leftPanel.style.padding = '20px';
+          
+          rightPanel.style.width = '';
+          rightPanel.style.height = '';
+          rightPanel.style.order = '';
+          rightPanel.style.padding = '20px';
+        }
       }
     };
 
+    // 初回実行
+    handleResize();
+    
+    // リサイズイベント監視
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
-  // メニュー外クリックで閉じる
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (isMobileMenuOpen && 
-          !target.closest('.left-panel') && 
-          !target.closest('.hamburger-menu')) {
-        setIsMobileMenuOpen(false);
-      }
-    };
-
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, [isMobileMenuOpen]);
-
   return (
-    <>
-      {/* ハンバーガーメニューボタン */}
-      <button 
-        className={`hamburger-menu ${isMobileMenuOpen ? 'active' : ''}`}
-        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        aria-label="メニュー"
-      >
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
-
-      {/* オーバーレイ */}
-      <div 
-        className={`overlay ${isMobileMenuOpen ? 'active' : ''}`}
-        onClick={() => setIsMobileMenuOpen(false)}
-      />
-
-      <div style={containerStyle}>
-        <div 
-          style={leftPanelStyle} 
-          className={`left-panel ${isMobileMenuOpen ? 'active' : ''}`}
-        >
-          <TopPanel
-            vehicle={vehicle}
-            setVehicle={setVehicle}
-            region={region}
-            setRegion={setRegion}
-            distanceType={distanceType}
-            setDistanceType={setDistanceType}
-            useHighway={useHighway}
-            setUseHighway={setUseHighway}
-            toll={toll}
-            setToll={setToll}
-            onCalcFare={handleCalcFare}
-            from={from}
-            setFrom={setFrom}
-            tos={tos}
-            setTos={setTos}
-            to={to}
-            setTo={setTo}
-            detailedSettingsEnabled={detailedSettingsEnabled}
-            setDetailedSettingsEnabled={setDetailedSettingsEnabled}
-            detailedSettings={detailedSettings}
-            setDetailedSettings={setDetailedSettings}
-          />
-        </div>
-        
-        <div style={rightPanelStyle} className="right-panel">
-          {/* 各種入力フォームと結果表示 */}
-          {distanceType === "manual" && (
-            <>
-              <ManualDistanceInput
-                vehicle={vehicle}
-                region={region}
-                useHighway={useHighway}
-                fareOption={toll}
-                onFareResult={handleManualFareResult}
-              />
-              {renderFareResult()}
-            </>
-          )}
-          
-          {distanceType === "map" && (
-            <>
-              <MapArea
-                ref={mapRef}
-                useHighway={useHighway}
-                region={region}
-                onRouteDraw={handleRouteDraw}
-              />
-              {renderFareResult()}
-            </>
-          )}
-          
-          {distanceType === "address" && (
-            <>
-              <AddressForm
-                ref={addressFormRef}
-                vehicle={vehicle}
-                region={region}
-                useHighway={useHighway}
-                from={from}
-                setFrom={setFrom}
-                tos={tos}
-                setTos={setTos}
-                to={to}
-                setTo={setTo}
-                distanceType={distanceType}
-                onFareResult={handleFareResult}
-              />
-              <div style={{ height: "0.5cm" }} />
-              <AddressMap
-                ref={addressMapRef}
-                originAddr={result?.originAddr}
-                destinationAddr={result?.destinationAddr}
-                waypointAddrs={tos.filter(t => t.trim())}
-                useHighway={useHighway}
-                region={region}
-                onRouteResult={(routeResult, routeError) => {
-                  // 必要に応じて処理を追加
-                }}
-              />
-              {renderFareResult()}
-            </>
-          )}
-
-          {distanceType === "ferry" && (
-            <>
-              <FerryForm
-                origin={ferryAddresses.origin}
-                setOrigin={(value) => setFerryAddresses(prev => ({ ...prev, origin: value }))}
-                embarkPort={ferryAddresses.embarkPort}
-                setEmbarkPort={(value) => setFerryAddresses(prev => ({ ...prev, embarkPort: value }))}
-                disembarkPort={ferryAddresses.disembarkPort}
-                setDisembarkPort={(value) => setFerryAddresses(prev => ({ ...prev, disembarkPort: value }))}
-                destination={ferryAddresses.destination}
-                setDestination={(value) => setFerryAddresses(prev => ({ ...prev, destination: value }))}
-                onFareResult={(addresses) => {
-                  setFerryAddresses(addresses);
-                }}
-              />
-
-              <FerryMap
-                ref={ferryMapRef}
-                origin={ferryAddresses.origin}
-                embarkPort={ferryAddresses.embarkPort}
-                disembarkPort={ferryAddresses.disembarkPort}
-                destination={ferryAddresses.destination}
-                vehicle={vehicle}
-                region={region}
-                useHighway={useHighway}
-                onResult={handleFerryFareResult}
-              />
-
-              {ferryError && <div style={{ color: "red" }}>{ferryError}</div>}
-
-              {ferryResult && (
-                <FerryFareResult
-                  totalFare={ferryResult.beforeFare + ferryResult.afterFare}
-                  before={{
-                    fare: ferryResult.beforeFare,
-                    originAddr: ferryResult.beforeOriginAddr,
-                    destinationAddr: ferryResult.beforeDestAddr,
-                    rawKm: ferryResult.beforeKm,
-                    roundedKm: ferryResult.beforeRoundedKm,
-                  }}
-                  after={{
-                    fare: ferryResult.afterFare,
-                    originAddr: ferryResult.afterOriginAddr,
-                    destinationAddr: ferryResult.afterDestAddr,
-                    rawKm: ferryResult.afterKm,
-                    roundedKm: ferryResult.afterRoundedKm,
-                  }}
-                  useHighway={useHighway}
-                  vehicle={vehicle}
-                  region={region}
-                />
-              )}
-            </>
-          )}
-
-          {/* 詳細設定（フェリー以外の場合のみ、かつ料金・実費が「適用する」の場合のみ表示） */}
-          {distanceType !== "ferry" && detailedSettingsEnabled && (
-            <div style={{ marginTop: 20, padding: 20, backgroundColor: '#f8f9fa', borderRadius: 8 }}>
-              <DetailedSettings 
-                value={detailedSettings} 
-                onChange={handleDetailedSettingsChange}
-              />
-            </div>
-          )}
-
-          {/* NoticeBoxを最下段に追加 */}
-          <NoticeBox />
-        </div>
+    <div style={containerStyle}>
+      <div style={leftPanelStyle}>
+        <TopPanel
+          vehicle={vehicle}
+          setVehicle={setVehicle}
+          region={region}
+          setRegion={setRegion}
+          distanceType={distanceType}
+          setDistanceType={setDistanceType}
+          useHighway={useHighway}
+          setUseHighway={setUseHighway}
+          toll={toll}
+          setToll={setToll}
+          onCalcFare={handleCalcFare}
+          from={from}
+          setFrom={setFrom}
+          tos={tos}
+          setTos={setTos}
+          to={to}
+          setTo={setTo}
+          detailedSettingsEnabled={detailedSettingsEnabled}
+          setDetailedSettingsEnabled={setDetailedSettingsEnabled}
+          detailedSettings={detailedSettings}
+          setDetailedSettings={setDetailedSettings}
+        />
       </div>
-    </>
+      
+      <div style={rightPanelStyle}>
+        {/* 各種入力フォームと結果表示 */}
+        {distanceType === "manual" && (
+          <>
+            <ManualDistanceInput
+              vehicle={vehicle}
+              region={region}
+              useHighway={useHighway}
+              fareOption={toll}
+              onFareResult={handleManualFareResult}
+            />
+            {renderFareResult()}
+          </>
+        )}
+        
+        {distanceType === "map" && (
+          <>
+            <MapArea
+              ref={mapRef}
+              useHighway={useHighway}
+              region={region}
+              onRouteDraw={handleRouteDraw}
+            />
+            {renderFareResult()}
+          </>
+        )}
+        
+        {distanceType === "address" && (
+          <>
+            <AddressForm
+              ref={addressFormRef}
+              vehicle={vehicle}
+              region={region}
+              useHighway={useHighway}
+              from={from}
+              setFrom={setFrom}
+              tos={tos}
+              setTos={setTos}
+              to={to}
+              setTo={setTo}
+              distanceType={distanceType}
+              onFareResult={handleFareResult}
+            />
+            <div style={{ height: "0.5cm" }} />
+            <AddressMap
+              ref={addressMapRef}
+              originAddr={result?.originAddr}
+              destinationAddr={result?.destinationAddr}
+              waypointAddrs={tos.filter(t => t.trim())}
+              useHighway={useHighway}
+              region={region}
+              onRouteResult={(routeResult, routeError) => {
+                // 必要に応じて処理を追加
+              }}
+            />
+            {renderFareResult()}
+          </>
+        )}
+
+        {distanceType === "ferry" && (
+          <>
+            <FerryForm
+              origin={ferryAddresses.origin}
+              setOrigin={(value) => setFerryAddresses(prev => ({ ...prev, origin: value }))}
+              embarkPort={ferryAddresses.embarkPort}
+              setEmbarkPort={(value) => setFerryAddresses(prev => ({ ...prev, embarkPort: value }))}
+              disembarkPort={ferryAddresses.disembarkPort}
+              setDisembarkPort={(value) => setFerryAddresses(prev => ({ ...prev, disembarkPort: value }))}
+              destination={ferryAddresses.destination}
+              setDestination={(value) => setFerryAddresses(prev => ({ ...prev, destination: value }))}
+              onFareResult={(addresses) => {
+                setFerryAddresses(addresses);
+              }}
+            />
+
+            <FerryMap
+              ref={ferryMapRef}
+              origin={ferryAddresses.origin}
+              embarkPort={ferryAddresses.embarkPort}
+              disembarkPort={ferryAddresses.disembarkPort}
+              destination={ferryAddresses.destination}
+              vehicle={vehicle}
+              region={region}
+              useHighway={useHighway}
+              onResult={handleFerryFareResult}
+            />
+
+            {ferryError && <div style={{ color: "red" }}>{ferryError}</div>}
+
+            {ferryResult && (
+              <FerryFareResult
+                totalFare={ferryResult.beforeFare + ferryResult.afterFare}
+                before={{
+                  fare: ferryResult.beforeFare,
+                  originAddr: ferryResult.beforeOriginAddr,
+                  destinationAddr: ferryResult.beforeDestAddr,
+                  rawKm: ferryResult.beforeKm,
+                  roundedKm: ferryResult.beforeRoundedKm,
+                }}
+                after={{
+                  fare: ferryResult.afterFare,
+                  originAddr: ferryResult.afterOriginAddr,
+                  destinationAddr: ferryResult.afterDestAddr,
+                  rawKm: ferryResult.afterKm,
+                  roundedKm: ferryResult.afterRoundedKm,
+                }}
+                useHighway={useHighway}
+                vehicle={vehicle}
+                region={region}
+              />
+            )}
+          </>
+        )}
+
+        {/* 詳細設定（フェリー以外の場合のみ、かつ料金・実費が「適用する」の場合のみ表示） */}
+        {distanceType !== "ferry" && detailedSettingsEnabled && (
+          <div style={{ marginTop: 20, padding: 20, backgroundColor: '#f8f9fa', borderRadius: 8 }}>
+            <DetailedSettings 
+              value={detailedSettings} 
+              onChange={handleDetailedSettingsChange}
+            />
+          </div>
+        )}
+
+        {/* NoticeBoxを最下段に追加 */}
+        <NoticeBox />
+      </div>
+    </div>
   );
 }

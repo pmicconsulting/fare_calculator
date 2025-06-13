@@ -28,10 +28,10 @@ type Props = {
 };
 
 const VEHICLE_LABELS: { value: VehicleType; label: string }[] = [
-  { value: "small", label: "小型車(2tクラス)" },
-  { value: "medium", label: "中型車(4tクラス)" },
-  { value: "large", label: "大型車(10tクラス)" },
-  { value: "trailer", label: "トレーラー(20tクラス)" },
+  { value: "small", label: "小型車:2t" },
+  { value: "medium", label: "中型車:4t" },
+  { value: "large", label: "大型車:10t" },
+  { value: "trailer", label: "トレーラー:20t" },
 ];
 const REGIONS: RegionType[] = [
   "北海道", "東北", "関東", "北陸信越", "中部",
@@ -41,7 +41,7 @@ const REGIONS: RegionType[] = [
 const DISTANCE_TYPE_LABELS: { value: DistanceType; label: string }[] = [
   { value: "map", label: "地図で計算" },
   { value: "address", label: "住所で計算" },
-  { value: "manual", label: "運行距離を入力" },
+  { value: "manual", label: "距離入力" },
   { value: "ferry", label: "フェリー利用" },
 ];
 
@@ -64,23 +64,13 @@ export default function TopPanel(props: Props) {
 
   return (
     <div className="panel-group">
-      {/* モバイル用のヘッダー */}
-      <div className="mobile-panel-header">
-        <h2>設定メニュー</h2>
-        <button className="close-menu" onClick={() => {
-          // 親コンポーネントのsetIsMobileMenuOpenを呼ぶ
-          if (window.innerWidth <= 599) {
-            document.querySelector('.hamburger-menu')?.click();
-          }
-        }}>×</button>
-      </div>
       {/* 最上段 運賃計算ボタン */}
       <button className="calc-main-btn" onClick={onCalcFare}>
-        標準的運賃を計算！
+        計算ボタン(クリックします)
       </button>
       {/* 車種 2列4ボタン */}
       <div className="panel-section">
-        <div className="panel-label">算出対象車種</div>
+        <div className="panel-label">算出対象の車種</div>
         <div className="vehicle-btns grid-2col">
           {VEHICLE_LABELS.map((v) => (
             <button
@@ -128,7 +118,7 @@ export default function TopPanel(props: Props) {
       </div>
       {/* 高速道路 2列2ボタン */}
       <div className="panel-section">
-        <div className="panel-label">高速道路</div>
+        <div className="panel-label">高速道路の利用</div>
         <div className="highway-btns grid-2col">
           <button
             className={`panel-btn${useHighway ? " selected" : ""}`}
@@ -148,7 +138,7 @@ export default function TopPanel(props: Props) {
       </div>
       {/* 料金・実費 2列2ボタン */}
       <div className="panel-section">
-        <div className="panel-label">料金・割増</div>
+        <div className="panel-label">料金・割増の適用</div>
         <div className="toll-btns grid-2col">
           <button
             className={`panel-btn${toll === "apply" ? " selected" : ""}`}
