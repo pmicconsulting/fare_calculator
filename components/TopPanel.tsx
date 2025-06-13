@@ -64,6 +64,16 @@ export default function TopPanel(props: Props) {
 
   return (
     <div className="panel-group">
+      {/* モバイル用のヘッダー */}
+      <div className="mobile-panel-header">
+        <h2>設定メニュー</h2>
+        <button className="close-menu" onClick={() => {
+          // 親コンポーネントのsetIsMobileMenuOpenを呼ぶ
+          if (window.innerWidth <= 599) {
+            document.querySelector('.hamburger-menu')?.click();
+          }
+        }}>×</button>
+      </div>
       {/* 最上段 運賃計算ボタン */}
       <button className="calc-main-btn" onClick={onCalcFare}>
         標準的運賃を計算！

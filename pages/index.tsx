@@ -574,161 +574,213 @@ export default function Home() {
     position: 'relative',
   };
 
+  // ハンバーガーメニューの状態を追加
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // モバイルメニューの制御
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth > 599) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // メニュー外クリックで閉じる
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (isMobileMenuOpen && 
+          !target.closest('.left-panel') && 
+          !target.closest('.hamburger-menu')) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [isMobileMenuOpen]);
+
   return (
-    <div style={containerStyle}>
-      <div style={leftPanelStyle}>
-        <TopPanel
-          vehicle={vehicle}
-          setVehicle={setVehicle}
-          region={region}
-          setRegion={setRegion}
-          distanceType={distanceType}
-          setDistanceType={setDistanceType}
-          useHighway={useHighway}
-          setUseHighway={setUseHighway}
-          toll={toll}
-          setToll={setToll}
-          onCalcFare={handleCalcFare}
-          from={from}
-          setFrom={setFrom}
-          tos={tos}
-          setTos={setTos}
-          to={to}
-          setTo={setTo}
-          detailedSettingsEnabled={detailedSettingsEnabled}
-          setDetailedSettingsEnabled={setDetailedSettingsEnabled}
-          detailedSettings={detailedSettings}
-          setDetailedSettings={setDetailedSettings}
-        />
-      </div>
-      
-      <div style={rightPanelStyle}>
-        {/* 各種入力フォームと結果表示 */}
-        {distanceType === "manual" && (
-          <>
-            <ManualDistanceInput
-              vehicle={vehicle}
-              region={region}
-              useHighway={useHighway}
-              fareOption={toll}
-              onFareResult={handleManualFareResult}
-            />
-            {renderFareResult()}
-          </>
-        )}
+    <>
+      {/* ハンバーガーメニューボタン */}
+      <button 
+        className={`hamburger-menu ${isMobileMenuOpen ? 'active' : ''}`}
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        aria-label="メニュー"
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      {/* オーバーレイ */}
+      <div 
+        className={`overlay ${isMobileMenuOpen ? 'active' : ''}`}
+        onClick={() => setIsMobileMenuOpen(false)}
+      />
+
+      <div style={containerStyle}>
+        <div 
+          style={leftPanelStyle} 
+          className={`left-panel ${isMobileMenuOpen ? 'active' : ''}`}
+        >
+          <TopPanel
+            vehicle={vehicle}
+            setVehicle={setVehicle}
+            region={region}
+            setRegion={setRegion}
+            distanceType={distanceType}
+            setDistanceType={setDistanceType}
+            useHighway={useHighway}
+            setUseHighway={setUseHighway}
+            toll={toll}
+            setToll={setToll}
+            onCalcFare={handleCalcFare}
+            from={from}
+            setFrom={setFrom}
+            tos={tos}
+            setTos={setTos}
+            to={to}
+            setTo={setTo}
+            detailedSettingsEnabled={detailedSettingsEnabled}
+            setDetailedSettingsEnabled={setDetailedSettingsEnabled}
+            detailedSettings={detailedSettings}
+            setDetailedSettings={setDetailedSettings}
+          />
+        </div>
         
-        {distanceType === "map" && (
-          <>
-            <MapArea
-              ref={mapRef}
-              useHighway={useHighway}
-              region={region}
-              onRouteDraw={handleRouteDraw}
-            />
-            {renderFareResult()}
-          </>
-        )}
-        
-        {distanceType === "address" && (
-          <>
-            <AddressForm
-              ref={addressFormRef}
-              vehicle={vehicle}
-              region={region}
-              useHighway={useHighway}
-              from={from}
-              setFrom={setFrom}
-              tos={tos}
-              setTos={setTos}
-              to={to}
-              setTo={setTo}
-              distanceType={distanceType}
-              onFareResult={handleFareResult}
-            />
-            <div style={{ height: "0.5cm" }} />
-            <AddressMap
-              ref={addressMapRef}
-              originAddr={result?.originAddr}
-              destinationAddr={result?.destinationAddr}
-              waypointAddrs={tos.filter(t => t.trim())}
-              useHighway={useHighway}
-              region={region}
-              onRouteResult={(routeResult, routeError) => {
-                // 必要に応じて処理を追加
-              }}
-            />
-            {renderFareResult()}
-          </>
-        )}
-
-        {distanceType === "ferry" && (
-          <>
-            <FerryForm
-              origin={ferryAddresses.origin}
-              setOrigin={(value) => setFerryAddresses(prev => ({ ...prev, origin: value }))}
-              embarkPort={ferryAddresses.embarkPort}
-              setEmbarkPort={(value) => setFerryAddresses(prev => ({ ...prev, embarkPort: value }))}
-              disembarkPort={ferryAddresses.disembarkPort}
-              setDisembarkPort={(value) => setFerryAddresses(prev => ({ ...prev, disembarkPort: value }))}
-              destination={ferryAddresses.destination}
-              setDestination={(value) => setFerryAddresses(prev => ({ ...prev, destination: value }))}
-              onFareResult={(addresses) => {
-                setFerryAddresses(addresses);
-              }}
-            />
-
-            <FerryMap
-              ref={ferryMapRef}
-              origin={ferryAddresses.origin}
-              embarkPort={ferryAddresses.embarkPort}
-              disembarkPort={ferryAddresses.disembarkPort}
-              destination={ferryAddresses.destination}
-              vehicle={vehicle}
-              region={region}
-              useHighway={useHighway}
-              onResult={handleFerryFareResult}
-            />
-
-            {ferryError && <div style={{ color: "red" }}>{ferryError}</div>}
-
-            {ferryResult && (
-              <FerryFareResult
-                totalFare={ferryResult.beforeFare + ferryResult.afterFare}
-                before={{
-                  fare: ferryResult.beforeFare,
-                  originAddr: ferryResult.beforeOriginAddr,
-                  destinationAddr: ferryResult.beforeDestAddr,
-                  rawKm: ferryResult.beforeKm,
-                  roundedKm: ferryResult.beforeRoundedKm,
-                }}
-                after={{
-                  fare: ferryResult.afterFare,
-                  originAddr: ferryResult.afterOriginAddr,
-                  destinationAddr: ferryResult.afterDestAddr,
-                  rawKm: ferryResult.afterKm,
-                  roundedKm: ferryResult.afterRoundedKm,
-                }}
-                useHighway={useHighway}
+        <div style={rightPanelStyle} className="right-panel">
+          {/* 各種入力フォームと結果表示 */}
+          {distanceType === "manual" && (
+            <>
+              <ManualDistanceInput
                 vehicle={vehicle}
                 region={region}
+                useHighway={useHighway}
+                fareOption={toll}
+                onFareResult={handleManualFareResult}
               />
-            )}
-          </>
-        )}
+              {renderFareResult()}
+            </>
+          )}
+          
+          {distanceType === "map" && (
+            <>
+              <MapArea
+                ref={mapRef}
+                useHighway={useHighway}
+                region={region}
+                onRouteDraw={handleRouteDraw}
+              />
+              {renderFareResult()}
+            </>
+          )}
+          
+          {distanceType === "address" && (
+            <>
+              <AddressForm
+                ref={addressFormRef}
+                vehicle={vehicle}
+                region={region}
+                useHighway={useHighway}
+                from={from}
+                setFrom={setFrom}
+                tos={tos}
+                setTos={setTos}
+                to={to}
+                setTo={setTo}
+                distanceType={distanceType}
+                onFareResult={handleFareResult}
+              />
+              <div style={{ height: "0.5cm" }} />
+              <AddressMap
+                ref={addressMapRef}
+                originAddr={result?.originAddr}
+                destinationAddr={result?.destinationAddr}
+                waypointAddrs={tos.filter(t => t.trim())}
+                useHighway={useHighway}
+                region={region}
+                onRouteResult={(routeResult, routeError) => {
+                  // 必要に応じて処理を追加
+                }}
+              />
+              {renderFareResult()}
+            </>
+          )}
 
-        {/* 詳細設定（フェリー以外の場合のみ、かつ料金・実費が「適用する」の場合のみ表示） */}
-        {distanceType !== "ferry" && detailedSettingsEnabled && (
-          <div style={{ marginTop: 20, padding: 20, backgroundColor: '#f8f9fa', borderRadius: 8 }}>
-            <DetailedSettings 
-              value={detailedSettings} 
-              onChange={handleDetailedSettingsChange}
-            />
-          </div>
-        )}
+          {distanceType === "ferry" && (
+            <>
+              <FerryForm
+                origin={ferryAddresses.origin}
+                setOrigin={(value) => setFerryAddresses(prev => ({ ...prev, origin: value }))}
+                embarkPort={ferryAddresses.embarkPort}
+                setEmbarkPort={(value) => setFerryAddresses(prev => ({ ...prev, embarkPort: value }))}
+                disembarkPort={ferryAddresses.disembarkPort}
+                setDisembarkPort={(value) => setFerryAddresses(prev => ({ ...prev, disembarkPort: value }))}
+                destination={ferryAddresses.destination}
+                setDestination={(value) => setFerryAddresses(prev => ({ ...prev, destination: value }))}
+                onFareResult={(addresses) => {
+                  setFerryAddresses(addresses);
+                }}
+              />
 
-        {/* NoticeBoxを最下段に追加 */}
-        <NoticeBox />
+              <FerryMap
+                ref={ferryMapRef}
+                origin={ferryAddresses.origin}
+                embarkPort={ferryAddresses.embarkPort}
+                disembarkPort={ferryAddresses.disembarkPort}
+                destination={ferryAddresses.destination}
+                vehicle={vehicle}
+                region={region}
+                useHighway={useHighway}
+                onResult={handleFerryFareResult}
+              />
+
+              {ferryError && <div style={{ color: "red" }}>{ferryError}</div>}
+
+              {ferryResult && (
+                <FerryFareResult
+                  totalFare={ferryResult.beforeFare + ferryResult.afterFare}
+                  before={{
+                    fare: ferryResult.beforeFare,
+                    originAddr: ferryResult.beforeOriginAddr,
+                    destinationAddr: ferryResult.beforeDestAddr,
+                    rawKm: ferryResult.beforeKm,
+                    roundedKm: ferryResult.beforeRoundedKm,
+                  }}
+                  after={{
+                    fare: ferryResult.afterFare,
+                    originAddr: ferryResult.afterOriginAddr,
+                    destinationAddr: ferryResult.afterDestAddr,
+                    rawKm: ferryResult.afterKm,
+                    roundedKm: ferryResult.afterRoundedKm,
+                  }}
+                  useHighway={useHighway}
+                  vehicle={vehicle}
+                  region={region}
+                />
+              )}
+            </>
+          )}
+
+          {/* 詳細設定（フェリー以外の場合のみ、かつ料金・実費が「適用する」の場合のみ表示） */}
+          {distanceType !== "ferry" && detailedSettingsEnabled && (
+            <div style={{ marginTop: 20, padding: 20, backgroundColor: '#f8f9fa', borderRadius: 8 }}>
+              <DetailedSettings 
+                value={detailedSettings} 
+                onChange={handleDetailedSettingsChange}
+              />
+            </div>
+          )}
+
+          {/* NoticeBoxを最下段に追加 */}
+          <NoticeBox />
+        </div>
       </div>
-    </div>
+    </>
   );
 }
