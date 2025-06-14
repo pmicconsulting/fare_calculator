@@ -58,16 +58,18 @@ export default function TopPanel(props: Props) {
     toll,
     setToll,
     onCalcFare,
-    // 未使用のpropsは分割代入から除外
     setDetailedSettingsEnabled,
   } = props;
 
   return (
     <div className="panel-group">
-      {/* 最上段 運賃計算ボタン */}
-      <button className="calc-main-btn" onClick={onCalcFare}>
-        計算ボタン(クリックします)
-      </button>
+      {/* 計算ボタン専用コンテナ */}
+      <div className="calc-btn-container">
+        <button className="calc-main-btn" onClick={onCalcFare}>
+          計算ボタン(クリックします)
+        </button>
+      </div>
+
       {/* 車種 2列4ボタン */}
       <div className="panel-section">
         <div className="panel-label">算出対象の車種</div>

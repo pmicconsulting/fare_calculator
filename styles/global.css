@@ -520,3 +520,65 @@
 .panel-group {
   touch-action: pan-y;
 }
+
+/* styles/global.css */
+
+/* 計算ボタン専用コンテナを最上段に固定 */
+.calc-btn-container {
+  position: sticky; /* スクロール時に固定 */
+  top: 0; /* 最上段に固定 */
+  z-index: 10; /* 他の要素より前面に表示 */
+  background: #fff; /* 背景色を設定（透け防止） */
+  padding-bottom: 8px; /* 下部に余白を追加 */
+  border-bottom: 1px solid #ddd; /* 下部に境界線を追加 */
+}
+
+/* スクロール時に影を追加（視認性向上） */
+.calc-btn-container::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.calc-btn-container.sticky-active::after {
+  opacity: 1;
+}
+
+/* スマートフォン用 (0〜599px) */
+@media (max-width: 599px) {
+  .calc-btn-container {
+    padding: 8px 0;
+  }
+  .calc-main-btn {
+    font-size: 1rem;
+    padding: 10px 0;
+  }
+}
+
+/* タブレット用 (600〜1023px) */
+@media (min-width: 600px) and (max-width: 1023px) {
+  .calc-btn-container {
+    padding: 10px 0;
+  }
+  .calc-main-btn {
+    font-size: 1.1rem;
+    padding: 12px 0;
+  }
+}
+
+/* PC用 (1024px以上) */
+@media (min-width: 1024px) {
+  .calc-btn-container {
+    padding: 12px 0;
+  }
+  .calc-main-btn {
+    font-size: 1.2rem;
+    padding: 14px 0;
+  }
+}

@@ -554,7 +554,7 @@ export default function Home() {
   const leftPanelStyle: React.CSSProperties = {
     width: '280px',
     height: '100vh',
-    overflowY: 'auto',
+    overflowY: 'auto', /* スクロール可能にする */
     overflowX: 'hidden',
     borderRight: '2px solid #dee2e6',
     backgroundColor: '#f8f9fa',
