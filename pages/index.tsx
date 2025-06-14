@@ -552,7 +552,7 @@ export default function Home() {
   };
 
   const leftPanelStyle: React.CSSProperties = {
-    width: '400px',
+    width: '280px',
     height: '100vh',
     overflowY: 'auto',
     overflowX: 'hidden',
