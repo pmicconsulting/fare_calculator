@@ -470,7 +470,7 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
     overflow: 'hidden',
     transition: 'max-height 0.3s ease-in-out',
     marginLeft: 16,
-    width: '400px',
+    width: '300px',
   };
 
   const vehicleItemStyle = (isSelected: boolean, vehicleId: string): React.CSSProperties => ({
