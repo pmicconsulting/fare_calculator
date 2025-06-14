@@ -143,7 +143,7 @@ const AddressForm = forwardRef((props: Props, ref) => {
           placeholder="「住所」又は「市町村＋事業所名」を入力"
           style={{
             marginLeft: 20,
-            width: 480, // FerryFormと同じ幅
+            width: 350, // FerryFormと同じ幅
             height: 35, // 変更：高さを25pxに調整
             fontSize: 15,
             borderRadius: 6,
@@ -177,7 +177,7 @@ const AddressForm = forwardRef((props: Props, ref) => {
             placeholder="「住所」又は「市町村＋事業所名」を入力"
             style={{
               marginLeft: 20,
-              width: 480, // FerryFormと同じ幅
+              width: 350, // FerryFormと同じ幅
               height: 35, // FerryFormと同じ高さ
               fontSize: 15,
               borderRadius: 6,
@@ -191,13 +191,19 @@ const AddressForm = forwardRef((props: Props, ref) => {
             onClick={() => removeVia(i)}
             disabled={tos.length === 1 || loading}
             style={{
-              marginLeft: 10,
-              padding: "8px 12px",
-              fontSize: 15,
-              borderRadius: 6,
-              border: "2px solid #bbb",
-              background: "#fff",
-              cursor: "pointer",
+    marginLeft: 1,
+    padding: 0,
+    width: 30,        // 幅を固定
+    height: 30,       // 高さを固定
+    fontSize: 15,
+    borderRadius: "50%",  // 円形にする
+    border: "2px solid #dc3545",  // 赤色の枠
+    background: "#dc3545",        // 赤色の背景
+    color: "#fff",                // 白色の文字
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
             }}
           >
             －
@@ -208,13 +214,19 @@ const AddressForm = forwardRef((props: Props, ref) => {
               onClick={addVia}
               disabled={loading}
               style={{
-                marginLeft: 10,
-                padding: "8px 12px",
-                fontSize: 15,
-                borderRadius: 6,
-                border: "2px solid #bbb",
-                background: "#fff",
-                cursor: "pointer",
+    marginLeft: 1,
+    padding: 0,
+    width: 30,        // 幅を固定
+    height: 30,       // 高さを固定
+    fontSize: 15,
+    borderRadius: "50%",  // 円形にする
+    border: "2px solid #007bff",  // 青色に変更
+    background: "#007bff",        // 青色に変更
+    color: "#fff",                // 白色の文字
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
               }}
             >
               ＋
@@ -245,7 +257,7 @@ const AddressForm = forwardRef((props: Props, ref) => {
           placeholder="「住所」又は「市町村＋事業所名」を入力"
           style={{
             marginLeft: 20,
-            width: 480, // FerryFormと同じ幅
+            width: 350, // FerryFormと同じ幅
             height: 35, // FerryFormと同じ高さ
             fontSize: 15,
             borderRadius: 6,

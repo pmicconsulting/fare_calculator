@@ -173,7 +173,7 @@ const DetailedTimeSettings: React.FC<DetailedTimeSettingsProps> = ({ value, onCh
     borderRadius: 4,
     fontWeight: "bold",
     fontSize: 18,
-    minWidth: 140,
+    minWidth: 90,
     textAlign: "center",
     padding: "4px 16px",
     marginRight: 24,
@@ -248,14 +248,19 @@ const DetailedTimeSettings: React.FC<DetailedTimeSettingsProps> = ({ value, onCh
 
   const accordionContainerStyle: React.CSSProperties = {
     display: 'flex',
-    flexDirection: 'column',
-    gap: 4,
+    flexDirection: 'row',
+    gap: 5,                    // 隙間をなくす
     marginTop: 12,
     marginBottom: 20,
-    width: '300px',
+    width: 200,                // radioContainerStyleと同じ幅
   };
 
   const loadingItemStyle = (isSelected: boolean): React.CSSProperties => ({
+    width: 100,              // 200px ÷ 2 = 100px（2つのボタンで200pxを分割）
+    height: 9,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: '12px 16px',
     backgroundColor: isSelected ? '#b94a48' : '#fff',
     color: isSelected ? '#fff' : '#333',
@@ -319,34 +324,44 @@ const DetailedTimeSettings: React.FC<DetailedTimeSettingsProps> = ({ value, onCh
       <div style={sectionTitleStyle}>出発時の設定事項</div>
       
       {/* 出発時：待機時間料 */}
-      <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
-        <div style={itemLabelStyle}>待機時間料</div>
-        <div style={radioContainerStyle}>
-          <div style={radioGroupStyle}>
-            <label style={radioLabelStyle(!showDepartureWaitingTime)}>
-              <input
-                type="radio"
-                name="departureWaitingTime"
-                checked={!showDepartureWaitingTime}
-                onChange={handleDepartureWaitingTimeToggle}
-                style={radioInputStyle}
-              />
-              適用しない
-            </label>
-            <label style={radioLabelStyle(showDepartureWaitingTime)}>
-              <input
-                type="radio"
-                name="departureWaitingTime"
-                checked={showDepartureWaitingTime}
-                onChange={handleDepartureWaitingTimeToggle}
-                style={radioInputStyle}
-              />
-              適用する
-            </label>
+      <div style={{ position: 'relative', marginBottom: showDepartureWaitingTime ? 60 : 16 }}>
+        <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+          <div style={itemLabelStyle}>待機時間料</div>
+          <div style={radioContainerStyle}>
+            <div style={radioGroupStyle}>
+              <label style={radioLabelStyle(!showDepartureWaitingTime)}>
+                <input
+                  type="radio"
+                  name="departureWaitingTime"
+                  checked={!showDepartureWaitingTime}
+                  onChange={handleDepartureWaitingTimeToggle}
+                  style={radioInputStyle}
+                />
+                適用しない
+              </label>
+              <label style={radioLabelStyle(showDepartureWaitingTime)}>
+                <input
+                  type="radio"
+                  name="departureWaitingTime"
+                  checked={showDepartureWaitingTime}
+                  onChange={handleDepartureWaitingTimeToggle}
+                  style={radioInputStyle}
+                />
+                適用する
+              </label>
+            </div>
           </div>
         </div>
         {showDepartureWaitingTime && (
-          <div style={inputContainerWithLabelStyle}>
+          <div style={{
+            position: 'absolute',
+            top: '100%',
+            left: '180px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+            marginTop: 4
+          }}>
             <span style={timeLabelStyle}>所要時間</span>
             <select
               value={tempDepartureWaitingTime}
@@ -370,34 +385,44 @@ const DetailedTimeSettings: React.FC<DetailedTimeSettingsProps> = ({ value, onCh
       </div>
 
       {/* 出発時：積込料 */}
-      <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
-        <div style={itemLabelStyle}>積込料</div>
-        <div style={radioContainerStyle}>
-          <div style={radioGroupStyle}>
-            <label style={radioLabelStyle(!showDepartureLoadingWork)}>
-              <input
-                type="radio"
-                name="departureLoadingWork"
-                checked={!showDepartureLoadingWork}
-                onChange={handleDepartureLoadingWorkToggle}
-                style={radioInputStyle}
-              />
-              適用しない
-            </label>
-            <label style={radioLabelStyle(showDepartureLoadingWork)}>
-              <input
-                type="radio"
-                name="departureLoadingWork"
-                checked={showDepartureLoadingWork}
-                onChange={handleDepartureLoadingWorkToggle}
-                style={radioInputStyle}
-              />
-              適用する
-            </label>
+      <div style={{ position: 'relative', marginBottom: showDepartureLoadingWork ? 100 : 16 }}>
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <div style={itemLabelStyle}>積込料</div>
+          <div style={radioContainerStyle}>
+            <div style={radioGroupStyle}>
+              <label style={radioLabelStyle(!showDepartureLoadingWork)}>
+                <input
+                  type="radio"
+                  name="departureLoadingWork"
+                  checked={!showDepartureLoadingWork}
+                  onChange={handleDepartureLoadingWorkToggle}
+                  style={radioInputStyle}
+                />
+                適用しない
+              </label>
+              <label style={radioLabelStyle(showDepartureLoadingWork)}>
+                <input
+                  type="radio"
+                  name="departureLoadingWork"
+                  checked={showDepartureLoadingWork}
+                  onChange={handleDepartureLoadingWorkToggle}
+                  style={radioInputStyle}
+                />
+                適用する
+              </label>
+            </div>
           </div>
         </div>
         {showDepartureLoadingWork && (
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{
+            position: 'absolute',
+            top: '100%',
+            left: '180px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+            marginTop: 4
+          }}>
             <div style={accordionContainerStyle}>
               {loadingWorkTypes.map((loading) => {
                 if (isDepartureLoadingTypeSelected && selectedDepartureLoadingType !== loading.id) {
@@ -443,34 +468,44 @@ const DetailedTimeSettings: React.FC<DetailedTimeSettingsProps> = ({ value, onCh
       <div style={sectionTitleStyle}>到着時の設定事項</div>
 
       {/* 到着時：待機時間料 */}
-      <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
-        <div style={itemLabelStyle}>待機時間料</div>
-        <div style={radioContainerStyle}>
-          <div style={radioGroupStyle}>
-            <label style={radioLabelStyle(!showArrivalWaitingTime)}>
-              <input
-                type="radio"
-                name="arrivalWaitingTime"
-                checked={!showArrivalWaitingTime}
-                onChange={handleArrivalWaitingTimeToggle}
-                style={radioInputStyle}
-              />
-              適用しない
-            </label>
-            <label style={radioLabelStyle(showArrivalWaitingTime)}>
-              <input
-                type="radio"
-                name="arrivalWaitingTime"
-                checked={showArrivalWaitingTime}
-                onChange={handleArrivalWaitingTimeToggle}
-                style={radioInputStyle}
-              />
-              適用する
-            </label>
+      <div style={{ position: 'relative', marginBottom: showArrivalWaitingTime ? 60 : 16 }}>
+        <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+          <div style={itemLabelStyle}>待機時間料</div>
+          <div style={radioContainerStyle}>
+            <div style={radioGroupStyle}>
+              <label style={radioLabelStyle(!showArrivalWaitingTime)}>
+                <input
+                  type="radio"
+                  name="arrivalWaitingTime"
+                  checked={!showArrivalWaitingTime}
+                  onChange={handleArrivalWaitingTimeToggle}
+                  style={radioInputStyle}
+                />
+                適用しない
+              </label>
+              <label style={radioLabelStyle(showArrivalWaitingTime)}>
+                <input
+                  type="radio"
+                  name="arrivalWaitingTime"
+                  checked={showArrivalWaitingTime}
+                  onChange={handleArrivalWaitingTimeToggle}
+                  style={radioInputStyle}
+                />
+                適用する
+              </label>
+            </div>
           </div>
         </div>
         {showArrivalWaitingTime && (
-          <div style={inputContainerWithLabelStyle}>
+          <div style={{
+            position: 'absolute',
+            top: '100%',
+            left: '180px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+            marginTop: 4
+          }}>
             <span style={timeLabelStyle}>所要時間</span>
             <select
               value={tempArrivalWaitingTime}
@@ -494,34 +529,44 @@ const DetailedTimeSettings: React.FC<DetailedTimeSettingsProps> = ({ value, onCh
       </div>
 
       {/* 到着時：取卸料 */}
-      <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
-        <div style={itemLabelStyle}>取卸料</div>
-        <div style={radioContainerStyle}>
-          <div style={radioGroupStyle}>
-            <label style={radioLabelStyle(!showArrivalLoadingWork)}>
-              <input
-                type="radio"
-                name="arrivalLoadingWork"
-                checked={!showArrivalLoadingWork}
-                onChange={handleArrivalLoadingWorkToggle}
-                style={radioInputStyle}
-              />
-              適用しない
-            </label>
-            <label style={radioLabelStyle(showArrivalLoadingWork)}>
-              <input
-                type="radio"
-                name="arrivalLoadingWork"
-                checked={showArrivalLoadingWork}
-                onChange={handleArrivalLoadingWorkToggle}
-                style={radioInputStyle}
-              />
-              適用する
-            </label>
+      <div style={{ position: 'relative', marginBottom: showArrivalLoadingWork ? 100 : 16 }}>
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <div style={itemLabelStyle}>取卸料</div>
+          <div style={radioContainerStyle}>
+            <div style={radioGroupStyle}>
+              <label style={radioLabelStyle(!showArrivalLoadingWork)}>
+                <input
+                  type="radio"
+                  name="arrivalLoadingWork"
+                  checked={!showArrivalLoadingWork}
+                  onChange={handleArrivalLoadingWorkToggle}
+                  style={radioInputStyle}
+                />
+                適用しない
+              </label>
+              <label style={radioLabelStyle(showArrivalLoadingWork)}>
+                <input
+                  type="radio"
+                  name="arrivalLoadingWork"
+                  checked={showArrivalLoadingWork}
+                  onChange={handleArrivalLoadingWorkToggle}
+                  style={radioInputStyle}
+                />
+                適用する
+              </label>
+            </div>
           </div>
         </div>
         {showArrivalLoadingWork && (
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{
+            position: 'absolute',
+            top: '100%',
+            left: '180px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 1,
+            marginTop: 4
+          }}>
             <div style={accordionContainerStyle}>
               {loadingWorkTypes.map((loading) => {
                 if (isArrivalLoadingTypeSelected && selectedArrivalLoadingType !== loading.id) {

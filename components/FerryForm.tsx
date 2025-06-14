@@ -63,7 +63,7 @@ function InputRow({ label, placeholder, value, onChange }: RowProps) {
           padding: "10px 0",
           fontWeight: "bold",
           fontSize: 15,
-          height: 25, // 変更：高さを25pxに調整
+          height: 20, // 変更：高さを25pxに調整
         }}
       >
         {label}
@@ -75,7 +75,7 @@ function InputRow({ label, placeholder, value, onChange }: RowProps) {
         style={{
           marginLeft: 20,
           width: 350,
-          height: 25, // 変更：高さを25pxに調整
+          height: 35, // 変更：高さを25pxに調整
           fontSize: 12,
           borderRadius: 6,
           border: "2px solid #bbb",

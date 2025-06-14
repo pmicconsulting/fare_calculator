@@ -91,29 +91,29 @@ const DetailedSettings: React.FC<Props> = ({ value, onChange }) => {
           style={{ 
             marginRight: '10px', 
             padding: '8px 16px',
-            backgroundColor: activeTab === 'time' ? '#007bff' : '#fff',
+            backgroundColor: activeTab === 'time' ? '#b94a48' : '#f8f9fa',
             color: activeTab === 'time' ? '#fff' : '#000',
-            border: '1px solid #007bff',
+            border: '2px solid #b94a48',
             borderRadius: '4px',
             cursor: 'pointer',
             fontWeight: activeTab === 'time' ? 'bold' : 'normal'
           }}
         >
-          待機時間料・荷役作業料
+          待機時間料、積込・取卸料
         </button>
         <button 
           onClick={() => setActiveTab('surcharge')}
           style={{ 
             padding: '8px 16px',
-            backgroundColor: activeTab === 'surcharge' ? '#007bff' : '#fff',
+            backgroundColor: activeTab === 'surcharge' ? '#b94a48' : '#fff',
             color: activeTab === 'surcharge' ? '#fff' : '#000',
-            border: '1px solid #007bff',
+            border: '2px solid #b94a48',
             borderRadius: '4px',
             cursor: 'pointer',
             fontWeight: activeTab === 'surcharge' ? 'bold' : 'normal'
           }}
         >
-          割増料金・燃料サーチャージ
+          燃料サーチャージ、割増料金
         </button>
       </div>
       
