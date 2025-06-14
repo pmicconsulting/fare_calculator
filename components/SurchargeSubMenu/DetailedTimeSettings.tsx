@@ -252,7 +252,7 @@ const DetailedTimeSettings: React.FC<DetailedTimeSettingsProps> = ({ value, onCh
     gap: 4,
     marginTop: 12,
     marginBottom: 20,
-    width: '100px',
+    width: '150px', // 変更: '100px' → '150px'
   };
 
   const loadingItemStyle = (isSelected: boolean): React.CSSProperties => ({

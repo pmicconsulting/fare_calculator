@@ -1,4 +1,6 @@
-/* スマートフォン用 (0〜599px) - 縦1列レイアウト */
+/* 条件設定ページの完璧なレスポンシブ対応 */
+
+/* スマートフォン用 (0〜599px) */
 @media (max-width: 599px) {
   /* インラインスタイルを強制上書き */
   body > div > div:first-child {
@@ -314,6 +316,110 @@
     width: 117.6% !important;
     margin-bottom: 10px !important;
   }
+
+  /* 料金・割増適用時の詳細設定を縦並びレイアウトに変更 */
+  .detailed-settings {
+    width: 100% !important;
+    padding: 15px !important;
+    margin-top: 15px !important;
+    box-sizing: border-box !important;
+    background: #f8f9fa !important;
+    border-radius: 8px !important;
+  }
+
+  /* 各設定行を縦並びに変更 */
+  .detailed-settings > div {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    margin-bottom: 20px !important;
+    width: 100% !important;
+    align-items: stretch !important;
+  }
+
+  /* ラベル + ラジオボタンを上段に配置 */
+  .detailed-settings > div > div:first-child {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 15px !important;
+    width: 100% !important;
+  }
+
+  /* ラベル（待機時間料、積込料等）のスタイル */
+  .detailed-settings div[style*="background: #f8d7da"] {
+    min-width: 100px !important;
+    width: 100px !important;
+    height: 35px !important;
+    font-size: 0.8rem !important;
+    padding: 4px 8px !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* ラジオボタンエリア */
+  .detailed-settings div[style*="border: 1.5px solid #b94a48"] {
+    flex: 1 !important;
+    height: 35px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  /* 詳細設定エリア（機械荷役、手荷役等）を下段に配置 */
+  .detailed-settings > div > div:not(:first-child) {
+    width: 100% !important;
+    margin-top: 10px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  /* 手荷役・機械荷役のボタンエリア */
+  .detailed-settings div[style*="flexDirection: column"]:not(:first-child) {
+    width: 100% !important;
+  }
+
+  .detailed-settings div[style*="flexDirection: column"] > div:first-child {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 8px !important;
+    justify-content: center !important;
+    width: 100% !important;
+  }
+
+  /* 手荷役・機械荷役のボタン */
+  .detailed-settings div[style*="padding: 12px 16px"] {
+    flex: 1 !important;
+    max-width: 120px !important;
+    text-align: center !important;
+    font-size: 0.8rem !important;
+    padding: 8px 12px !important;
+  }
+
+  /* 所要時間の選択エリア */
+  .detailed-settings div[style*="alignItems: center"]:last-child {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    margin-top: 8px !important;
+    width: 100% !important;
+  }
+
+  /* 所要時間のラベル */
+  .detailed-settings span[style*="timeLabelStyle"] {
+    font-size: 0.8rem !important;
+    white-space: nowrap !important;
+  }
+
+  /* 所要時間のセレクトボックス */
+  .detailed-settings select {
+    width: 100px !important;
+    height: 30px !important;
+    font-size: 0.8rem !important;
+    padding: 4px !important;
+  }
 }
 
 /* タブレット用 (600〜1023px) */
@@ -332,5 +438,47 @@
   .manual-label {
     width: 120px !important;
     min-width: 120px !important;
+  }
+
+  .detailed-settings {
+    width: 100% !important;
+    padding: 20px !important;
+  }
+
+  /* タブレットでは横並び基本、適度に調整 */
+  .detailed-settings > div {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-start !important;
+    gap: 15px !important;
+    margin-bottom: 15px !important;
+    flex-wrap: wrap !important;
+  }
+
+  /* ラベル */
+  .detailed-settings div[style*="background: #f8d7da"] {
+    min-width: 120px !important;
+    width: 120px !important;
+    height: 35px !important;
+  }
+
+  /* ラジオボタンエリア */
+  .detailed-settings div[style*="border: 1.5px solid #b94a48"] {
+    width: 180px !important;
+    height: 35px !important;
+  }
+
+  /* 詳細設定エリア */
+  .detailed-settings > div > div:not(:first-child) {
+    flex: 1 !important;
+    min-width: 250px !important;
+  }
+}
+
+/* PC用 (1024px以上) - 既存レイアウト維持 */
+@media (min-width: 1024px) {
+  /* 既存のスタイルをそのまま使用 */
+  .detailed-settings {
+    /* 既存の設定を維持 */
   }
 }

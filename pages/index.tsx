@@ -629,20 +629,6 @@ export default function Home() {
     };
   }, []);
 
-  // Phase 2で追加したコード（これが原因）
-  useEffect(() => {
-    const handleResize = () => {
-      const container = document.querySelector('body > div > div');
-      if (container && window.innerWidth <= 599) {
-        // スマートフォン用の縮小処理
-        container.style.transform = 'scale(0.85)';
-      }
-    };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   return (
     <div style={containerStyle}>
       <div style={leftPanelStyle}>
