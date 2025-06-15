@@ -399,7 +399,7 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
   };
 
   const fuelSelectStyle: React.CSSProperties = {
-    width: 120,
+    width: 100,
     height: 36,
     padding: '0 8px',
     border: '1.5px solid #b94a48',

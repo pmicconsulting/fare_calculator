@@ -582,14 +582,3 @@
     padding: 14px 0;
   }
 }
-
-/* DetailedSettingsコンテナ基本スタイル（PC用） */
-.detailed-settings-container {
-  padding: 20px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  margin-top: 20px;
-  background-color: #fff;
-  box-sizing: border-box;
-  width: 100%;
-}

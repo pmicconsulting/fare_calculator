@@ -314,20 +314,6 @@
     width: 117.6% !important;
     margin-bottom: 10px !important;
   }
-
-  /* DetailedSettingsコンテナのレスポンシブ対応 */
-  .detailed-settings-container {
-    padding: 8px !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-    overflow-x: auto !important;
-  }
-
-  .detailed-settings-container > div {
-    transform: scale(0.85);
-    transform-origin: left top;
-    width: 117.6%; /* 100% ÷ 0.85 = 117.6% */
-  }
 }
 
 /* タブレット用 (600〜1023px) */
@@ -346,12 +332,5 @@
   .manual-label {
     width: 120px !important;
     min-width: 120px !important;
-  }
-
-  /* DetailedSettingsコンテナのレスポンシブ対応 */
-  .detailed-settings-container {
-    padding: 16px;
-    width: 100%;
-    box-sizing: border-box;
   }
 }

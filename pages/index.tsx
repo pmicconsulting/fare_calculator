@@ -584,7 +584,7 @@ export default function Home() {
       if (container && leftPanel && rightPanel) {
         if (window.innerWidth <= 599) {
           // スマートフォン用レイアウト
-          container.style.position = 'static';
+          container.style.position = 'relative'; // static → relative に変更
           container.style.height = 'auto';
           container.style.flexDirection = 'column';
           container.style.overflow = 'visible';
