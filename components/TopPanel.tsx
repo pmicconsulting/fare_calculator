@@ -66,7 +66,7 @@ export default function TopPanel(props: Props) {
       {/* 計算ボタン専用コンテナ */}
       <div className="calc-btn-container">
         <button className="calc-main-btn" onClick={onCalcFare}>
-          計算ボタン(クリックします)
+          計算ボタン
         </button>
       </div>
 
@@ -120,7 +120,7 @@ export default function TopPanel(props: Props) {
       </div>
       {/* 高速道路 2列2ボタン */}
       <div className="panel-section">
-        <div className="panel-label">高速道路の利用</div>
+        <div className="panel-label">経路選定：高速道路利用(料金未反映)</div>
         <div className="highway-btns grid-2col">
           <button
             className={`panel-btn${useHighway ? " selected" : ""}`}

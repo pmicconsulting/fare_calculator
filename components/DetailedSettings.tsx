@@ -74,13 +74,7 @@ const DetailedSettings: React.FC<Props> = ({ value, onChange }) => {
   const safeValue = { ...getDefaultSettings(), ...value };
 
   return (
-    <div style={{ 
-      padding: '20px', 
-      border: '1px solid #ccc', 
-      borderRadius: '8px',
-      marginTop: '20px',
-      backgroundColor: '#fff'
-    }}>
+    <div className="detailed-settings-container"> {/* ← クラス名指定に変更 */}
       <div style={{ 
         marginBottom: '20px',
         borderBottom: '1px solid #ddd',
@@ -99,7 +93,7 @@ const DetailedSettings: React.FC<Props> = ({ value, onChange }) => {
             fontWeight: activeTab === 'time' ? 'bold' : 'normal'
           }}
         >
-          待機時間料、積込・取卸料
+          待機時間料、積込料・取卸料
         </button>
         <button 
           onClick={() => setActiveTab('surcharge')}
