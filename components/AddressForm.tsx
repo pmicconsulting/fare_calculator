@@ -124,7 +124,7 @@ const AddressForm = forwardRef((props: Props, ref) => {
         <span
           className="address-label"
           style={{
-            minWidth: 110,
+            minWidth: 100,
             background: "#8B5CF6", // 変更：パープルに変更
             color: "#fff",
             borderRadius: 6,

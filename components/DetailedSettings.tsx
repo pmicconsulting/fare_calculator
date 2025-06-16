@@ -99,7 +99,7 @@ const DetailedSettings: React.FC<Props> = ({ value, onChange }) => {
             fontWeight: activeTab === 'time' ? 'bold' : 'normal'
           }}
         >
-          待機時間料、積込・取卸料
+          待機時間料、積込料・取卸料
         </button>
         <button 
           onClick={() => setActiveTab('surcharge')}

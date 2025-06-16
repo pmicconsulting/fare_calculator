@@ -331,10 +331,10 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
     border: "1.5px solid #b94a48",
     borderRadius: 4,
     fontWeight: "bold",
-    fontSize: 18,
-    minWidth: 140,
+    fontSize: 14,
+    minWidth: 90,
     textAlign: "center",
-    padding: "4px 16px",
+    padding: "1px 4px",
     marginRight: 24,
     height: "40px",
     display: "flex",
@@ -466,15 +466,15 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
 
   // 特殊車両用の追加スタイル
   const accordionContainerStyle: React.CSSProperties = {
-    maxHeight: isVehicleListExpanded ? '470px' : selectedVehicleType ? '60px' : '0',
+    maxHeight: isVehicleListExpanded ? '400px' : selectedVehicleType ? '40px' : '0',
     overflow: 'hidden',
     transition: 'max-height 0.3s ease-in-out',
     marginLeft: 16,
-    width: '300px',
+    width: '250px',
   };
 
   const vehicleItemStyle = (isSelected: boolean, vehicleId: string): React.CSSProperties => ({
-    padding: '12px 16px',
+    padding: '3px 5px',
     backgroundColor: isSelected ? '#b94a48' : '#fff',
     color: isSelected ? '#fff' : '#333',
     border: '1px solid #b94a48',
@@ -482,7 +482,7 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
     cursor: 'pointer',
     marginBottom: 4,
     transition: 'all 0.2s ease',
-    fontSize: 14,
+    fontSize: 12,
     display: isSelected || isVehicleListExpanded ? 'flex' : 'none',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -517,36 +517,37 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
   return (
     <div style={containerStyle}>
       {/* 燃料サーチャージ - 最上段に配置 */}
-      <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 16 }}>
-        <div style={itemLabelStyle}>燃料サーチャージ</div>
-        <div style={radioContainerStyle}>
-          <div style={radioGroupStyle}>
-            <label style={radioLabelStyle(!showFuelSurcharge)}>
-              <input
-                type="radio"
-                name="fuelSurcharge"
-                checked={!showFuelSurcharge}
-                onChange={handleFuelSurchargeToggle}
-                style={radioInputStyle}
-              />
-              適用しない
-            </label>
-            <label style={radioLabelStyle(showFuelSurcharge)}>
-              <input
-                type="radio"
-                name="fuelSurcharge"
-                checked={showFuelSurcharge}
-                onChange={handleFuelSurchargeToggle}
-                style={radioInputStyle}
-              />
-              適用する
-            </label>
-          </div>
+      <div style={{ position: 'relative', marginBottom: showFuelSurcharge ? 100 : 16 }}>
+        <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+          <div style={itemLabelStyle}>燃料サーチャージ</div>
+          <button
+            onClick={handleFuelSurchargeToggle}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: showFuelSurcharge ? '#b94a48' : '#fff',
+              color: showFuelSurcharge ? '#fff' : '#333',
+              border: '2px solid #b94a48',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            {showFuelSurcharge ? '適用する' : '適用しない'}
+          </button>
         </div>
         {showFuelSurcharge && (
-          <div style={fuelInputContainerStyle}>
+          <div style={{
+            position: 'absolute',
+            top: '100%',
+            left: '5px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8,
+            marginTop: 4
+          }}>
             <div style={fuelInputRowStyle}>
-              <span style={fuelLabelStyle}>燃費</span>
+              <span style={fuelLabelStyle}>燃　費</span>
               <select
                 value={tempFuelEfficiency}
                 onChange={handleFuelEfficiencyChange}
@@ -593,58 +594,60 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
                 style={fuelSelectStyle}
               >
                 <option value="">選択</option>
-                <option value="125">125</option>
-                <option value="130">130</option>
-                <option value="135">135</option>
-                <option value="140">140</option>
-                <option value="145">145</option>
-                <option value="150">150</option>
-                <option value="155">155</option>
-                <option value="160">160</option>
-                <option value="165">165</option>
-                <option value="170">170</option>
-                <option value="175">175</option>
-                <option value="180">180</option>
-                <option value="185">185</option>
-                <option value="190">190</option>
-                <option value="195">195</option>
-                <option value="200">200</option>
+                <option value="125">125円</option>
+                <option value="130">130円</option>
+                <option value="135">135円</option>
+                <option value="140">140円</option>
+                <option value="145">145円</option>
+                <option value="145">145円</option>
+                <option value="150">150円</option>
+                <option value="155">155円</option>
+                <option value="160">160円</option>
+                <option value="165">165円</option>
+                <option value="170">170円</option>
+                <option value="175">175円</option>
+                <option value="180">180円</option>
+                <option value="185">185円</option>
+                <option value="190">190円</option>
+                <option value="185">195円</option>
+                <option value="190">200円</option>
               </select>
-              <span style={fuelUnitStyle}>円/L</span>
             </div>
           </div>
         )}
       </div>
 
       {/* 特殊車両割増 */}
-      <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 16 }}>
-        <div style={itemLabelStyle}>特殊車両割増</div>
-        <div style={radioContainerStyle}>
-          <div style={radioGroupStyle}>
-            <label style={radioLabelStyle(!showSpecialVehicle)}>
-              <input
-                type="radio"
-                name="specialVehicle"
-                checked={!showSpecialVehicle}
-                onChange={handleSpecialVehicleToggle}
-                style={radioInputStyle}
-              />
-              適用しない
-            </label>
-            <label style={radioLabelStyle(showSpecialVehicle)}>
-              <input
-                type="radio"
-                name="specialVehicle"
-                checked={showSpecialVehicle}
-                onChange={handleSpecialVehicleToggle}
-                style={radioInputStyle}
-              />
-              適用する
-            </label>
-          </div>
+      <div style={{ position: 'relative', marginBottom: showSpecialVehicle ? 300 : 16 }}>
+        <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+          <div style={itemLabelStyle}>特殊車両割増</div>
+          <button
+            onClick={handleSpecialVehicleToggle}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: showSpecialVehicle ? '#b94a48' : '#fff',
+              color: showSpecialVehicle ? '#fff' : '#333',
+              border: '2px solid #b94a48',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            {showSpecialVehicle ? '適用する' : '適用しない'}
+          </button>
         </div>
         {showSpecialVehicle && (
-          <div style={accordionContainerStyle}>
+          <div style={{
+            position: 'absolute',
+            top: '100%',
+            left: '5px',
+            width: '270px',
+            maxHeight: isVehicleListExpanded ? '400px' : selectedVehicleType ? '40px' : '0',
+            overflow: 'hidden',
+            transition: 'max-height 0.3s ease-in-out',
+            marginTop: 4
+          }}>
             {specialVehicleTypes.map((vehicle) => (
               <div
                 key={vehicle.id}
@@ -661,241 +664,242 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
         )}
       </div>
 
-      {/* 休日割増 - プルダウン版 */}
+      {/* 休日割増 */}
       <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
         <div style={itemLabelStyle}>休日割増</div>
-        <div style={radioContainerStyle}>
-          <div style={radioGroupStyle}>
-            <label style={radioLabelStyle(!showHoliday)}>
-              <input
-                type="radio"
-                name="holiday"
-                checked={!showHoliday}
-                onChange={handleHolidayToggle}
-                style={radioInputStyle}
-              />
-              適用しない
-            </label>
-            <label style={radioLabelStyle(showHoliday)}>
-              <input
-                type="radio"
-                name="holiday"
-                checked={showHoliday}
-                onChange={handleHolidayToggle}
-                style={radioInputStyle}
-              />
-              適用する
-            </label>
-          </div>
-        </div>
-        {showHoliday && (
-          <div style={inputContainerStyle}>
-            <span style={distanceRatioLabelStyle}>走行距離比率</span>
-            <select
-              value={tempHolidayDistanceRatio}
-              onChange={handleHolidaySelectChange}
-              style={selectBoxStyle}
-            >
-              <option value="">選択</option>
-              <option value="10">10%</option>
-              <option value="20">20%</option>
-              <option value="30">30%</option>
-              <option value="40">40%</option>
-              <option value="50">50%</option>
-              <option value="60">60%</option>
-              <option value="70">70%</option>
-              <option value="80">80%</option>
-              <option value="90">90%</option>
-              <option value="100">100%</option>
-            </select>
-          </div>
-        )}
+        <button
+          onClick={() => setShowHoliday(!showHoliday)}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: showHoliday ? '#b94a48' : '#fff',
+            color: showHoliday ? '#fff' : '#333',
+            border: '2px solid #b94a48',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '14px',
+            transition: 'all 0.2s ease',
+            marginRight: '16px',
+          }}
+        >
+          {showHoliday ? '適用する' : '適用しない'}
+        </button>
       </div>
 
-      {/* 深夜割増 - プルダウン版 */}
+      {/* 休日割増の走行距離比率選択 - 下段に配置 */}
+      {showHoliday && (
+        <div style={{
+          marginLeft: 5,
+          marginBottom: 16,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8
+        }}>
+          <span style={fuelLabelStyle}>走行距離比率</span>
+          <select
+            value={tempHolidayDistanceRatio}
+            onChange={handleHolidaySelectChange}
+            style={selectBoxStyle}
+          >
+            <option value="">選択</option>
+            <option value="10">10%</option>
+            <option value="20">20%</option>
+            <option value="30">30%</option>
+            <option value="40">40%</option>
+            <option value="50">50%</option>
+            <option value="60">60%</option>
+            <option value="70">70%</option>
+            <option value="80">80%</option>
+            <option value="90">90%</option>
+            <option value="100">100%</option>
+          </select>
+        </div>
+      )}
+
+      {/* 深夜割増 - ラジオボタンをボタンに変更 */}
       <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
         <div style={itemLabelStyle}>深夜割増</div>
-        <div style={radioContainerStyle}>
-          <div style={radioGroupStyle}>
-            <label style={radioLabelStyle(!showDeepNight)}>
-              <input
-                type="radio"
-                name="deepNight"
-                checked={!showDeepNight}
-                onChange={handleDeepNightToggle}
-                style={radioInputStyle}
-              />
-              適用しない
-            </label>
-            <label style={radioLabelStyle(showDeepNight)}>
-              <input
-                type="radio"
-                name="deepNight"
-                checked={showDeepNight}
-                onChange={handleDeepNightToggle}
-                style={radioInputStyle}
-              />
-              適用する
-            </label>
-          </div>
-        </div>
-        {showDeepNight && (
-          <div style={inputContainerStyle}>
-            <span style={distanceRatioLabelStyle}>走行距離比率</span>
-            <select
-              value={tempDeepNightDistanceRatio}
-              onChange={handleDeepNightSelectChange}
-              style={selectBoxStyle}
-            >
-              <option value="">選択</option>
-              <option value="10">10%</option>
-              <option value="20">20%</option>
-              <option value="30">30%</option>
-              <option value="40">40%</option>
-              <option value="50">50%</option>
-              <option value="60">60%</option>
-              <option value="70">70%</option>
-              <option value="80">80%</option>
-              <option value="90">90%</option>
-              <option value="100">100%</option>
-            </select>
-          </div>
-        )}
+        <button
+          onClick={() => setShowDeepNight(!showDeepNight)}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: showDeepNight ? '#b94a48' : '#fff',
+            color: showDeepNight ? '#fff' : '#333',
+            border: '2px solid #b94a48',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '14px',
+            transition: 'all 0.2s ease',
+            marginRight: '16px',
+          }}
+        >
+          {showDeepNight ? '適用する' : '適用しない'}
+        </button>
       </div>
 
-      {/* 速達割増 - プルダウン版 */}
+      {/* 深夜割増の走行距離比率選択 - 下段に配置 */}
+      {showDeepNight && (
+        <div style={{
+          marginLeft: 5,
+          marginBottom: 16,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8
+        }}>
+          <span style={fuelLabelStyle}>走行距離比率</span>
+          <select
+            value={tempDeepNightDistanceRatio}
+            onChange={handleDeepNightSelectChange}
+            style={selectBoxStyle}
+          >
+            <option value="">選択</option>
+            <option value="10">10%</option>
+            <option value="20">20%</option>
+            <option value="30">30%</option>
+            <option value="40">40%</option>
+            <option value="50">50%</option>
+            <option value="60">60%</option>
+            <option value="70">70%</option>
+            <option value="80">80%</option>
+            <option value="90">90%</option>
+            <option value="100">100%</option>
+          </select>
+        </div>
+      )}
+
+      {/* 速達割増 */}
       <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
         <div style={itemLabelStyle}>速達割増</div>
-        <div style={radioContainerStyle}>
-          <div style={radioGroupStyle}>
-            <label style={radioLabelStyle(!showExpress)}>
-              <input
-                type="radio"
-                name="express"
-                checked={!showExpress}
-                onChange={handleExpressToggle}
-                style={radioInputStyle}
-              />
-              適用しない
-            </label>
-            <label style={radioLabelStyle(showExpress)}>
-              <input
-                type="radio"
-                name="express"
-                checked={showExpress}
-                onChange={handleExpressToggle}
-                style={radioInputStyle}
-              />
-              適用する
-            </label>
-          </div>
-        </div>
-        {showExpress && (
-          <div style={inputContainerStyle}>
-            <span style={surchargeRateLabelStyle}>割 　増 　率 </span>
-            <select
-              value={tempExpressRate}
-              onChange={handleExpressSelectChange}
-              style={selectBoxStyle}
-            >
-              <option value="">選択</option>
-              <option value="10">10%</option>
-              <option value="20">20%</option>
-              <option value="30">30%</option>
-              <option value="40">40%</option>
-              <option value="50">50%</option>
-              <option value="60">60%</option>
-              <option value="70">70%</option>
-              <option value="80">80%</option>
-              <option value="90">90%</option>
-              <option value="100">100%</option>
-            </select>
-          </div>
-        )}
+        <button
+          onClick={() => setShowExpress(!showExpress)}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: showExpress ? '#b94a48' : '#fff',
+            color: showExpress ? '#fff' : '#333',
+            border: '2px solid #b94a48',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '14px',
+            transition: 'all 0.2s ease',
+            marginRight: '16px',
+          }}
+        >
+          {showExpress ? '適用する' : '適用しない'}
+        </button>
       </div>
 
-      {/* 一般道利用割増 - プルダウン版 */}
+      {/* 速達割増の割増率選択 - 下段に配置 */}
+      {showExpress && (
+        <div style={{
+          marginLeft: 5,
+          marginBottom: 16,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8
+        }}>
+          <span style={fuelLabelStyle}>割増率</span>
+          <select
+            value={tempExpressRate}
+            onChange={handleExpressSelectChange}
+            style={selectBoxStyle}
+          >
+            <option value="">選択</option>
+            <option value="10">10%</option>
+            <option value="20">20%</option>
+            <option value="30">30%</option>
+            <option value="40">40%</option>
+            <option value="50">50%</option>
+            <option value="60">60%</option>
+            <option value="70">70%</option>
+            <option value="80">80%</option>
+            <option value="90">90%</option>
+            <option value="100">100%</option>
+          </select>
+        </div>
+      )}
+
+      {/* 一般道利用割増 */}
       <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
         <div style={itemLabelStyle}>一般道利用割増</div>
-        <div style={radioContainerStyle}>
-          <div style={radioGroupStyle}>
-            <label style={radioLabelStyle(!showGeneralRoad)}>
-              <input
-                type="radio"
-                name="generalRoad"
-                checked={!showGeneralRoad}
-                onChange={handleGeneralRoadToggle}
-                style={radioInputStyle}
-              />
-              適用しない
-            </label>
-            <label style={radioLabelStyle(showGeneralRoad)}>
-              <input
-                type="radio"
-                name="generalRoad"
-                checked={showGeneralRoad}
-                onChange={handleGeneralRoadToggle}
-                style={radioInputStyle}
-              />
-              適用する
-            </label>
-          </div>
-        </div>
-        {showGeneralRoad && (
-          <div style={inputContainerStyle}>
-            <span style={surchargeRateLabelStyle}>割 　増 　率 </span>
-            <select
-              value={tempGeneralRoadRate}
-              onChange={handleGeneralRoadSelectChange}
-              style={selectBoxStyle}
-            >
-              <option value="">選択</option>
-              <option value="10">10%</option>
-              <option value="20">20%</option>
-              <option value="30">30%</option>
-              <option value="40">40%</option>
-              <option value="50">50%</option>
-              <option value="60">60%</option>
-              <option value="70">70%</option>
-              <option value="80">80%</option>
-              <option value="90">90%</option>
-              <option value="100">100%</option>
-            </select>
-          </div>
-        )}
+        <button
+          onClick={() => setShowGeneralRoad(!showGeneralRoad)}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: showGeneralRoad ? '#b94a48' : '#fff',
+            color: showGeneralRoad ? '#fff' : '#333',
+            border: '2px solid #b94a48',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '14px',
+            transition: 'all 0.2s ease',
+            marginRight: '16px',
+          }}
+        >
+          {showGeneralRoad ? '適用する' : '適用しない'}
+        </button>
       </div>
 
-      {/* 利用運送手数料 - 入力枠を削除 */}
+      {/* 一般道利用割増の割増率選択 - 下段に配置 */}
+      {showGeneralRoad && (
+        <div style={{
+          marginLeft: 5,
+          marginBottom: 16,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8
+        }}>
+          <span style={fuelLabelStyle}>割増率</span>
+          <select
+            value={tempGeneralRoadRate}
+            onChange={handleGeneralRoadSelectChange}
+            style={selectBoxStyle}
+          >
+            <option value="">選択</option>
+            <option value="10">10%</option>
+            <option value="20">20%</option>
+            <option value="30">30%</option>
+            <option value="40">40%</option>
+            <option value="50">50%</option>
+            <option value="60">60%</option>
+            <option value="70">70%</option>
+            <option value="80">80%</option>
+            <option value="90">90%</option>
+            <option value="100">100%</option>
+          </select>
+        </div>
+      )}
+
+      {/* 利用運送手数料 */}
       <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
         <div style={itemLabelStyle}>利用運送手数料</div>
-        <div style={radioContainerStyle}>
-          <div style={radioGroupStyle}>
-            <label style={radioLabelStyle(!showForwardingFee)}>
-              <input
-                type="radio"
-                name="forwardingFee"
-                checked={!showForwardingFee}
-                onChange={handleForwardingFeeToggle}
-                style={radioInputStyle}
-              />
-              適用しない
-            </label>
-            <label style={radioLabelStyle(showForwardingFee)}>
-              <input
-                type="radio"
-                name="forwardingFee"
-                checked={showForwardingFee}
-                onChange={handleForwardingFeeToggle}
-                style={radioInputStyle}
-              />
-              適用する
-            </label>
-          </div>
-        </div>
-        {showForwardingFee && (
-          <span style={fixedRateDisplayStyle}>基準運賃額の10%</span>
-        )}
+        <button
+          onClick={() => setShowForwardingFee(!showForwardingFee)}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: showForwardingFee ? '#b94a48' : '#fff',
+            color: showForwardingFee ? '#fff' : '#333',
+            border: '2px solid #b94a48',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '14px',
+            transition: 'all 0.2s ease',
+            marginRight: '16px',
+          }}
+        >
+          {showForwardingFee ? '適用する' : '適用しない'}
+        </button>
       </div>
+
+      {/* 利用運送手数料の表示 - 下段に配置 */}
+      {showForwardingFee && (
+        <div style={{
+          marginLeft: 5,
+          marginBottom: 16,
+          display: 'flex',
+          alignItems: 'center'
+        }}>
+          <span style={fixedRateDisplayStyle}>基準運賃額の10%</span>
+        </div>
+      )}
     </div>
   );
 };
