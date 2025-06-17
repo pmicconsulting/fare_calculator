@@ -263,7 +263,7 @@ const FuelSurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChan
   return (
     <div style={containerStyle}>
       {/* 燃料サーチャージ */}
-      <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
         <div style={itemLabelStyle}>燃料サーチャージ</div>
         <div style={radioContainerStyle}>
           <div style={radioGroupStyle}>

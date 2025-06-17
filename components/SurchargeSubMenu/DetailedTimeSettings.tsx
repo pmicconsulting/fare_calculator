@@ -162,7 +162,7 @@ const DetailedTimeSettings: React.FC<DetailedTimeSettingsProps> = ({ value, onCh
     fontSize: 14,
     fontWeight: "bold",
     color: "#333",
-    marginBottom: 16,
+    marginBottom: 8,
     marginTop: 24,
     borderBottom: "2px solid #b94a48",
     paddingBottom: 8,

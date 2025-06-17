@@ -381,14 +381,14 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
   const fuelInputContainerStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
-    gap: 12,
+    gap: 5,
     marginLeft: 16,
   };
 
   const fuelInputRowStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: 8,
+    gap: 5,
   };
 
   const fuelLabelStyle: React.CSSProperties = {
@@ -418,7 +418,7 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
   const inputContainerStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: 8
+    gap: 5
   };
 
   const distanceRatioLabelStyle: React.CSSProperties = {
@@ -618,7 +618,12 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
       </div>
 
       {/* 特殊車両割増 */}
-      <div style={{ position: 'relative', marginBottom: showSpecialVehicle ? 300 : 16 }}>
+      <div style={{ 
+        position: 'relative', 
+        marginBottom: showSpecialVehicle 
+          ? (selectedVehicleType && !isVehicleListExpanded ? 50 : 320)  // 選択済み50px、展開時320px
+          : 16 
+      }}>
         <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
           <div style={itemLabelStyle}>特殊車両割増</div>
           <button
@@ -643,7 +648,8 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
             top: '100%',
             left: '5px',
             width: '270px',
-            maxHeight: isVehicleListExpanded ? '400px' : selectedVehicleType ? '40px' : '0',
+            maxHeight: isVehicleListExpanded ? '315px' : selectedVehicleType ? '35px' : '0',
+            //         ↑ 9項目 × 35px = 315px     ↑ 1項目 35px
             overflow: 'hidden',
             transition: 'max-height 0.3s ease-in-out',
             marginTop: 4
@@ -665,7 +671,7 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
       </div>
 
       {/* 休日割増 */}
-      <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
         <div style={itemLabelStyle}>休日割増</div>
         <button
           onClick={() => setShowHoliday(!showHoliday)}
@@ -689,7 +695,7 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
       {showHoliday && (
         <div style={{
           marginLeft: 5,
-          marginBottom: 16,
+          marginBottom: 8,
           display: 'flex',
           alignItems: 'center',
           gap: 8
@@ -716,7 +722,7 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
       )}
 
       {/* 深夜割増 - ラジオボタンをボタンに変更 */}
-      <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
         <div style={itemLabelStyle}>深夜割増</div>
         <button
           onClick={() => setShowDeepNight(!showDeepNight)}
@@ -740,7 +746,7 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
       {showDeepNight && (
         <div style={{
           marginLeft: 5,
-          marginBottom: 16,
+          marginBottom: 8,
           display: 'flex',
           alignItems: 'center',
           gap: 8
@@ -767,7 +773,7 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
       )}
 
       {/* 速達割増 */}
-      <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
         <div style={itemLabelStyle}>速達割増</div>
         <button
           onClick={() => setShowExpress(!showExpress)}
@@ -791,7 +797,7 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
       {showExpress && (
         <div style={{
           marginLeft: 5,
-          marginBottom: 16,
+          marginBottom: 8,
           display: 'flex',
           alignItems: 'center',
           gap: 8
@@ -818,7 +824,7 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
       )}
 
       {/* 一般道利用割増 */}
-      <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
         <div style={itemLabelStyle}>一般道利用割増</div>
         <button
           onClick={() => setShowGeneralRoad(!showGeneralRoad)}
@@ -842,7 +848,7 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
       {showGeneralRoad && (
         <div style={{
           marginLeft: 5,
-          marginBottom: 16,
+          marginBottom: 8,
           display: 'flex',
           alignItems: 'center',
           gap: 8
@@ -869,7 +875,7 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
       )}
 
       {/* 利用運送手数料 */}
-      <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
         <div style={itemLabelStyle}>利用運送手数料</div>
         <button
           onClick={() => setShowForwardingFee(!showForwardingFee)}
@@ -893,7 +899,7 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
       {showForwardingFee && (
         <div style={{
           marginLeft: 5,
-          marginBottom: 16,
+          marginBottom: 8,
           display: 'flex',
           alignItems: 'center'
         }}>
