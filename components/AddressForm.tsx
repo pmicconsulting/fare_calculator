@@ -239,7 +239,7 @@ const AddressForm = forwardRef((props: Props, ref) => {
           className="address-label"
           style={{
             minWidth: 70,
-            background: "#8B5CF6",
+            background: "#7B1FA2",
             color: "#fff",
             borderRadius: 6,
             textAlign: "center",

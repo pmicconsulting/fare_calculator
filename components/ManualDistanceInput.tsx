@@ -118,7 +118,7 @@ export default function ManualDistanceInput({
     <div className="manual-distance-input" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
       <span className="manual-label" style={{
         minWidth: 100,
-        background: "#8B5CF6", // 変更：パープルに変更
+        background: "#7B1FA2", // 変更：パープルに変更
         color: "#fff", // 白色文字
         borderRadius: 8, // 角丸を強調
         textAlign: "center",

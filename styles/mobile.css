@@ -216,7 +216,7 @@
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    background: #8B5CF6 !important; /* パープル色に変更 */
+    background: #7B1FA2 !important; /* パープル色に変更 */
     color: white !important;
     border-radius: 4px !important;
   }
@@ -233,7 +233,7 @@
 
   /* 2. フェリー利用のラベルはそのままの高さで色のみ変更 */
   .ferry-settings-label {
-    background: #8B5CF6 !important; /* パープル色に変更 */
+    background: #7B1FA2 !important; /* パープル色に変更 */
     color: white !important;
     border-radius: 4px !important;
     padding: 8px !important;

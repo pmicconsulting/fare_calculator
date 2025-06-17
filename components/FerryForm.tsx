@@ -56,7 +56,7 @@ function InputRow({ label, placeholder, value, onChange }: RowProps) {
       <span
         style={{
           minWidth: 90,
-          background: "#8B5CF6", // 変更：パープルに変更
+          background: "#7B1FA2", // 変更：パープルに変更
           color: "#fff",
           borderRadius: 6,
           textAlign: "center",
