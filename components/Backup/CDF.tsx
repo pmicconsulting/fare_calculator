@@ -9,7 +9,6 @@ export const calculateDetailedFare = async (
   rawKm: number = 0,
   vehicleType: 'small' | 'medium' | 'large' | 'trailer' = 'large'
 ) => {
-
   const charges: any = {};
   const surcharges: any = {};
 
@@ -141,12 +140,9 @@ export const calculateDetailedFare = async (
     charges.unloadingFee = result.fee;
   }
 
-  // 利用運送手数料の計算部分（既存のコードを修正）
+  // 転送料の計算
   if (settings.forwardingFee?.enabled) {
-    const forwardingFeeAmount = Math.round(baseFare * 0.1);
-    charges.forwardingFee = forwardingFeeAmount;
-  } else {
-    charges.forwardingFee = 0;
+    charges.forwardingFee = Math.round(baseFare * 0.1);
   }
 
   // 燃料サーチャージの計算（修正）
@@ -204,8 +200,6 @@ export const calculateDetailedFare = async (
   if (settings.express?.enabled && settings.express.surchargeRate > 0) {
     surcharges.express = Math.round(baseFare * (settings.express.surchargeRate / 100));
   }
-
-  // 一般道利用割増の計算
   if (settings.generalRoad?.enabled && settings.generalRoad.surchargeRate > 0) {
     surcharges.generalRoad = Math.round(baseFare * (settings.generalRoad.surchargeRate / 100));
   }

@@ -178,13 +178,11 @@ const FerryMap = forwardRef(({ vehicle, region, useHighway, origin, embarkPort, 
         .maybeSingle();
 
       if (error) {
-        console.error("運賃取得エラー:", error);
         return 0;
       }
 
       return data?.fare_yen || 0;
     } catch (error) {
-      console.error("運賃取得エラー:", error);
       return 0;
     }
   };
@@ -279,7 +277,6 @@ const FerryMap = forwardRef(({ vehicle, region, useHighway, origin, embarkPort, 
       });
 
     } catch (e: any) {
-      console.error("calculateRouteエラー:", e);
       onResult(null, e.message || "不明なエラーが発生しました。");
       // ★★ エラー時は地図から経路を消す ★★
       if (directionsRenderer.current.length >= 2) {
@@ -305,7 +302,6 @@ const FerryMap = forwardRef(({ vehicle, region, useHighway, origin, embarkPort, 
       
       return response;
     } catch (error) {
-      console.error("Route fetch error:", error);
       return null;
     }
   }, [gmapsLoaded, directions, origin, destination, useHighway]);

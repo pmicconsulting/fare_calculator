@@ -30,7 +30,6 @@ export const fetchWaitingTimeRates = async (
       .order("time_code", { ascending: true }); // 0: 2時間以内, 1: 2時間超
 
     if (error || !data || data.length < 2) {
-      console.error("待機時間単価の取得エラー:", error);
       return null;
     }
 
@@ -39,7 +38,6 @@ export const fetchWaitingTimeRates = async (
       over2Hours: data[1].charge_yen   // time_code = 1
     };
   } catch (error) {
-    console.error("待機時間単価の取得エラー:", error);
     return null;
   }
 };

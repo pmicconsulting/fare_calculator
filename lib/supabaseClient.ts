@@ -8,7 +8,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
   if (process.env.NODE_ENV === 'production') {
     throw new Error('Supabase環境変数が設定されていません。');
   }
-  console.warn('Supabase環境変数が設定されていません。');
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {

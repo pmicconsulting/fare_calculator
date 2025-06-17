@@ -203,5 +203,4 @@ settings.specialVehicle = { vehicleType: 'refrigerated' };
 settings.holiday = { enabled: true, rate: 20 };
 
 const result = calculateSurcharge(10000, settings);
-console.log(result.breakdown);
 */

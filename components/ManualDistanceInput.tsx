@@ -60,8 +60,7 @@ export default function ManualDistanceInput({
       .maybeSingle();
 
     if (error || !data) {
-      console.error("運賃データ取得失敗", error);
-      onFareResult(null, "運賃データが見つかりません");
+        onFareResult(null, "運賃データが見つかりません");
       return;
     }
 

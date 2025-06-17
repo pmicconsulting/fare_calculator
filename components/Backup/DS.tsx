@@ -46,7 +46,7 @@ const DetailedSettings: React.FC<Props> = ({ value, onChange }) => {
     />
   );
 
-  // 割増の設定をレンダリング（valueを直接渡す）
+  // 割増の設定をレンダリング
   const renderSurcharge = () => (
     <SurchargeSettings value={value} onChange={onChange} />
   );
@@ -91,23 +91,23 @@ const DetailedSettings: React.FC<Props> = ({ value, onChange }) => {
           style={{ 
             marginRight: '10px', 
             padding: '8px 16px',
-            backgroundColor: activeTab === 'time' ? '#b94a48' : '#f8f9fa',
+            backgroundColor: activeTab === 'time' ? '#007bff' : '#fff',
             color: activeTab === 'time' ? '#fff' : '#000',
-            border: '2px solid #b94a48',
+            border: '1px solid #007bff',
             borderRadius: '4px',
             cursor: 'pointer',
             fontWeight: activeTab === 'time' ? 'bold' : 'normal'
           }}
         >
-          待機時間料、積込料・取卸料
+          待機時間料・荷役作業料
         </button>
         <button 
           onClick={() => setActiveTab('surcharge')}
           style={{ 
             padding: '8px 16px',
-            backgroundColor: activeTab === 'surcharge' ? '#b94a48' : '#fff',
+            backgroundColor: activeTab === 'surcharge' ? '#007bff' : '#fff',
             color: activeTab === 'surcharge' ? '#fff' : '#000',
-            border: '2px solid #b94a48',
+            border: '1px solid #007bff',
             borderRadius: '4px',
             cursor: 'pointer',
             fontWeight: activeTab === 'surcharge' ? 'bold' : 'normal'

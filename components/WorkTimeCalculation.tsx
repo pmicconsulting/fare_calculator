@@ -34,7 +34,6 @@ export const fetchWorkTimeRates = async (
       .order("time_code", { ascending: true });
 
     if (error || !data || data.length < 2) {
-      console.error("作業時間単価の取得エラー:", error);
       return null;
     }
 
@@ -43,7 +42,6 @@ export const fetchWorkTimeRates = async (
       over2Hours: data.find(d => d.time_code === 9)?.charge_yen || 0
     };
   } catch (error) {
-    console.error("作業時間単価の取得エラー:", error);
     return null;
   }
 };

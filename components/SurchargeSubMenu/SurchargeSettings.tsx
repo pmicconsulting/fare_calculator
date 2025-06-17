@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 // import { specialVehicleTypes } from '../SurchargeCalculation'; // この行を削除
 import { DetailedSettingsType, SpecialVehicleData } from '../../types/DetailedSettingsType';
 
@@ -22,74 +22,77 @@ type SurchargeSettingsProps = {
 };
 
 const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }) => {
-  // valueから初期値を取得するように修正
-  const initialValue = value || {
-    fuelSurcharge: { enabled: false, fuelPrice: 0, fuelEfficiency: 0 },
+  // initialValue定義
+  const initialValue = useMemo(() => value || {
+    fuelSurcharge: { enabled: false, fuelPrice: 120, fuelEfficiency: 5.0 },
     specialVehicle: { enabled: false, type: "" },
     holiday: { enabled: false, distanceRatio: 0 },
     deepNight: { enabled: false, distanceRatio: 0 },
-    express: { enabled: false, surchargeRate: 0 },
-    generalRoad: { enabled: false, surchargeRate: 0 },
+    express: { enabled: false, surchargeRate: 20 },
+    generalRoad: { enabled: false, surchargeRate: 20 },
     forwardingFee: { enabled: false }
-  };
+  }, [value]);
 
-  // 燃料サーチャージ用の状態を追加
-  const [showFuelSurcharge, setShowFuelSurcharge] = useState(
-    initialValue.fuelSurcharge?.enabled || false
-  );
-  const [tempFuelPrice, setTempFuelPrice] = useState(
-    initialValue.fuelSurcharge?.fuelPrice?.toString() || ""
-  );
-  const [tempFuelEfficiency, setTempFuelEfficiency] = useState(
-    initialValue.fuelSurcharge?.fuelEfficiency?.toString() || ""
-  );
+  // 既存の状態変数
+  const [showFuelSurcharge, setShowFuelSurcharge] = useState(() => initialValue.fuelSurcharge?.enabled || false);
+  const [tempFuelPrice, setTempFuelPrice] = useState(() => initialValue.fuelSurcharge?.fuelPrice?.toString() || "120");
+  const [tempFuelEfficiency, setTempFuelEfficiency] = useState(() => initialValue.fuelSurcharge?.fuelEfficiency?.toString() || "5.0");
+  
+  const [showSpecialVehicle, setShowSpecialVehicle] = useState(() => initialValue.specialVehicle?.enabled || false);
+  const [tempSpecialVehicleType, setTempSpecialVehicleType] = useState(() => initialValue.specialVehicle?.type || "");
+  
+  const [showHoliday, setShowHoliday] = useState(() => initialValue.holiday?.enabled || false);
+  const [tempHolidayDistanceRatio, setTempHolidayDistanceRatio] = useState(() => initialValue.holiday?.distanceRatio?.toString() || "");
+  
+  const [showDeepNight, setShowDeepNight] = useState(() => initialValue.deepNight?.enabled || false);
+  const [tempDeepNightDistanceRatio, setTempDeepNightDistanceRatio] = useState(() => initialValue.deepNight?.distanceRatio?.toString() || "");
 
-  // 特殊車両割増用の状態（初期値をvalueから取得）
-  const [showSpecialVehicle, setShowSpecialVehicle] = useState(initialValue.specialVehicle?.enabled || false);
-  const [selectedVehicleType, setSelectedVehicleType] = useState<string | null>(initialValue.specialVehicle?.type || null);
-  const [selectedVehicleRate, setSelectedVehicleRate] = useState<number>(0);
+  // 新しい3つの状態変数
+  const [showExpress, setShowExpress] = useState(() => initialValue.express?.enabled || false);
+  const [tempExpressRate, setTempExpressRate] = useState(() => initialValue.express?.surchargeRate?.toString() || "20");
+  
+  const [showGeneralRoad, setShowGeneralRoad] = useState(() => initialValue.generalRoad?.enabled || false);
+  const [tempGeneralRoadRate, setTempGeneralRoadRate] = useState(() => initialValue.generalRoad?.surchargeRate?.toString() || "20");
+  
+  const [showForwardingFee, setShowForwardingFee] = useState(() => initialValue.forwardingFee?.enabled || false);
+
+  // 不足している状態変数を追加
   const [isVehicleListExpanded, setIsVehicleListExpanded] = useState(false);
-
-  // 休日割増用の状態（確定状態を削除）
-  const [showHoliday, setShowHoliday] = useState(initialValue.holiday?.enabled || false);
-  const [tempHolidayDistanceRatio, setTempHolidayDistanceRatio] = useState(
-    initialValue.holiday?.distanceRatio?.toString() || ""
-  );
+  const [selectedVehicleType, setSelectedVehicleType] = useState(() => initialValue.specialVehicle?.type || "");
   
-  // 深夜割増用の状態（確定状態を削除）
-  const [showDeepNight, setShowDeepNight] = useState(initialValue.deepNight?.enabled || false);
-  const [tempDeepNightDistanceRatio, setTempDeepNightDistanceRatio] = useState(
-    initialValue.deepNight?.distanceRatio?.toString() || ""
-  );
+  const [selectedVehicleRate, setSelectedVehicleRate] = useState<number>(0);
   
-  // 他の割増用の状態（確定状態を削除）
-  const [showExpress, setShowExpress] = useState(initialValue.express?.enabled || false);
-  const [tempExpressRate, setTempExpressRate] = useState(
-    initialValue.express?.surchargeRate?.toString() || "20"
-  );
-  
-  const [showGeneralRoad, setShowGeneralRoad] = useState(initialValue.generalRoad?.enabled || false);
-  const [tempGeneralRoadRate, setTempGeneralRoadRate] = useState(
-    initialValue.generalRoad?.surchargeRate?.toString() || "20"
-  );
-  
-  const [showForwardingFee, setShowForwardingFee] = useState(initialValue.forwardingFee?.enabled || false);
+  // 他に必要な状態変数も追加
+  const [showFuelEfficiencyDetail, setShowFuelEfficiencyDetail] = useState(false);
+  const [showFuelPriceDetail, setShowFuelPriceDetail] = useState(false);
 
-  // ユーティリティ関数（getButtonTextを削除）
-  // 全角→半角変換関数
-  const toHalfWidth = (str: string): string => {
-    return str.replace(/[０-９]/g, (s) => {
-      return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
-    });
-  };
+  // ハンドラー関数
+  const handleGeneralRoadToggle = useCallback(() => {
+    const newValue = !showGeneralRoad;
+    setShowGeneralRoad(newValue);
+    
+    const newSettings = {
+      ...value,
+      generalRoad: { 
+        enabled: newValue, 
+        surchargeRate: newValue ? parseInt(tempGeneralRoadRate) || 20 : 0 
+      },
+    };
+    onChange(newSettings);
+  }, [showGeneralRoad, tempGeneralRoadRate, value, onChange]);
 
-  // 入力値の検証関数（1〜100の整数）
-  const isValidDistanceRatio = (value: string): boolean => {
-    if (!value) return false;
-    const num = parseInt(value, 10);
-    return !isNaN(num) && num >= 1 && num <= 100 && value === num.toString();
-  };
+  const handleForwardingFeeToggle = useCallback(() => {
+    const newValue = !showForwardingFee;
+    setShowForwardingFee(newValue);
+    
+    const newSettings = {
+      ...value,
+      forwardingFee: { enabled: newValue },
+    };
+    onChange(newSettings);
+  }, [showForwardingFee, value, onChange]);
 
+  // 既存のハンドラー関数はそのまま保持
   // 燃料サーチャージのハンドラー
   const handleFuelSurchargeToggle = () => {
     const newValue = !showFuelSurcharge;
@@ -241,77 +244,25 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
     }
   };
 
-  // 速達割増のハンドラー
-  const handleExpressToggle = () => {
-    const newValue = !showExpress;
-    setShowExpress(newValue);
-    if (!newValue) {
-      setTempExpressRate("");
-      onChange({
-        ...value,
-        express: { enabled: false, surchargeRate: 0 },
-      });
-    } else {
-      onChange({
-        ...value,
-        express: { enabled: true, surchargeRate: parseInt(tempExpressRate) || 0 },
-      });
-    }
-  };
-
+  // 不足している関数を追加
   const handleExpressSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newValue = e.target.value;
-    setTempExpressRate(newValue);
-    if (showExpress && newValue) {
+    const newRate = e.target.value;
+    setTempExpressRate(newRate);
+    if (showExpress) {
       onChange({
         ...value,
-        express: { enabled: true, surchargeRate: parseInt(newValue, 10) },
-      });
-    }
-  };
-
-  // 一般道利用割増のハンドラー
-  const handleGeneralRoadToggle = () => {
-    const newValue = !showGeneralRoad;
-    setShowGeneralRoad(newValue);
-    if (!newValue) {
-      setTempGeneralRoadRate("");
-      onChange({
-        ...value,
-        generalRoad: { enabled: false, surchargeRate: 0 },
-      });
-    } else {
-      onChange({
-        ...value,
-        generalRoad: { enabled: true, surchargeRate: parseInt(tempGeneralRoadRate) || 0 },
+        express: { enabled: true, surchargeRate: parseInt(newRate) || 20 },
       });
     }
   };
 
   const handleGeneralRoadSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newValue = e.target.value;
-    setTempGeneralRoadRate(newValue);
-    if (showGeneralRoad && newValue) {
+    const newRate = e.target.value;
+    setTempGeneralRoadRate(newRate);
+    if (showGeneralRoad) {
       onChange({
         ...value,
-        generalRoad: { enabled: true, surchargeRate: parseInt(newValue, 10) },
-      });
-    }
-  };
-
-  // 利用運送手数料のハンドラー
-  const handleForwardingFeeToggle = () => {
-    const newValue = !showForwardingFee;
-    setShowForwardingFee(newValue);
-    if (!newValue) {
-      onChange({
-        ...value,
-        forwardingFee: { enabled: false },
-      });
-    } else {
-      onChange({
-        ...value,
-        forwardingFee: { enabled: true },
+        generalRoad: { enabled: true, surchargeRate: parseInt(newRate) || 20 },
       });
     }
   };
@@ -464,15 +415,17 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
 
   // confirmButtonStyleとその他の不要なスタイルを削除
 
-  // 特殊車両用の追加スタイル
-  const accordionContainerStyle: React.CSSProperties = {
-    maxHeight: isVehicleListExpanded ? '400px' : selectedVehicleType ? '40px' : '0',
-    overflow: 'hidden',
-    transition: 'max-height 0.3s ease-in-out',
-    marginLeft: 16,
-    width: '250px',
+  const fixedRateDisplayStyle: React.CSSProperties = {
+    backgroundColor: '#b94a48',
+    color: '#fff',
+    padding: '8px 16px',
+    borderRadius: 4,
+    fontSize: 14,
+    fontWeight: 'bold',
+    display: 'inline-block',
   };
 
+  // コンポーネント内に以下の関数を追加（useState定義の後あたり）
   const vehicleItemStyle = (isSelected: boolean, vehicleId: string): React.CSSProperties => ({
     padding: '3px 5px',
     backgroundColor: isSelected ? '#b94a48' : '#fff',
@@ -496,26 +449,8 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
     fontWeight: 'bold',
   });
 
-  const surchargeRateLabelStyle: React.CSSProperties = {
-    fontSize: 14,
-    color: '#333',
-    marginRight: 8,
-    fontWeight: 'normal',
-    whiteSpace: 'nowrap',
-  };
-
-  const fixedRateDisplayStyle: React.CSSProperties = {
-    backgroundColor: '#b94a48',
-    color: '#fff',
-    padding: '8px 16px',
-    borderRadius: 4,
-    fontSize: 14,
-    fontWeight: 'bold',
-    display: 'inline-block',
-  };
-
   return (
-    <div style={containerStyle}>
+    <div style={{ padding: '20px' }}>
       {/* 燃料サーチャージ - 最上段に配置 */}
       <div style={{ position: 'relative', marginBottom: showFuelSurcharge ? 100 : 16 }}>
         <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
@@ -775,22 +710,33 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
       {/* 速達割増 */}
       <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
         <div style={itemLabelStyle}>速達割増</div>
-        <button
-          onClick={() => setShowExpress(!showExpress)}
-          style={{
-            padding: '8px 16px',
-            backgroundColor: showExpress ? '#b94a48' : '#fff',
-            color: showExpress ? '#fff' : '#333',
-            border: '2px solid #b94a48',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            transition: 'all 0.2s ease',
-            marginRight: '16px',
-          }}
-        >
-          {showExpress ? '適用する' : '適用しない'}
-        </button>
+ <button
+  onClick={() => {
+    const newValue = !showExpress;
+    setShowExpress(newValue);
+    const newSettings = {
+      ...value,
+      express: { 
+        enabled: newValue, 
+        surchargeRate: newValue ? parseInt(tempExpressRate) || 20 : 0 
+      }
+    };
+    onChange(newSettings);
+  }}
+  style={{
+    padding: '8px 16px',
+    backgroundColor: showExpress ? '#b94a48' : '#fff',
+    color: showExpress ? '#fff' : '#333',
+    border: '2px solid #b94a48',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    transition: 'all 0.2s ease',
+    marginRight: '16px',
+  }}
+>
+  {showExpress ? '適用する' : '適用しない'}
+</button>
       </div>
 
       {/* 速達割増の割増率選択 - 下段に配置 */}
@@ -827,7 +773,18 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
       <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
         <div style={itemLabelStyle}>一般道利用割増</div>
         <button
-          onClick={() => setShowGeneralRoad(!showGeneralRoad)}
+          onClick={() => {
+            const newValue = !showGeneralRoad;
+            setShowGeneralRoad(newValue);
+            const newSettings = {
+              ...value,
+              generalRoad: { 
+                enabled: newValue, 
+                surchargeRate: newValue ? parseInt(tempGeneralRoadRate) || 20 : 0 
+              }
+            };
+            onChange(newSettings);
+          }}
           style={{
             padding: '8px 16px',
             backgroundColor: showGeneralRoad ? '#b94a48' : '#fff',
@@ -878,7 +835,15 @@ const SurchargeSettings: React.FC<SurchargeSettingsProps> = ({ value, onChange }
       <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
         <div style={itemLabelStyle}>利用運送手数料</div>
         <button
-          onClick={() => setShowForwardingFee(!showForwardingFee)}
+          onClick={() => {
+            const newValue = !showForwardingFee;
+            setShowForwardingFee(newValue);
+            const newSettings = {
+              ...value,
+              forwardingFee: { enabled: newValue }
+            };
+            onChange(newSettings);
+          }}
           style={{
             padding: '8px 16px',
             backgroundColor: showForwardingFee ? '#b94a48' : '#fff',

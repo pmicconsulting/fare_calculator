@@ -1,8 +1,6 @@
 import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react";
 
 const DynamicMap = forwardRef(function DynamicMap(props: any, ref) {
-  // console.log("DynamicMap component rendered"); // 削除
-  
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<google.maps.Map | null>(null);
   const directionsRenderer = useRef<google.maps.DirectionsRenderer | null>(null);
@@ -17,8 +15,6 @@ const DynamicMap = forwardRef(function DynamicMap(props: any, ref) {
 
   // 地図の初期化とクリックイベントの登録
   useEffect(() => {
-    // console.log("Map initialization useEffect called"); // 削除
-    
     // Google Maps APIが読み込まれているか確認
     if (!window.google || !window.google.maps) {
       const checkInterval = setInterval(() => {
@@ -62,7 +58,7 @@ const DynamicMap = forwardRef(function DynamicMap(props: any, ref) {
           setMenuOpen(true);
         });
       } catch (error) {
-        // 本番環境ではエラーログを削除
+        // エラーログを削除
       }
     }
   }, []); // 空の依存配列で、初回のみ実行
@@ -135,7 +131,6 @@ const DynamicMap = forwardRef(function DynamicMap(props: any, ref) {
           anchor: new window.google.maps.Point(16, 32),
         },
       });
-      console.log("Origin marker placed at:", clickedLatLng);
     }
     if (sel === "destination" && clickedLatLng) {
       destinationMarkerRef.current?.setMap(null);
@@ -148,7 +143,6 @@ const DynamicMap = forwardRef(function DynamicMap(props: any, ref) {
           anchor: new window.google.maps.Point(16, 32),
         },
       });
-      console.log("Destination marker placed at:", clickedLatLng);
     }
   };
 
@@ -207,11 +201,8 @@ const DynamicMap = forwardRef(function DynamicMap(props: any, ref) {
   // refで公開するメソッド
   useImperativeHandle(ref, () => ({
     drawRoute: () => {
-      console.log("drawRoute called");
-      
       // 設定されたマーカーから経路を計算
       if (!originMarkerRef.current || !destinationMarkerRef.current) {
-        console.log("Origin or destination marker not set");
         props.onRouteDraw?.([], 0, null);
         return;
       }
@@ -220,11 +211,8 @@ const DynamicMap = forwardRef(function DynamicMap(props: any, ref) {
       const destination = destinationMarkerRef.current.getPosition();
       
       if (!origin || !destination) {
-        console.log("Position is null");
         return;
       }
-      
-      console.log("Calculating route from:", origin.toString(), "to:", destination.toString());
       
       const directionsService = new window.google.maps.DirectionsService();
       directionsService.route(
@@ -242,12 +230,6 @@ const DynamicMap = forwardRef(function DynamicMap(props: any, ref) {
               (sum, leg) => sum + (leg.distance?.value || 0),
               0
             );
-            
-            console.log("Route calculation success:", {
-              totalMeters,
-              totalKm: totalMeters / 1000,
-              legs: route.legs.length
-            });
             
             // 既存のdirectionsRendererをクリア
             if (directionsRenderer.current) {
@@ -295,7 +277,6 @@ const DynamicMap = forwardRef(function DynamicMap(props: any, ref) {
             
             props.onRouteDraw?.(pins, totalMeters / 1000, route);
           } else {
-            console.error("Directions request failed:", status);
             props.onRouteDraw?.([], 0, null);
           }
         }
